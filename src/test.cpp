@@ -1,9 +1,9 @@
  #include <ros/ros.h>
 
  // Include opencv2
- #include <opencv2/imgproc/imgproc.hpp>
- #include <opencv2/highgui/highgui.hpp>
- #include <opencv2/core/core.hpp>
+ #include <opencv2/imgproc.hpp>
+ #include <opencv2/highgui.hpp>
+//  #include <opencv2/core.hpp>
 //  #include "roscpp_tutorials/TwoInts.h"
 //  #include <opencv2/core/types.hpp>
 
@@ -72,7 +72,7 @@ void CAMERA_CV::CannyThreshold(int, void*)
     // //set the dist image all black so that you can put the deteceted edges on the black background
     dst = Scalar::all(0);
     // src.copyTo( dst, detected_edges);
-    imshow( window_name, src_gray);
+    imshow( window_name, src);
     waitKey(3);
 }
 
@@ -98,7 +98,7 @@ void CAMERA_CV::CannyThreshold(int, void*)
     cv_bridge::CvImagePtr cv_ptr;
     try
     {
-        cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
+        cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR16);
     }
     catch (cv_bridge::Exception& e)
     {
@@ -108,7 +108,7 @@ void CAMERA_CV::CannyThreshold(int, void*)
 
     src = cv_ptr->image;
     dst.create(src.size(), src.type());
-    cvtColor(src, src_gray, COLOR_BGR2GRAY);
+    // cvtColor(src, src_gray, COLOR_BGR2GRAY);
     // namedWindow(window_name, WINDOW_AUTOSIZE );
     // CannyThreshold(0, 0);
 
