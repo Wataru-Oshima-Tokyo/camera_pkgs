@@ -23,13 +23,24 @@
 
 class CAMERA_CV{
   public:
-    Mat src, src_gray, dst, detected_edges;
+    Mat src, src_gray, src_hsv, dst, detected_edges, mask;
     ros::Publisher pub;
     ros::Subscriber sub;
     ros::NodeHandle nh;
     ros::ServiceServer start, stop;
     int lowThreshold;
+    // int low_c[3] = {17, 123, 121};
+    // int high_c[3] ={37, 143, 201};
+    int low_c[3] = {0, 0, 0};
+    int high_c[3] = {0, 0, 0};
+    const int max_c[3] = {179, 255, 255};
+    std::string HSV[3] = {"H","S","V"};
+
+    // int _MIN_DH =15, _MIN_DS = 60, _MIN_DV = 60;
+    // int _MAX_DH = 15, _MAX_DS = 150, _MAX_DV = 60;
     void CannyThreshold(int, void*);
+    void MaskThreshold(int, void*);
+    void DrawCircle(int, void*);
     const std::string OPENCV_WINDOW = "Image window";
     virtual bool clbk_start_service(roscpp_tutorials::TwoInts::Request& req,roscpp_tutorials::TwoInts::Response& res);
     virtual bool clbk_stop_service(roscpp_tutorials::TwoInts::Request& req, roscpp_tutorials::TwoInts::Response& res);
@@ -43,6 +54,7 @@ class CAMERA_CV{
     ~CAMERA_CV();
     bool getRun(); 
     const int max_lowThreshold = 100;
+    const std::string window_name = "Edge Map";
     // static constexpr char* window_name = "Edge Map";
     static void callback(int pos, void *userptr) { // because trace
         CAMERA_CV *foo = (CAMERA_CV*)userptr; // cast user data back to "this"
@@ -65,11 +77,77 @@ bool CAMERA_CV::getRun(){
   return RUN;
 }
 
+void CAMERA_CV::DrawCircle(int, void*){
+  int x = src.cols, y = src.rows;
+  int x_array[3] = {40,x/2, x-40};
+  int y_array[3] = {40, y/2,y-40};
+  //draw circle 9;
+  //top
+  rep(i,0,3){
+    rep(j,0,3){
+      cv::circle(src_hsv, cv::Point(x_array[i],y_array[j]), 20, cv::Scalar(153, 255, 255), FILLED);
+      cv::circle(src, cv::Point(x_array[i],y_array[j]), 20, cv::Scalar(153, 255, 255), FILLED);
+    }
+  }
+  // cv::circle(src_hsv, cv::Point(40,40), 20, cv::Scalar(0, 0, 255), 2);
+  // cv::circle(src_hsv, cv::Point(x/2,40), 20, cv::Scalar(0, 0, 255));
+  // cv::circle(src_hsv, cv::Point(x-40,40), 20, cv::Scalar(0, 0, 255));
+
+  // //middle
+  // cv::circle(src_hsv, cv::Point(40,y/2), 20, cv::Scalar(0, 0, 255));
+  // cv::circle(src_hsv, cv::Point(x/2,y/2), 20, cv::Scalar(0, 0, 255), FILLED);
+  // cv::circle(src_hsv, cv::Point(x-40,y/2), 20, cv::Scalar(0, 0, 255));
+  
+  // //botton
+  // cv::circle(src_hsv, cv::Point(40,y-40), 20, cv::Scalar(0, 0, 255));
+  // cv::circle(src_hsv, cv::Point(x/2,y-40), 20, cv::Scalar(0, 0, 255));
+  // cv::circle(src_hsv, cv::Point(x-40,y-40), 20, cv::Scalar(0, 0, 255));
+  // rep(i,,0, 9){
+
+  // }
+    imshow( "src", src);
+    waitKey(3);
+}
+
+void CAMERA_CV::MaskThreshold(int, void*){
+
+   
+   
+   cv::inRange(src_hsv, cv::Scalar(low_c[0],low_c[1],low_c[1]), cv::Scalar(high_c[0],high_c[1],high_c[2]),mask);
+   //resize the image
+  //  cv::resize(mask, resized, cv::Size(), fwidth/3, fheight/3);
+  //  int search_top = fheight/4*3; 
+  //  int search_bot = search_top+20;//focus on just the front of cam <- need to know only 20 rows
+  //  mask[0:search_top, 0:w] =0;
+  //  mask[search_bot:fheight, 0:w] = 0;
+  //  for(int i=1; i<mask.rows-1; i++){
+  //    for(int j=1; j<mask.cols-1; j++){
+  //      cv::Vec3b &color = mask.at<cv::Vec3b>(cv::Point(j,i));
+  //      if(j< search_top || (j>search_bot && j<fheight)){
+  //         color.val[0] =0;
+  //         color.val[1] =0;
+  //         color.val[2] =0;
+  //      }
+  //    }
+  //  }
+   
+   cv::Moments M = cv::moments(mask); // get the center of gravity
+   if (M.m00 >0){
+   			int cx = int(M.m10/M.m00); //重心のx座標
+   			int cy = int(M.m01/M.m00); //重心のy座標
+      
+      cv::circle(src, cv::Point(cx,cy), 5, cv::Scalar(0, 0, 255));
+   }
+  //  imshow("masked", src);
+  //  waitKey(3);
+}
+
+
 void CAMERA_CV::CannyThreshold(int, void*)
 {
     // cout << "start canny threashold" <<endl;
     // removeing the noise and ap since the kernel size is 3, set the size 3 by 3
-    blur(src_gray, detected_edges, Size(3,3) );
+    blur(mask, detected_edges, Size(3,3) );
     // //detecing an edege by Canny with the lowThreashold and maxThreshold which is 3 times thant the lower one.
     Canny(detected_edges, detected_edges, lowThreshold, lowThreshold*ratio, kernel_size );
     // //set the dist image all black so that you can put the deteceted edges on the black background
@@ -111,7 +189,9 @@ void CAMERA_CV::CannyThreshold(int, void*)
 
     src = cv_ptr->image;
     dst.create(src.size(), src.type());
-    cvtColor(src, src_gray, COLOR_BGR2GRAY);
+    //cvtColor(src, src_gray, COLOR_BGR2GRAY);
+    cvtColor(src, src_hsv, COLOR_BGR2HSV);
+    
     // namedWindow(window_name, WINDOW_AUTOSIZE );
     // CannyThreshold(0, 0);
 
@@ -134,8 +214,17 @@ int main( int argc, char** argv )
       // cout << cc.getRun() << endl;
       if(cc.getRun()){
         // createTrackbar( "Min Threshold:", "Edge Map", &cc.lowThreshold, cc.max_lowThreshold, cc.callback, (void*)(&cc));
-        createTrackbar( "Min Threshold:", "Edge Map", &cc.lowThreshold, cc.max_lowThreshold);
+        // createTrackbar( "Min color:", "Edge Map", &cc.low_c[0], cc.max_lowThreshold);
+        rep(i,0,3){
+          std::string low =cc.HSV[i] + "_low", high=cc.HSV[i] + "_high";
+          createTrackbar(low, cc.window_name, &cc.low_c[i], cc.max_c[i]);
+          createTrackbar(high, cc.window_name, &cc.high_c[i], cc.max_c[i]);
+        }
+        createTrackbar( "Min Threshold:", cc.window_name, &cc.lowThreshold, cc.max_lowThreshold);
+        cc.DrawCircle(0,0);
+        cc.MaskThreshold(0,0);
         cc.CannyThreshold(0, 0);
+        
       }
       ros::spinOnce();
       loop_rate.sleep();
