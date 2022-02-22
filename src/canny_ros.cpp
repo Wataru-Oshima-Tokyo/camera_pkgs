@@ -10,8 +10,10 @@
  #include <image_transport/image_transport.h>
  #include <cv_bridge/cv_bridge.h>
  #include <sensor_msgs/image_encodings.h>
+ #include "std_msgs/String.h"
  #include "roscpp_tutorials/TwoInts.h"
  #include <vector>
+ #include <camera_pkg/Coordinate.h>
  #include <map>
 // #include <camera_pkg/Camera_CV.h>
  #define IMG_HEIGHT (240)
@@ -20,6 +22,10 @@
  #define fore(i,a) for(auto &i:a)
  using namespace std;
  using namespace cv;
+
+
+struct timespec start, stop;
+double fstart, fstop;
 
 class CAMERA_CV{
   public:
@@ -41,13 +47,14 @@ class CAMERA_CV{
     void CannyThreshold(int, void*);
     void MaskThreshold(int, void*);
     void DrawCircle(int, void*);
+    void mouseEvent(int event, int x, int y, int flags, void* userdata);
     const std::string OPENCV_WINDOW = "Image window";
     virtual bool clbk_start_service(roscpp_tutorials::TwoInts::Request& req,roscpp_tutorials::TwoInts::Response& res);
     virtual bool clbk_stop_service(roscpp_tutorials::TwoInts::Request& req, roscpp_tutorials::TwoInts::Response& res);
     virtual void image_callback(const sensor_msgs::ImageConstPtr&);
     // Topics
     const std::string IMAGE_TOPIC = "/camera/color/image_raw";
-    const std::string PUBLISH_TOPIC = "/image_converter/output_video";
+    const std::string PUBLISH_TOPIC = "/camera_pkg/coordinate";
     const std::string SERVICE_START = "/canny/start";
     const std::string SERVICE_STOP = "/canny/stop";
     CAMERA_CV();
@@ -56,9 +63,9 @@ class CAMERA_CV{
     const int max_lowThreshold = 100;
     const std::string window_name = "Edge Map";
     // static constexpr char* window_name = "Edge Map";
-    static void callback(int pos, void *userptr) { // because trace
-        CAMERA_CV *foo = (CAMERA_CV*)userptr; // cast user data back to "this"
-        //foo->CannyThreshold(pos, userptr);
+    static void callback(int event, int x, int y, int flags, void* userdata) { // because the mouse call back cannot accept non-static func
+        CAMERA_CV *foo = (CAMERA_CV*)userdata; // cast user data back to "this"
+        foo->mouseEvent(event, x, y, flags, userdata);
     }
 private:
     bool RUN = false;
@@ -89,24 +96,7 @@ void CAMERA_CV::DrawCircle(int, void*){
       cv::circle(src, cv::Point(x_array[i],y_array[j]), 20, cv::Scalar(153, 255, 255), FILLED);
     }
   }
-  // cv::circle(src_hsv, cv::Point(40,40), 20, cv::Scalar(0, 0, 255), 2);
-  // cv::circle(src_hsv, cv::Point(x/2,40), 20, cv::Scalar(0, 0, 255));
-  // cv::circle(src_hsv, cv::Point(x-40,40), 20, cv::Scalar(0, 0, 255));
 
-  // //middle
-  // cv::circle(src_hsv, cv::Point(40,y/2), 20, cv::Scalar(0, 0, 255));
-  // cv::circle(src_hsv, cv::Point(x/2,y/2), 20, cv::Scalar(0, 0, 255), FILLED);
-  // cv::circle(src_hsv, cv::Point(x-40,y/2), 20, cv::Scalar(0, 0, 255));
-  
-  // //botton
-  // cv::circle(src_hsv, cv::Point(40,y-40), 20, cv::Scalar(0, 0, 255));
-  // cv::circle(src_hsv, cv::Point(x/2,y-40), 20, cv::Scalar(0, 0, 255));
-  // cv::circle(src_hsv, cv::Point(x-40,y-40), 20, cv::Scalar(0, 0, 255));
-  // rep(i,,0, 9){
-
-  // }
-    imshow( "src", src);
-    waitKey(3);
 }
 
 void CAMERA_CV::MaskThreshold(int, void*){
@@ -199,6 +189,38 @@ void CAMERA_CV::CannyThreshold(int, void*)
 
 
 
+void CAMERA_CV::mouseEvent(int event, int x, int y, int flags, void* userdata)
+{
+     ros::Publisher* _pub = (ros::Publisher*)userdata;
+    //  _cc.pub = _cc.nh.advertise<std_msgs::String>(_cc.PUBLISH_TOPIC, 1000);
+     camera_pkg::Coordinate coordinate;
+     std::string temp="";
+     if  ( event == EVENT_LBUTTONDOWN )
+     {
+          cout << "Left button of the mouse is clicked - position (" << x << ", " << y << ")" << endl;
+          temp = "L";
+           
+     }
+     else if  ( event == EVENT_RBUTTONDOWN )
+     {
+          cout << "Right button of the mouse is clicked - position (" << x << ", " << y << ")" << endl;
+          temp = "R";
+     }
+     else if  ( event == EVENT_MBUTTONDOWN )
+     {
+          cout << "Middle button of the mouse is clicked - position (" << x << ", " << y << ")" << endl;
+          temp = "M";
+     }
+     if(!temp.empty()){
+        coordinate.t = temp;
+        coordinate.x = x;
+        coordinate.y = y;
+        _pub->publish(coordinate);
+     }
+
+}
+
+
 int main( int argc, char** argv )
 {
 
@@ -210,6 +232,8 @@ int main( int argc, char** argv )
    cc.sub = cc.nh.subscribe(cc.IMAGE_TOPIC, 1000, &CAMERA_CV::image_callback, &cc);
    cc.start = cc.nh.advertiseService(cc.SERVICE_START, &CAMERA_CV::clbk_start_service, &cc);
    cc.stop = cc.nh.advertiseService(cc.SERVICE_STOP, &CAMERA_CV::clbk_stop_service, &cc);
+   cc.pub = cc.nh.advertise<camera_pkg::Coordinate>(cc.PUBLISH_TOPIC, 1000);
+
    while(ros::ok()){
       // cout << cc.getRun() << endl;
       if(cc.getRun()){
@@ -221,10 +245,23 @@ int main( int argc, char** argv )
           createTrackbar(high, cc.window_name, &cc.high_c[i], cc.max_c[i]);
         }
         createTrackbar( "Min Threshold:", cc.window_name, &cc.lowThreshold, cc.max_lowThreshold);
+        clock_gettime(CLOCK_MONOTONIC, &start); fstart=(double)start.tv_sec;// + ((double)start.tv_nsec/1000000000.0);
         cc.DrawCircle(0,0);
         cc.MaskThreshold(0,0);
         cc.CannyThreshold(0, 0);
-        
+        setMouseCallback("src", cc.callback, &cc.pub);
+        clock_gettime(CLOCK_MONOTONIC, &stop); fstop=(int)stop.tv_sec;// + ((double)stop.tv_nsec/1000000000.0);
+        std::string fps= "FPS: " + std::to_string(1/(fstop-fstart));
+
+        putText(cc.src, //target image
+        fps, //text
+        Point(10, 30), //top-left position
+        FONT_HERSHEY_DUPLEX,
+        1.0,
+        Scalar(118, 185, 0), //font color
+        2);
+        imshow( "src", cc.src);
+        waitKey(3);
       }
       ros::spinOnce();
       loop_rate.sleep();
