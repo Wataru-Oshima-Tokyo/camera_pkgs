@@ -69,7 +69,7 @@ class CAMERA_CV{
     // static constexpr char* window_name = "Edge Map";
     static void callback(int event, int x, int y, int flags, void* userdata) { // because the mouse call back cannot accept non-static func
         CAMERA_CV *foo = (CAMERA_CV*)userdata; // cast user data back to "this"
-        foo->mouseEvent(event, x, y, flags, userdata);
+        foo->mouseEvent(event, x, y, flags, foo);
     }
 private:
     bool RUN = false;
@@ -132,22 +132,6 @@ void CAMERA_CV::MaskThreshold(int, void*){
    
    
    cv::inRange(src_hsv, cv::Scalar(low_c[0],low_c[1],low_c[1]), cv::Scalar(high_c[0],high_c[1],high_c[2]),mask);
-  //  //resize the image
-  // //  cv::resize(mask, resized, cv::Size(), fwidth/3, fheight/3);
-  // //  int search_top = fheight/4*3; 
-  // //  int search_bot = search_top+20;//focus on just the front of cam <- need to know only 20 rows
-  // //  mask[0:search_top, 0:w] =0;
-  // //  mask[search_bot:fheight, 0:w] = 0;
-  // //  for(int i=1; i<mask.rows-1; i++){
-  // //    for(int j=1; j<mask.cols-1; j++){
-  // //      cv::Vec3b &color = mask.at<cv::Vec3b>(cv::Point(j,i));
-  // //      if(j< search_top || (j>search_bot && j<fheight)){
-  // //         color.val[0] =0;
-  // //         color.val[1] =0;
-  // //         color.val[2] =0;
-  // //      }
-  // //    }
-  // //  }
    
    cv::Moments M = cv::moments(mask); // get the center of gravity
    if (M.m00 >0){
@@ -219,7 +203,8 @@ void CAMERA_CV::CannyThreshold(int, void*)
 
 void CAMERA_CV::mouseEvent(int event, int x, int y, int flags, void* userdata)
 {
-     ros::Publisher* _pub = (ros::Publisher*)userdata;
+     CAMERA_CV *cc = (CAMERA_CV*)userdata;
+    //  ros::Publisher* _pub = cc->pub;
     //  _cc.pub = _cc.nh.advertise<std_msgs::String>(_cc.PUBLISH_TOPIC, 1000);
      camera_pkg::Coordinate coordinate;
     //  Mat* _depth = &depth;
@@ -228,7 +213,7 @@ void CAMERA_CV::mouseEvent(int event, int x, int y, int flags, void* userdata)
      if  ( event == EVENT_LBUTTONDOWN )
      {
           //I got the erro for getting the belwo one I guess because this function is dervied from the 
-          double z = depth->at<u_int16_t>(20,20);
+          z = cc->depth->at<u_int16_t>(x,y);
           cout << "Left button of the mouse is clicked - position (" << x << ", " << y << ", " << z << ")" << endl;
           temp = "L";
           
@@ -249,7 +234,7 @@ void CAMERA_CV::mouseEvent(int event, int x, int y, int flags, void* userdata)
         coordinate.t = temp;
         coordinate.x = x;
         coordinate.y = y;
-        _pub->publish(coordinate);
+        cc->_pub->publish(coordinate);
      }
 
 }
@@ -284,7 +269,7 @@ int main( int argc, char** argv )
         cc.DrawCircle(0,0);
         cc.MaskThreshold(0,0);
         cc.CannyThreshold(0, 0);
-        setMouseCallback("src", cc.callback, &cc.pub);
+        setMouseCallback("src", cc.callback, &cc);
         clock_gettime(CLOCK_MONOTONIC, &stop); fstop=(int)stop.tv_sec;// + ((double)stop.tv_nsec/1000000000.0);
         std::string fps= "FPS: " + std::to_string(1/(fstop-fstart));
 
