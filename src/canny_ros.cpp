@@ -30,8 +30,9 @@ double fstart, fstop;
 class CAMERA_CV{
   public:
     Mat src, src_gray, src_hsv, dst, detected_edges, mask;
+    Mat* depth;
     ros::Publisher pub;
-    ros::Subscriber sub;
+    ros::Subscriber image_sub, depth_sub;
     ros::NodeHandle nh;
     ros::ServiceServer start, stop;
     int lowThreshold;
@@ -52,8 +53,11 @@ class CAMERA_CV{
     virtual bool clbk_start_service(roscpp_tutorials::TwoInts::Request& req,roscpp_tutorials::TwoInts::Response& res);
     virtual bool clbk_stop_service(roscpp_tutorials::TwoInts::Request& req, roscpp_tutorials::TwoInts::Response& res);
     virtual void image_callback(const sensor_msgs::ImageConstPtr&);
+    virtual void depth_callback(const sensor_msgs::ImageConstPtr&);
+
     // Topics
     const std::string IMAGE_TOPIC = "/camera/color/image_raw";
+    const std::string DEPTH_TOPIC = "/camera/aligned_depth_to_color/image_raw";
     const std::string PUBLISH_TOPIC = "/camera_pkg/coordinate";
     const std::string SERVICE_START = "/canny/start";
     const std::string SERVICE_STOP = "/canny/stop";
@@ -84,6 +88,30 @@ bool CAMERA_CV::getRun(){
   return RUN;
 }
 
+
+void CAMERA_CV::depth_callback(const sensor_msgs::ImageConstPtr& msg){
+    std_msgs::Header msg_header = msg->header;
+    std::string frame_id = msg_header.frame_id.c_str();
+    // ROS_INFO_STREAM("New Image from " << frame_id);
+
+    cv_bridge::CvImagePtr cv_ptr;
+    try
+    {
+        cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::TYPE_16UC1);
+    }
+    catch (cv_bridge::Exception& e)
+    {
+        ROS_ERROR("cv_bridge exception: %s", e.what());
+        return;
+    }
+
+    depth = &cv_ptr->image;
+    // double distance =
+    cout <<  depth->at<u_int16_t>(20,20) <<endl;
+
+
+}
+
 void CAMERA_CV::DrawCircle(int, void*){
   int x = src.cols, y = src.rows;
   int x_array[3] = {40,x/2, x-40};
@@ -104,22 +132,22 @@ void CAMERA_CV::MaskThreshold(int, void*){
    
    
    cv::inRange(src_hsv, cv::Scalar(low_c[0],low_c[1],low_c[1]), cv::Scalar(high_c[0],high_c[1],high_c[2]),mask);
-   //resize the image
-  //  cv::resize(mask, resized, cv::Size(), fwidth/3, fheight/3);
-  //  int search_top = fheight/4*3; 
-  //  int search_bot = search_top+20;//focus on just the front of cam <- need to know only 20 rows
-  //  mask[0:search_top, 0:w] =0;
-  //  mask[search_bot:fheight, 0:w] = 0;
-  //  for(int i=1; i<mask.rows-1; i++){
-  //    for(int j=1; j<mask.cols-1; j++){
-  //      cv::Vec3b &color = mask.at<cv::Vec3b>(cv::Point(j,i));
-  //      if(j< search_top || (j>search_bot && j<fheight)){
-  //         color.val[0] =0;
-  //         color.val[1] =0;
-  //         color.val[2] =0;
-  //      }
-  //    }
-  //  }
+  //  //resize the image
+  // //  cv::resize(mask, resized, cv::Size(), fwidth/3, fheight/3);
+  // //  int search_top = fheight/4*3; 
+  // //  int search_bot = search_top+20;//focus on just the front of cam <- need to know only 20 rows
+  // //  mask[0:search_top, 0:w] =0;
+  // //  mask[search_bot:fheight, 0:w] = 0;
+  // //  for(int i=1; i<mask.rows-1; i++){
+  // //    for(int j=1; j<mask.cols-1; j++){
+  // //      cv::Vec3b &color = mask.at<cv::Vec3b>(cv::Point(j,i));
+  // //      if(j< search_top || (j>search_bot && j<fheight)){
+  // //         color.val[0] =0;
+  // //         color.val[1] =0;
+  // //         color.val[2] =0;
+  // //      }
+  // //    }
+  // //  }
    
    cv::Moments M = cv::moments(mask); // get the center of gravity
    if (M.m00 >0){
@@ -128,8 +156,8 @@ void CAMERA_CV::MaskThreshold(int, void*){
       
       cv::circle(src, cv::Point(cx,cy), 5, cv::Scalar(0, 0, 255));
    }
-  //  imshow("masked", src);
-  //  waitKey(3);
+  // //  imshow("masked", src);
+  // //  waitKey(3);
 }
 
 
@@ -194,11 +222,17 @@ void CAMERA_CV::mouseEvent(int event, int x, int y, int flags, void* userdata)
      ros::Publisher* _pub = (ros::Publisher*)userdata;
     //  _cc.pub = _cc.nh.advertise<std_msgs::String>(_cc.PUBLISH_TOPIC, 1000);
      camera_pkg::Coordinate coordinate;
+    //  Mat* _depth = &depth;
      std::string temp="";
+     double z=0.0;
      if  ( event == EVENT_LBUTTONDOWN )
      {
-          cout << "Left button of the mouse is clicked - position (" << x << ", " << y << ")" << endl;
+          //I got the erro for getting the belwo one I guess because this function is dervied from the 
+          double z = depth->at<u_int16_t>(20,20);
+          cout << "Left button of the mouse is clicked - position (" << x << ", " << y << ", " << z << ")" << endl;
           temp = "L";
+          
+          // cout << z << endl;
            
      }
      else if  ( event == EVENT_RBUTTONDOWN )
@@ -229,7 +263,8 @@ int main( int argc, char** argv )
    // Initialize the ROS Node "roscpp_example"
    ros::Rate loop_rate(100);
    
-   cc.sub = cc.nh.subscribe(cc.IMAGE_TOPIC, 1000, &CAMERA_CV::image_callback, &cc);
+   cc.image_sub = cc.nh.subscribe(cc.IMAGE_TOPIC, 1000, &CAMERA_CV::image_callback, &cc);
+   cc.depth_sub = cc.nh.subscribe(cc.DEPTH_TOPIC, 1000, &CAMERA_CV::depth_callback, &cc);
    cc.start = cc.nh.advertiseService(cc.SERVICE_START, &CAMERA_CV::clbk_start_service, &cc);
    cc.stop = cc.nh.advertiseService(cc.SERVICE_STOP, &CAMERA_CV::clbk_stop_service, &cc);
    cc.pub = cc.nh.advertise<camera_pkg::Coordinate>(cc.PUBLISH_TOPIC, 1000);
