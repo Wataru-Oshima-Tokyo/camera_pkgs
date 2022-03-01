@@ -42,13 +42,14 @@ class CAMERA_CV{
     int high_c[3] = {0, 0, 0};
     const int max_c[3] = {179, 255, 255};
     std::string HSV[3] = {"H","S","V"};
-
+    Mat getDepth();
     // int _MIN_DH =15, _MIN_DS = 60, _MIN_DV = 60;
     // int _MAX_DH = 15, _MAX_DS = 150, _MAX_DV = 60;
     void CannyThreshold(int, void*);
     void MaskThreshold(int, void*);
     void DrawCircle(int, void*);
     void mouseEvent(int event, int x, int y, int flags, void* userdata);
+    Mat getDepth();
     const std::string OPENCV_WINDOW = "Image window";
     virtual bool clbk_start_service(roscpp_tutorials::TwoInts::Request& req,roscpp_tutorials::TwoInts::Response& res);
     virtual bool clbk_stop_service(roscpp_tutorials::TwoInts::Request& req, roscpp_tutorials::TwoInts::Response& res);
@@ -144,7 +145,10 @@ void CAMERA_CV::MaskThreshold(int, void*){
   // //  waitKey(3);
 }
 
-
+Mat CAMERA_CV::getDepth()
+{
+  return depth;
+}
 void CAMERA_CV::CannyThreshold(int, void*)
 {
     // cout << "start canny threashold" <<endl;
