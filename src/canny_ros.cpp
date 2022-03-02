@@ -59,9 +59,10 @@ class CAMERA_CV{
     // Topics
     const std::string IMAGE_TOPIC = "/camera/color/image_raw";
     const std::string DEPTH_TOPIC = "/camera/aligned_depth_to_color/image_raw";
+    // const std::string DEPTH_TOPIC = "/camera/depth/color/image_raw";
     const std::string PUBLISH_TOPIC = "/camera_pkg/coordinate";
-    const std::string SERVICE_START = "/canny/start";
-    const std::string SERVICE_STOP = "/canny/stop";
+    const std::string SERVICE_START = "/imshow/start";
+    const std::string SERVICE_STOP = "/imshow/stop";
     CAMERA_CV();
     ~CAMERA_CV();
     bool getRun(); 
@@ -83,6 +84,7 @@ private:
 CAMERA_CV::CAMERA_CV(){
   lowThreshold = 6;
 };
+
 CAMERA_CV::~CAMERA_CV(){};
 
 bool CAMERA_CV::getRun(){
@@ -93,28 +95,7 @@ Mat CAMERA_CV::_getDepth(){
     return depth;
 }
 
-void CAMERA_CV::depth_callback(const sensor_msgs::ImageConstPtr& msg){
-    std_msgs::Header msg_header = msg->header;
-    std::string frame_id = msg_header.frame_id.c_str();
-    // ROS_INFO_STREAM("New Image from " << frame_id);
 
-    cv_bridge::CvImagePtr cv_ptr;
-    try
-    {
-        cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::TYPE_16UC1);
-    }
-    catch (cv_bridge::Exception& e)
-    {
-        ROS_ERROR("cv_bridge exception: %s", e.what());
-        return;
-    }
-
-    depth = cv_ptr->image;
-    // double distance =
-    cout <<  depth.at<u_int16_t>(20,20) <<endl;
-
-
-}
 
 void CAMERA_CV::DrawCircle(int, void*){
   int x = src.cols, y = src.rows;
@@ -180,6 +161,32 @@ void CAMERA_CV::CannyThreshold(int, void*)
    return RUN;
  }
 
+
+
+void CAMERA_CV::depth_callback(const sensor_msgs::ImageConstPtr& msg){
+    std_msgs::Header msg_header = msg->header;
+    std::string frame_id = msg_header.frame_id.c_str();
+    // ROS_INFO_STREAM("New Image from " << frame_id);
+
+    cv_bridge::CvImagePtr cv_ptr;
+    try
+    {
+        cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::TYPE_16UC1);
+        // cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
+
+    }
+    catch (cv_bridge::Exception& e)
+    {
+        ROS_ERROR("cv_bridge exception: %s", e.what());
+        return;
+    }
+
+    depth = cv_ptr->image;
+    // double distance =
+    // imshow("depth", depth);
+
+}
+
  void CAMERA_CV::image_callback(const sensor_msgs::ImageConstPtr& msg){
     std_msgs::Header msg_header = msg->header;
     std::string frame_id = msg_header.frame_id.c_str();
@@ -220,7 +227,8 @@ void mouseEvent(int event, int x, int y, int flags, void* userdata)
      if  ( event == EVENT_LBUTTONDOWN )
      {
           //I got the erro for getting the belwo one I guess because this function is dervied from the 
-          z = cc->depth.at<u_int16_t>(x,y);
+          // z = cc->depth.at<u_int16_t>(x,y);
+          z = cc->depth.at<uint16_t>((uint16_t)x,(uint16_t)y);
           cout << "Left button of the mouse is clicked - position (" << x << ", " << y << ", " << z << ")" << endl;
           temp = "L";
           
@@ -238,10 +246,16 @@ void mouseEvent(int event, int x, int y, int flags, void* userdata)
           temp = "M";
      }
      if(!temp.empty()){
-        coordinate.t = temp;
-        coordinate.x = x;
-        coordinate.y = y;
-        cc->pub.publish(coordinate);
+       if(z>0 && z <1200){
+          coordinate.t = temp;
+          coordinate.x = x;
+          coordinate.y = y;
+          coordinate.z = z;
+          cc->pub.publish(coordinate);
+       }else{
+         cout << "z value is not valid please try again." << endl;
+       }
+
      }
 
 }
@@ -253,7 +267,7 @@ int main( int argc, char** argv )
    ros::init(argc, argv, "roscpp_example");
    CAMERA_CV cc;
    // Initialize the ROS Node "roscpp_example"
-   ros::Rate loop_rate(100);
+   ros::Rate loop_rate(20);
    
    cc.image_sub = cc.nh.subscribe(cc.IMAGE_TOPIC, 1000, &CAMERA_CV::image_callback, &cc);
    cc.depth_sub = cc.nh.subscribe(cc.DEPTH_TOPIC, 1000, &CAMERA_CV::depth_callback, &cc);
@@ -266,18 +280,18 @@ int main( int argc, char** argv )
       if(cc.getRun()){
         // createTrackbar( "Min Threshold:", "Edge Map", &cc.lowThreshold, cc.max_lowThreshold, cc.callback, (void*)(&cc));
         // createTrackbar( "Min color:", "Edge Map", &cc.low_c[0], cc.max_lowThreshold);
-        rep(i,0,3){
-          std::string low =cc.HSV[i] + "_low", high=cc.HSV[i] + "_high";
-          createTrackbar(low, cc.window_name, &cc.low_c[i], cc.max_c[i]);
-          createTrackbar(high, cc.window_name, &cc.high_c[i], cc.max_c[i]);
-        }
-        createTrackbar( "Min Threshold:", cc.window_name, &cc.lowThreshold, cc.max_lowThreshold);
-        clock_gettime(CLOCK_MONOTONIC, &start); fstart=(double)start.tv_sec;// + ((double)start.tv_nsec/1000000000.0);
+        // rep(i,0,3){
+        //   std::string low =cc.HSV[i] + "_low", high=cc.HSV[i] + "_high";
+        //   createTrackbar(low, cc.window_name, &cc.low_c[i], cc.max_c[i]);
+        //   createTrackbar(high, cc.window_name, &cc.high_c[i], cc.max_c[i]);
+        // }
+        // createTrackbar( "Min Threshold:", cc.window_name, &cc.lowThreshold, cc.max_lowThreshold);
+        clock_gettime(CLOCK_MONOTONIC, &start); fstart=(double)start.tv_sec + ((double)start.tv_nsec/1000000000.0);
         cc.DrawCircle(0,0);
         cc.MaskThreshold(0,0);
-        cc.CannyThreshold(0, 0);
+        // cc.CannyThreshold(0, 0);
         setMouseCallback("src", mouseEvent, &cc);
-        clock_gettime(CLOCK_MONOTONIC, &stop); fstop=(int)stop.tv_sec;// + ((double)stop.tv_nsec/1000000000.0);
+        clock_gettime(CLOCK_MONOTONIC, &stop); fstop=(double)stop.tv_sec + ((double)stop.tv_nsec/1000000000.0);
         std::string fps= "FPS: " + std::to_string(1/(fstop-fstart));
 
         putText(cc.src, //target image
