@@ -30,7 +30,7 @@ double fstart, fstop;
 class CAMERA_CV{
   public:
     Mat src, src_gray, src_hsv, dst, detected_edges, mask;
-    Mat* depth;
+    Mat depth;
     ros::Publisher pub;
     ros::Subscriber image_sub, depth_sub;
     ros::NodeHandle nh;
@@ -42,20 +42,20 @@ class CAMERA_CV{
     int high_c[3] = {0, 0, 0};
     const int max_c[3] = {179, 255, 255};
     std::string HSV[3] = {"H","S","V"};
-    Mat getDepth();
+    Mat _getDepth();
     // int _MIN_DH =15, _MIN_DS = 60, _MIN_DV = 60;
     // int _MAX_DH = 15, _MAX_DS = 150, _MAX_DV = 60;
     void CannyThreshold(int, void*);
     void MaskThreshold(int, void*);
     void DrawCircle(int, void*);
     void mouseEvent(int event, int x, int y, int flags, void* userdata);
-    Mat getDepth();
+    // Mat getDepth();
     const std::string OPENCV_WINDOW = "Image window";
     virtual bool clbk_start_service(roscpp_tutorials::TwoInts::Request& req,roscpp_tutorials::TwoInts::Response& res);
     virtual bool clbk_stop_service(roscpp_tutorials::TwoInts::Request& req, roscpp_tutorials::TwoInts::Response& res);
     virtual void image_callback(const sensor_msgs::ImageConstPtr&);
     virtual void depth_callback(const sensor_msgs::ImageConstPtr&);
-
+    Mat getDepth();
     // Topics
     const std::string IMAGE_TOPIC = "/camera/color/image_raw";
     const std::string DEPTH_TOPIC = "/camera/aligned_depth_to_color/image_raw";
@@ -89,6 +89,9 @@ bool CAMERA_CV::getRun(){
   return RUN;
 }
 
+Mat CAMERA_CV::_getDepth(){
+    return depth;
+}
 
 void CAMERA_CV::depth_callback(const sensor_msgs::ImageConstPtr& msg){
     std_msgs::Header msg_header = msg->header;
@@ -106,9 +109,9 @@ void CAMERA_CV::depth_callback(const sensor_msgs::ImageConstPtr& msg){
         return;
     }
 
-    depth = &cv_ptr->image;
+    depth = cv_ptr->image;
     // double distance =
-    cout <<  depth->at<u_int16_t>(20,20) <<endl;
+    cout <<  depth.at<u_int16_t>(20,20) <<endl;
 
 
 }
@@ -130,8 +133,6 @@ void CAMERA_CV::DrawCircle(int, void*){
 
 void CAMERA_CV::MaskThreshold(int, void*){
 
-   
-   
    cv::inRange(src_hsv, cv::Scalar(low_c[0],low_c[1],low_c[1]), cv::Scalar(high_c[0],high_c[1],high_c[2]),mask);
    
    cv::Moments M = cv::moments(mask); // get the center of gravity
@@ -145,10 +146,12 @@ void CAMERA_CV::MaskThreshold(int, void*){
   // //  waitKey(3);
 }
 
-Mat CAMERA_CV::getDepth()
-{
-  return depth;
-}
+// Mat CAMERA_CV::getDepth()
+// {
+//   return depth;
+// }
+
+
 void CAMERA_CV::CannyThreshold(int, void*)
 {
     // cout << "start canny threashold" <<endl;
@@ -205,7 +208,7 @@ void CAMERA_CV::CannyThreshold(int, void*)
 
 
 
-void CAMERA_CV::mouseEvent(int event, int x, int y, int flags, void* userdata)
+void mouseEvent(int event, int x, int y, int flags, void* userdata)
 {
      CAMERA_CV *cc = (CAMERA_CV*)userdata;
     //  ros::Publisher* _pub = cc->pub;
@@ -217,7 +220,7 @@ void CAMERA_CV::mouseEvent(int event, int x, int y, int flags, void* userdata)
      if  ( event == EVENT_LBUTTONDOWN )
      {
           //I got the erro for getting the belwo one I guess because this function is dervied from the 
-          z = cc->depth->at<u_int16_t>(x,y);
+          z = cc->depth.at<u_int16_t>(x,y);
           cout << "Left button of the mouse is clicked - position (" << x << ", " << y << ", " << z << ")" << endl;
           temp = "L";
           
@@ -238,7 +241,7 @@ void CAMERA_CV::mouseEvent(int event, int x, int y, int flags, void* userdata)
         coordinate.t = temp;
         coordinate.x = x;
         coordinate.y = y;
-        cc->_pub->publish(coordinate);
+        cc->pub.publish(coordinate);
      }
 
 }
@@ -273,7 +276,7 @@ int main( int argc, char** argv )
         cc.DrawCircle(0,0);
         cc.MaskThreshold(0,0);
         cc.CannyThreshold(0, 0);
-        setMouseCallback("src", cc.callback, &cc);
+        setMouseCallback("src", mouseEvent, &cc);
         clock_gettime(CLOCK_MONOTONIC, &stop); fstop=(int)stop.tv_sec;// + ((double)stop.tv_nsec/1000000000.0);
         std::string fps= "FPS: " + std::to_string(1/(fstop-fstart));
 
