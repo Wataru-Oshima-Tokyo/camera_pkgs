@@ -224,11 +224,12 @@ void mouseEvent(int event, int x, int y, int flags, void* userdata)
     //  Mat* _depth = &depth;
      std::string temp="";
      double z=0.0;
+     z = cc->depth.at<uint16_t>((uint16_t)y,(uint16_t)x);
      if  ( event == EVENT_LBUTTONDOWN )
      {
           //I got the erro for getting the belwo one I guess because this function is dervied from the 
           // z = cc->depth.at<u_int16_t>(x,y);
-          z = cc->depth.at<uint16_t>((uint16_t)x,(uint16_t)y);
+          
           cout << "Left button of the mouse is clicked - position (" << x << ", " << y << ", " << z << ")" << endl;
           temp = "L";
           
@@ -237,12 +238,12 @@ void mouseEvent(int event, int x, int y, int flags, void* userdata)
      }
      else if  ( event == EVENT_RBUTTONDOWN )
      {
-          cout << "Right button of the mouse is clicked - position (" << x << ", " << y << ")" << endl;
+          cout << "Right button of the mouse is clicked - position (" << x << ", " << y << ", " << z << ")" << endl;
           temp = "R";
      }
      else if  ( event == EVENT_MBUTTONDOWN )
      {
-          cout << "Middle button of the mouse is clicked - position (" << x << ", " << y << ")" << endl;
+          cout << "Middle button of the mouse is clicked - position (" << x << ", " << y << ", " << z << ")" << endl;
           temp = "M";
      }
      if(!temp.empty()){
