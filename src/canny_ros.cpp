@@ -11,10 +11,11 @@
  #include <cv_bridge/cv_bridge.h>
  #include <sensor_msgs/image_encodings.h>
  #include "std_msgs/String.h"
- #include "roscpp_tutorials/TwoInts.h"
+ #include "std_srvs/Empty.h"
  #include <vector>
  #include <camera_pkg/Coordinate.h>
  #include <map>
+
 // #include <camera_pkg/Camera_CV.h>
  #define IMG_HEIGHT (240)
  #define IMG_WIDTH (320)
@@ -34,7 +35,8 @@ class CAMERA_CV{
     ros::Publisher pub;
     ros::Subscriber image_sub, depth_sub;
     ros::NodeHandle nh;
-    ros::ServiceServer start, stop;
+    ros::ServiceServer imshow_start, imshow_stop;
+    ros::ServiceClient calibration_start, calibration_stop;
     int lowThreshold;
     // int low_c[3] = {17, 123, 121};
     // int high_c[3] ={37, 143, 201};
@@ -42,7 +44,6 @@ class CAMERA_CV{
     int high_c[3] = {0, 0, 0};
     const int max_c[3] = {179, 255, 255};
     std::string HSV[3] = {"H","S","V"};
-    Mat _getDepth();
     // int _MIN_DH =15, _MIN_DS = 60, _MIN_DV = 60;
     // int _MAX_DH = 15, _MAX_DS = 150, _MAX_DV = 60;
     void CannyThreshold(int, void*);
@@ -51,18 +52,19 @@ class CAMERA_CV{
     void mouseEvent(int event, int x, int y, int flags, void* userdata);
     // Mat getDepth();
     const std::string OPENCV_WINDOW = "Image window";
-    virtual bool clbk_start_service(roscpp_tutorials::TwoInts::Request& req,roscpp_tutorials::TwoInts::Response& res);
-    virtual bool clbk_stop_service(roscpp_tutorials::TwoInts::Request& req, roscpp_tutorials::TwoInts::Response& res);
+    virtual bool calibration_start_service(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);
+    virtual bool calibration_stop_service(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);
     virtual void image_callback(const sensor_msgs::ImageConstPtr&);
     virtual void depth_callback(const sensor_msgs::ImageConstPtr&);
-    Mat getDepth();
     // Topics
     const std::string IMAGE_TOPIC = "/camera/color/image_raw";
     const std::string DEPTH_TOPIC = "/camera/aligned_depth_to_color/image_raw";
     // const std::string DEPTH_TOPIC = "/camera/depth/color/image_raw";
     const std::string PUBLISH_TOPIC = "/camera_pkg/coordinate";
-    const std::string SERVICE_START = "/imshow/start";
-    const std::string SERVICE_STOP = "/imshow/stop";
+    const std::string IMSHOW_SERVICE_START = "/imshow/start";
+    const std::string IMSHOW_SERVICE_STOP = "/imshow/stop";
+    const std::string CALIB_SERVICE_START = "/calibration/start";
+    const std::string CALIB_SERVICE_STOP = "/calibration/stop";
     CAMERA_CV();
     ~CAMERA_CV();
     bool getRun(); 
@@ -75,6 +77,8 @@ class CAMERA_CV{
     // }
 private:
     bool RUN = false;
+    bool start_call = true;
+    bool stop_call = false;
     const int ratio = 3;
     //set the kernel size 3
     const int kernel_size = 3;
@@ -88,25 +92,39 @@ CAMERA_CV::CAMERA_CV(){
 CAMERA_CV::~CAMERA_CV(){};
 
 bool CAMERA_CV::getRun(){
+  std_srvs::Empty _emp;
+  if(RUN && start_call){
+    calibration_start.call(_emp);
+    start_call = false;
+    stop_call = true;
+  }else if(!RUN && stop_call) {
+    calibration_stop.call(_emp);
+    start_call = true;
+    stop_call = false;
+  }
+    
   return RUN;
 }
 
-Mat CAMERA_CV::_getDepth(){
-    return depth;
-}
 
 
 
 void CAMERA_CV::DrawCircle(int, void*){
   int x = src.cols, y = src.rows;
-  int x_array[3] = {40,x/2, x-40};
-  int y_array[3] = {40, y/2,y-40};
+  vector<int> x_array = {x/2-70, x/2, x/2+70, x/2+140};
+  vector<int> y_array = {y/2-140, y/2-70, y/2, y/2+70};
   //draw circle 9;
   //top
-  rep(i,0,3){
-    rep(j,0,3){
-      cv::circle(src_hsv, cv::Point(x_array[i],y_array[j]), 20, cv::Scalar(153, 255, 255), FILLED);
-      cv::circle(src, cv::Point(x_array[i],y_array[j]), 20, cv::Scalar(153, 255, 255), FILLED);
+  rep(i,0,x_array.size()){
+    rep(j,0,y_array.size()){
+      int _radius =13;
+      int _saturation1 = 153;
+      int _saturation2 =0;
+      if(j%2==0 && i%2==0){ _radius =20;_saturation1 = 100; _saturation2 =100;} 
+      else if(j%2==0) {_radius = 17; _saturation1 = 0; _saturation2 =150;}
+      else if(i%2==0) {_radius = 25; _saturation1 = 200; _saturation2 =10;}
+      // cv::circle(src_hsv, cv::Point(x_array[i],y_array[j]), 15, cv::Scalar(153, 0, 255), 5);
+      cv::circle(src, cv::Point(x_array[i],y_array[j]), _radius, cv::Scalar(_saturation1, _saturation2, 255),5);
     }
   }
 
@@ -127,40 +145,34 @@ void CAMERA_CV::MaskThreshold(int, void*){
   // //  waitKey(3);
 }
 
-// Mat CAMERA_CV::getDepth()
+
+
+// void CAMERA_CV::CannyThreshold(int, void*)
 // {
-//   return depth;
+//     // cout << "start canny threashold" <<endl;
+//     // removeing the noise and ap since the kernel size is 3, set the size 3 by 3
+//     blur(mask, detected_edges, Size(3,3) );
+//     // //detecing an edege by Canny with the lowThreashold and maxThreshold which is 3 times thant the lower one.
+//     Canny(detected_edges, detected_edges, lowThreshold, lowThreshold*ratio, kernel_size );
+//     // //set the dist image all black so that you can put the deteceted edges on the black background
+//     dst = Scalar::all(0);
+//     // src.copyTo( dst, detected_edges);
+//     imshow( "Edge Map", detected_edges);
+//     waitKey(3);
 // }
 
-
-void CAMERA_CV::CannyThreshold(int, void*)
-{
-    // cout << "start canny threashold" <<endl;
-    // removeing the noise and ap since the kernel size is 3, set the size 3 by 3
-    blur(mask, detected_edges, Size(3,3) );
-    // //detecing an edege by Canny with the lowThreashold and maxThreshold which is 3 times thant the lower one.
-    Canny(detected_edges, detected_edges, lowThreshold, lowThreshold*ratio, kernel_size );
-    // //set the dist image all black so that you can put the deteceted edges on the black background
-    dst = Scalar::all(0);
-    // src.copyTo( dst, detected_edges);
-    imshow( "Edge Map", detected_edges);
-    waitKey(3);
-}
-
- bool CAMERA_CV::clbk_start_service(roscpp_tutorials::TwoInts::Request& req,roscpp_tutorials::TwoInts::Response& res){
-   cout << "start canny_img" << endl;
+ bool CAMERA_CV::calibration_start_service(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res){
+  //  cout << "start calibration" << endl;
    RUN = true;
    return RUN;
 
  }
 
- bool CAMERA_CV::clbk_stop_service(roscpp_tutorials::TwoInts::Request& req,roscpp_tutorials::TwoInts::Response& res){
-   cout << "stop canny_img" << endl;
+ bool CAMERA_CV::calibration_stop_service(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res){
+  //  cout << "stop calibration" << endl;
    RUN = false;
-   destroyAllWindows();
    return RUN;
  }
-
 
 
 void CAMERA_CV::depth_callback(const sensor_msgs::ImageConstPtr& msg){
@@ -182,8 +194,6 @@ void CAMERA_CV::depth_callback(const sensor_msgs::ImageConstPtr& msg){
     }
 
     depth = cv_ptr->image;
-    // double distance =
-    // imshow("depth", depth);
 
 }
 
@@ -265,49 +275,45 @@ void mouseEvent(int event, int x, int y, int flags, void* userdata)
 int main( int argc, char** argv )
 {
 
-   ros::init(argc, argv, "roscpp_example");
+   ros::init(argc, argv, "work_with_camera start");
    CAMERA_CV cc;
    // Initialize the ROS Node "roscpp_example"
    ros::Rate loop_rate(20);
    
    cc.image_sub = cc.nh.subscribe(cc.IMAGE_TOPIC, 1000, &CAMERA_CV::image_callback, &cc);
    cc.depth_sub = cc.nh.subscribe(cc.DEPTH_TOPIC, 1000, &CAMERA_CV::depth_callback, &cc);
-   cc.start = cc.nh.advertiseService(cc.SERVICE_START, &CAMERA_CV::clbk_start_service, &cc);
-   cc.stop = cc.nh.advertiseService(cc.SERVICE_STOP, &CAMERA_CV::clbk_stop_service, &cc);
+   cc.imshow_start = cc.nh.advertiseService(cc.IMSHOW_SERVICE_START, &CAMERA_CV::calibration_start_service, &cc);
+   cc.imshow_stop = cc.nh.advertiseService(cc.IMSHOW_SERVICE_STOP, &CAMERA_CV::calibration_stop_service, &cc);
+   cc.calibration_start = cc.nh.serviceClient<std_srvs::Empty>(cc.CALIB_SERVICE_START);
+   cc.calibration_stop = cc.nh.serviceClient<std_srvs::Empty>(cc.CALIB_SERVICE_STOP);
    cc.pub = cc.nh.advertise<camera_pkg::Coordinate>(cc.PUBLISH_TOPIC, 1000);
-
+   std_srvs::Empty _emp;
    while(ros::ok()){
       // cout << cc.getRun() << endl;
+       clock_gettime(CLOCK_MONOTONIC, &start); fstart=(double)start.tv_sec + ((double)start.tv_nsec/1000000000.0);
+       
       if(cc.getRun()){
-        // createTrackbar( "Min Threshold:", "Edge Map", &cc.lowThreshold, cc.max_lowThreshold, cc.callback, (void*)(&cc));
-        // createTrackbar( "Min color:", "Edge Map", &cc.low_c[0], cc.max_lowThreshold);
-        // rep(i,0,3){
-        //   std::string low =cc.HSV[i] + "_low", high=cc.HSV[i] + "_high";
-        //   createTrackbar(low, cc.window_name, &cc.low_c[i], cc.max_c[i]);
-        //   createTrackbar(high, cc.window_name, &cc.high_c[i], cc.max_c[i]);
-        // }
-        // createTrackbar( "Min Threshold:", cc.window_name, &cc.lowThreshold, cc.max_lowThreshold);
-        clock_gettime(CLOCK_MONOTONIC, &start); fstart=(double)start.tv_sec + ((double)start.tv_nsec/1000000000.0);
-        cc.DrawCircle(0,0);
-        cc.MaskThreshold(0,0);
-        // cc.CannyThreshold(0, 0);
+            cc.DrawCircle(0,0);
+      }
+      if(!cc.src.empty()){
         setMouseCallback("src", mouseEvent, &cc);
         clock_gettime(CLOCK_MONOTONIC, &stop); fstop=(double)stop.tv_sec + ((double)stop.tv_nsec/1000000000.0);
         std::string fps= "FPS: " + std::to_string(1/(fstop-fstart));
-
         putText(cc.src, //target image
-        fps, //text
-        Point(10, 30), //top-left position
-        FONT_HERSHEY_DUPLEX,
-        1.0,
-        Scalar(118, 185, 0), //font color
-        2);
+          fps, //text
+          Point(10, 30), //top-left position
+          FONT_HERSHEY_DUPLEX,
+          1.0,
+          Scalar(118, 185, 0), //font color
+          2);
+      
         imshow( "src", cc.src);
         waitKey(3);
       }
+
       ros::spinOnce();
       loop_rate.sleep();
    }
-   
+  destroyAllWindows();
   return 0;
 }
