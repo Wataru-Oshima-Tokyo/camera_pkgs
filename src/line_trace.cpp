@@ -12,6 +12,7 @@
  #include <sensor_msgs/image_encodings.h>
  #include <pthread.h>
  #include <geometry_msgs/Twist.h>
+  #include "std_srvs/Empty.h"
  #define IMG_HEIGHT (240)
  #define IMG_WIDTH (320)
  #define NUM_THREADS 4
