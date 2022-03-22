@@ -29,6 +29,7 @@ class LINETRACE{
     ros::NodeHandle nh;
     // Publisher
     ros::Publisher cmd_vel_pub;
+    ros::ServiceServer linetrace_start, linetrace_stop;
     void image_callback(const sensor_msgs::ImageConstPtr& msg);
     virtual bool linetrace_start_service(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);
     virtual bool linetrace_stop_service(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);
@@ -185,6 +186,8 @@ void LINETRACE::image_callback(const sensor_msgs::ImageConstPtr& msg){
    // Print "Hello ROS!" to the terminal and ROS log file
    ROS_INFO_STREAM("Hello from ROS node " << ros::this_node::getName());
    ros::Subscriber sub = lt.nh.subscribe(IMAGE_TOPIC, 1000, &LINETRACE::image_callback, &lt);
+   lt.linetrace_start = lt.nh.advertiseService(lt.LINETRACE_SERVICE_START, &LINETRACE::linetrace_start_service, &lt);
+   lt.linetrace_stop =lt.nh.linetrace_stop_service(lt.LINETRACE_SERVICE_STOP, &LINETRACE::linetrace_stop_service, &lt);
    // Program succesful
    ros::spin();
    return 0;
