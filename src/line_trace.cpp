@@ -29,7 +29,36 @@ class LINETRACE{
     // Publisher
     ros::Publisher cmd_vel_pub;
     void image_callback(const sensor_msgs::ImageConstPtr& msg);
+    virtual bool linetrace_start_service(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);
+    virtual bool linetrace_stop_service(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);
+    const std::string LINETRACE_SERVICE_START = "/linetrace/start";
+    const std::string LINETRACE_SERVICE_STOP = "/linetrace/stop";
+    bool RUN = false;
+    LLINETRACE();
+    ~LINETRACE();
 };
+
+LINETRACE::LINETRACE(){
+
+}
+
+LINETRACE::~LINETRACE(){
+  
+}
+
+
+ bool CAMERA_CV::calibration_start_service(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res){
+  //  cout << "start calibration" << endl;
+   RUN = true;
+   return RUN;
+
+ }
+
+ bool CAMERA_CV::calibration_stop_service(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res){
+  //  cout << "stop calibration" << endl;
+   RUN = false;
+   return RUN;
+ }
 
 
 struct arg_struct {
@@ -133,14 +162,13 @@ void LINETRACE::image_callback(const sensor_msgs::ImageConstPtr& msg){
       double err = (double)cx - (double)(fwidth/2);  //黄色の先の重心座標(x)と画像の中心(x)との差
       cmd_msg.linear.x =0.2;
       cmd_msg.angular.z = -(double)(err/800);
-      cmd_vel_pub.publish(cmd_msg);
    }else{
       cmd_msg.linear.x =0.0;
       cmd_msg.angular.z = 0.2;
-      cmd_vel_pub.publish(cmd_msg);
    }
+   if(RUN) cmd_vel_pub.publish(cmd_msg);
 
-     cv::imshow("original", frame);
+   cv::imshow("original", frame);
    cv::waitKey(3);
 }
 
