@@ -57,8 +57,8 @@ class CAMERA_CV{
     virtual void image_callback(const sensor_msgs::ImageConstPtr&);
     virtual void depth_callback(const sensor_msgs::ImageConstPtr&);
     // Topics
-    const std::string IMAGE_TOPIC = "/camera/color/image_raw";
-    const std::string DEPTH_TOPIC = "/camera/aligned_depth_to_color/image_raw";
+    const std::string IMAGE_TOPIC = "/camera/color/image";
+    const std::string DEPTH_TOPIC = "/camera/ir/image";
     // const std::string DEPTH_TOPIC = "/camera/depth/color/image_raw";
     const std::string PUBLISH_TOPIC = "/camera_pkg/coordinate";
     const std::string IMSHOW_SERVICE_START = "/imshow/start";

@@ -18,7 +18,7 @@ find_package(catkin REQUIRED COMPONENTS
 )
 
 find_package(OpenCV 4  REQUIRED)
-
+find_package(Threads REQUIRED)
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 
@@ -135,7 +135,7 @@ add_library(${PROJECT_NAME}
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
 ## either from message generation or dynamic reconfigure
-# add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+ add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
@@ -154,6 +154,10 @@ add_library(${PROJECT_NAME}
 
 add_executable(canny_ros src/canny_ros.cpp)
 target_link_libraries(canny_ros ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
+add_executable(line_trace src/line_trace.cpp)
+target_link_libraries(line_trace ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+add_executable(camera_astra src/astra.cpp)
+target_link_libraries(camera_astra ${OpenCV_LIBRARIES} ${catkin_LIBRARIES})
 add_executable(sobel_img_opencv src/sobel_image.cpp)
 target_link_libraries(sobel_img_opencv ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
 add_executable(simplecv src/simple_img_draw.cpp)

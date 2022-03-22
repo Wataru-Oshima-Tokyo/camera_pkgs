@@ -1,0 +1,7 @@
+<launch>
+  <!-- uvc_camera -->
+  <node pkg="libuvc_camera" name="camera_node" type="camera_node">
+      <remap from="image_raw" to="camera/color/image_raw"/>
+  </node>
+  <node pkg="camera_pkg" name="line_trace" type="line_trace"/>
+</launch>
