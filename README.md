@@ -5,6 +5,6 @@
 #### Required packages
 ```
 realsene-ros
-vision_openccv(Make sure it is for noetic not melodic so that you can use opencv4)
+vision_opencv(Make sure it is for noetic not melodic so that you can use opencv4)
 ```
 
