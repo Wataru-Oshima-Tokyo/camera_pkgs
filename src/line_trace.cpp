@@ -35,7 +35,7 @@ class LINETRACE{
     const std::string LINETRACE_SERVICE_START = "/linetrace/start";
     const std::string LINETRACE_SERVICE_STOP = "/linetrace/stop";
     bool RUN = false;
-    LLINETRACE();
+    LINETRACE();
     ~LINETRACE();
 };
 
@@ -48,14 +48,14 @@ LINETRACE::~LINETRACE(){
 }
 
 
- bool CAMERA_CV::calibration_start_service(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res){
+ bool LINETRACE::linetrace_start_service(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res){
   //  cout << "start calibration" << endl;
    RUN = true;
    return RUN;
 
  }
 
- bool CAMERA_CV::calibration_stop_service(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res){
+ bool LINETRACE::linetrace_stop_service(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res){
   //  cout << "stop calibration" << endl;
    RUN = false;
    return RUN;
