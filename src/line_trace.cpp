@@ -187,7 +187,7 @@ void LINETRACE::image_callback(const sensor_msgs::ImageConstPtr& msg){
    ROS_INFO_STREAM("Hello from ROS node " << ros::this_node::getName());
    ros::Subscriber sub = lt.nh.subscribe(IMAGE_TOPIC, 1000, &LINETRACE::image_callback, &lt);
    lt.linetrace_start = lt.nh.advertiseService(lt.LINETRACE_SERVICE_START, &LINETRACE::linetrace_start_service, &lt);
-   lt.linetrace_stop =lt.nh.linetrace_stop_service(lt.LINETRACE_SERVICE_STOP, &LINETRACE::linetrace_stop_service, &lt);
+   lt.linetrace_stop =lt.nh.advertiseService(lt.LINETRACE_SERVICE_STOP, &LINETRACE::linetrace_stop_service, &lt);
    // Program succesful
    ros::spin();
    return 0;
