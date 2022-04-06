@@ -236,7 +236,7 @@ void mouseEvent(int event, int x, int y, int flags, void* userdata)
      double z=0.0;
      z = cc->depth.at<uint16_t>((uint16_t)y,(uint16_t)x);
      Vec3b &color = src_hsv.at<Vec3b>(Point(y,x));
-     cout << color[0] << " "<< color[1] << " " << color[2] <<endl; 
+    //  cout << color[0] << " "<< color[1] << " " << color[2] <<endl; 
      if  ( event == EVENT_LBUTTONDOWN )
      {
           //I got the erro for getting the belwo one I guess because this function is dervied from the 
@@ -244,6 +244,7 @@ void mouseEvent(int event, int x, int y, int flags, void* userdata)
           
           cout << "Left button of the mouse is clicked - position (" << x << ", " << y << ", " << z << ")" << endl;
           temp = "L";
+          z =1;
           
           // cout << z << endl;
            
