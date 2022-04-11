@@ -50,6 +50,7 @@ class CAMERA_CV{
     void MaskThreshold(int, void*);
     void DrawCircle(int, void*);
     void mouseEvent(int event, int x, int y, int flags, void* userdata);
+    Coordinate MaskThreshold(int, int);
     // Mat getDepth();
     const std::string OPENCV_WINDOW = "Image window";
     virtual bool calibration_start_service(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);
@@ -130,9 +131,21 @@ void CAMERA_CV::DrawCircle(int, void*){
 
 }
 
-void CAMERA_CV::MaskThreshold(int, void*){
+void CAMERA_CV::MaskThreshold(int x, int y){
+  Coordinate rvalue;
+  Vec3b &color = src_hsv.at<Vec3b>(Point(y,x));
+  // 			upper=  np.array([pixel[0] + 10, pixel[1] + 10, pixel[2] + 40])
+	// lower=  np.array([pixel[0] -10, pixel[1] -10, pixel[2] -40])
+  rep(i,0,3){
+    int val=10;
+    if (i==2){
+      val=40;
+    }
+    low_c[i] = color[i] -val;
+    high_c[i] = color[i] +val;
+  }
 
-   cv::inRange(src_hsv, cv::Scalar(low_c[0],low_c[1],low_c[1]), cv::Scalar(high_c[0],high_c[1],high_c[2]),mask);
+   cv::inRange(src_hsv, cv::Scalar(low_c[0],low_c[1],low_c[2]), cv::Scalar(high_c[0],high_c[1],high_c[2]),mask);
    
    cv::Moments M = cv::moments(mask); // get the center of gravity
    if (M.m00 >0){
@@ -141,8 +154,9 @@ void CAMERA_CV::MaskThreshold(int, void*){
       
       cv::circle(src, cv::Point(cx,cy), 5, cv::Scalar(0, 0, 255));
    }
-  // //  imshow("masked", src);
-  // //  waitKey(3);
+   rvalue.x = cx;
+   rvalue.y = cy;
+   return rvalue;
 }
 
 
@@ -235,13 +249,16 @@ void mouseEvent(int event, int x, int y, int flags, void* userdata)
      std::string temp="";
      double z=0.0;
      z = cc->depth.at<uint16_t>((uint16_t)y,(uint16_t)x);
-     Vec3b &color = src_hsv.at<Vec3b>(Point(y,x));
+     
     //  cout << color[0] << " "<< color[1] << " " << color[2] <<endl; 
      if  ( event == EVENT_LBUTTONDOWN )
      {
           //I got the erro for getting the belwo one I guess because this function is dervied from the 
           // z = cc->depth.at<u_int16_t>(x,y);
-          
+          Coordinate tempv;
+          tempv = MaskThreshold(x,y);
+          x = tempv.x;
+          y=tempv.y;
           cout << "Left button of the mouse is clicked - position (" << x << ", " << y << ", " << z << ")" << endl;
           temp = "L";
           z =1;
