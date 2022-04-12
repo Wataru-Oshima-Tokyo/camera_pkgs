@@ -129,7 +129,7 @@ include_directories(
 
 ## Declare a C++ library
 add_library(${PROJECT_NAME}
-   src/canny_ros.cpp
+   src/ros_rgbd.cpp
  )
 
 ## Add cmake target dependencies of the library
@@ -152,8 +152,8 @@ add_library(${PROJECT_NAME}
 ## same as for the library above
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
-add_executable(canny_ros src/canny_ros.cpp)
-target_link_libraries(canny_ros ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
+add_executable(ros_rgbd src/ros_rgbd.cpp)
+target_link_libraries(ros_rgbd ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
 add_executable(line_trace src/line_trace.cpp)
 target_link_libraries(line_trace ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 add_executable(camera_astra src/astra.cpp)

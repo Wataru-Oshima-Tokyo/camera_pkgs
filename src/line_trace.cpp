@@ -157,8 +157,8 @@ void LINETRACE::image_callback(const sensor_msgs::ImageConstPtr& msg){
    
    cv::Moments M = cv::moments(mask); // get the center of gravity
    if (M.m00 >0){
-                        int cx = int(M.m10/M.m00); //重心のx座標
-                        int cy = int(M.m01/M.m00); //重心のy座標
+        int cx = int(M.m10/M.m00); //重心のx座標
+        int cy = int(M.m01/M.m00); //重心のy座標
 
       cv::circle(frame, cv::Point(cx,cy), 5, cv::Scalar(0, 0, 255));
       double err = (double)cx - (double)(fwidth/2);  //黄色の先の重心座標(x)と画像の中心(x)との差
