@@ -20,7 +20,7 @@
 static const std::string OPENCV_WINDOW = "Image window";
 
 // Topics
-static const std::string IMAGE_TOPIC = "/camera/color/image_raw";
+static const std::string IMAGE_TOPIC = "/camera/rgb/image_raw";
 static const std::string PUBLISH_TOPIC = "/image_converter/output_video";
 class LINETRACE{
  
