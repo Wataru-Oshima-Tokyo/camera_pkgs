@@ -44,19 +44,14 @@ class CAMERA_CV{
     int high_c[3] = {0, 0, 0};
     const int max_c[3] = {179, 255, 255};
     std::string HSV[3] = {"H","S","V"};
-    // int _MIN_DH =15, _MIN_DS = 60, _MIN_DV = 60;
-    // int _MAX_DH = 15, _MAX_DS = 150, _MAX_DV = 60;
     void CannyThreshold(int, void*);
-    void MaskThreshold(int, void*);
     void DrawCircle(int, void*);
-    // Mat getDepth();
     const std::string OPENCV_WINDOW = "Image window";
     virtual bool calibration_start_service(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);
     virtual bool calibration_stop_service(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);
     virtual void ir_callback(const sensor_msgs::ImageConstPtr&);
     // Topics
     const std::string IR_TOPIC = "/camera/ir/image_raw";
-    // const std::string DEPTH_TOPIC = "/camera/depth/color/image_raw";
     const std::string PUBLISH_TOPIC = "/camera_pkg/coordinate";
     const std::string IMSHOW_SERVICE_START = "/imshow/start";
     const std::string IMSHOW_SERVICE_STOP = "/imshow/stop";
@@ -167,7 +162,7 @@ int main( int argc, char** argv )
    // Initialize the ROS Node "roscpp_example"
    ros::Rate loop_rate(20);
    
-   cc.ir_sub = cc.nh.subscribe(cc.DEPTH_TOPIC, 1000, &CAMERA_CV::ir_callback, &cc);
+   cc.ir_sub = cc.nh.subscribe(cc.IR_TOPIC, 1000, &CAMERA_CV::ir_callback, &cc);
    cc.imshow_start = cc.nh.advertiseService(cc.IMSHOW_SERVICE_START, &CAMERA_CV::calibration_start_service, &cc);
    cc.imshow_stop = cc.nh.advertiseService(cc.IMSHOW_SERVICE_STOP, &CAMERA_CV::calibration_stop_service, &cc);
    cc.pub = cc.nh.advertise<camera_pkg::Coordinate>(cc.PUBLISH_TOPIC, 1000);
