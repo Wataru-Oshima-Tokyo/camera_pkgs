@@ -132,7 +132,8 @@ void CAMERA_CV::DrawCircle(int, void*){
 }
 
 camera_pkg::Coordinate CAMERA_CV::MaskThreshold(int x, int y){
-  Coordinate rvalue;
+  camera_pkg::Coordinate rvalue;
+  rvalue.t="e";
   Vec3b &color = src_hsv.at<Vec3b>(Point(y,x));
   // 			upper=  np.array([pixel[0] + 10, pixel[1] + 10, pixel[2] + 40])
 	// lower=  np.array([pixel[0] -10, pixel[1] -10, pixel[2] -40])
@@ -153,10 +154,13 @@ camera_pkg::Coordinate CAMERA_CV::MaskThreshold(int x, int y){
    			int cy = int(M.m01/M.m00); //the cneter of mass for y
       
       cv::circle(src, cv::Point(cx,cy), 5, cv::Scalar(0, 0, 255));
+      rvalue.t="f";
+      rvalue.x = cx;
+      rvalue.y = cy;
+      return rvalue;
    }
-   rvalue.x = cx;
-   rvalue.y = cy;
    return rvalue;
+
 }
 
 
@@ -257,11 +261,16 @@ void mouseEvent(int event, int x, int y, int flags, void* userdata)
           // z = cc->depth.at<u_int16_t>(x,y);
           camera_pkg::Coordinate tempv;
           tempv = MaskThreshold(x,y);
-          x=tempv.x;
-          y=tempv.y;
-          cout << "Left button of the mouse is clicked - position (" << x << ", " << y << ", " << z << ")" << endl;
-          temp = "L";
-          z =1;
+	  if(tempv.t =="e"){
+		x=tempv.x;
+          	y=tempv.y;
+		cout << "Left button of the mouse is clicked - position (" << x << ", " << y << ", " << z << ")" << endl;
+          	temp = "L";
+		z =1;
+	  }
+
+
+          
           
           // cout << z << endl;
            
