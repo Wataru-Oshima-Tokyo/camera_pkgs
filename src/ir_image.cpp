@@ -51,7 +51,7 @@ class CAMERA_CV{
     virtual bool calibration_stop_service(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);
     virtual void ir_callback(const sensor_msgs::ImageConstPtr&);
     // Topics
-    const std::string IR_TOPIC = "/camera/ir/image_raw";
+    const std::string IR_TOPIC = "/camera/ir/image";
     const std::string PUBLISH_TOPIC = "/camera_pkg/coordinate";
     const std::string IMSHOW_SERVICE_START = "/imshow/start";
     const std::string IMSHOW_SERVICE_STOP = "/imshow/stop";
