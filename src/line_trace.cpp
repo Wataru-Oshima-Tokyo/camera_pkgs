@@ -22,6 +22,7 @@ static const std::string OPENCV_WINDOW = "Image window";
 // Topics
 static const std::string IMAGE_TOPIC = "/camera/rgb/image_raw";
 static const std::string PUBLISH_TOPIC = "/image_converter/output_video";
+static const std::string IR_TOPIC ="/camera/ir/image";
 class LINETRACE{
  
  public:
@@ -29,13 +30,20 @@ class LINETRACE{
     ros::NodeHandle nh;
     // Publisher
     ros::Publisher cmd_vel_pub;
+    Mat ir;
     ros::ServiceServer linetrace_start, linetrace_stop;
+    ros::ServiceClient mg400_work_start, mg400_work_stop;
     void image_callback(const sensor_msgs::ImageConstPtr& msg);
+    void ir_callback(const sensor_msgs::ImageConstPtr& msg);
     virtual bool linetrace_start_service(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);
     virtual bool linetrace_stop_service(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);
     const std::string LINETRACE_SERVICE_START = "/linetrace/start";
     const std::string LINETRACE_SERVICE_STOP = "/linetrace/stop";
+    const std::string MG400_PICKUP_SERVICE_START = "/mg400/pickup_start";
+    const std::string MG400_PICKUP_SERVICE_STOP = "/mg400/pickup_stop";
     bool RUN = false;
+    bool MG_WORK =false;
+    std_srvs::Empty emp;
     LINETRACE();
     ~LINETRACE();
 };
@@ -90,6 +98,56 @@ void *makeBlack(void *arguments){
   // }
 
 }
+
+void LINETRACE::ir_callback(const sensor_msgs::ImageConstPtr& msg)
+{
+    std_msgs::Header msg_header = msg->header;
+    std::string frame_id = msg_header.frame_id.c_str();
+    // ROS_INFO_STREAM("New Image from " << frame_id);
+
+    cv_bridge::CvImagePtr cv_ptr;
+    try
+    {
+        cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::TYPE_16UC1);
+        // cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
+
+    }
+    catch (cv_bridge::Exception& e)
+    {
+        ROS_ERROR("cv_bridge exception: %s", e.what());
+        return;
+    }
+
+    ir = cv_ptr->image;
+    vector<int> z_arr;
+    int fheight = ir.size().height, fwidth = ir.size().width;
+    for(int i = fwidth/3 ; i<(2*fwidth)/3; i++){
+      for(int j = fheight/3; j<(2*fheight)/3; j++){
+          int z = ir.at<uint16_t>((uint16_t)j,(uint16_t)i);
+          z_arr.push_back(z);
+      }
+    }
+    // get the mean of z_arr
+    int z = z_arr[z_arr.size()/2];
+
+    //start the picking behavior
+    if(z<100 && RUN){
+      MG_WORK =true;
+      if(MG_WORK && RUN){
+        mg400_work_start.call(emp);
+      }
+      RUN=false;
+    }else{
+      RUN=true;
+      if(MG_WORK && RUN){
+        mg400_work_stop.call(emp);
+      }
+      MG_WORK=false;
+    }
+
+}
+
+
 
 void LINETRACE::image_callback(const sensor_msgs::ImageConstPtr& msg){
    std_msgs::Header msg_header = msg->header;
@@ -185,9 +243,13 @@ void LINETRACE::image_callback(const sensor_msgs::ImageConstPtr& msg){
 
    // Print "Hello ROS!" to the terminal and ROS log file
    ROS_INFO_STREAM("Hello from ROS node " << ros::this_node::getName());
-   ros::Subscriber sub = lt.nh.subscribe(IMAGE_TOPIC, 1000, &LINETRACE::image_callback, &lt);
+   ros::Subscriber rgb_sub = lt.nh.subscribe(IMAGE_TOPIC, 1000, &LINETRACE::image_callback, &lt);
+   ros::Subscriber ir_sub = lt.nh.subscribe(IR_TOPIC, 1000, &LINETRACE::ir_callback, &lt);
    lt.linetrace_start = lt.nh.advertiseService(lt.LINETRACE_SERVICE_START, &LINETRACE::linetrace_start_service, &lt);
    lt.linetrace_stop =lt.nh.advertiseService(lt.LINETRACE_SERVICE_STOP, &LINETRACE::linetrace_stop_service, &lt);
+   lt.mg400_work_start = lt.nh.serviceClient<std_srvs::Empty>(lt.MG400_PICKUP_SERVICE_START);
+   lt.mg400_work_stop = lt.nh.serviceClient<std_srvs::Empty>(lt.MG400_PICKUP_SERVICE_STOP);
+   
    // Program succesful
    ros::spin();
    return 0;
