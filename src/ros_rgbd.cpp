@@ -50,7 +50,7 @@ class CAMERA_CV{
     void MaskThreshold(int, void*);
     void DrawCircle(int, void*);
     void mouseEvent(int event, int x, int y, int flags, void* userdata);
-    Coordinate MaskThreshold(int, int);
+    camera_pkg::Coordinate MaskThreshold(int, int);
     // Mat getDepth();
     const std::string OPENCV_WINDOW = "Image window";
     virtual bool calibration_start_service(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);
@@ -131,7 +131,7 @@ void CAMERA_CV::DrawCircle(int, void*){
 
 }
 
-void CAMERA_CV::MaskThreshold(int x, int y){
+camera_pkg::Coordinate CAMERA_CV::MaskThreshold(int x, int y){
   Coordinate rvalue;
   Vec3b &color = src_hsv.at<Vec3b>(Point(y,x));
   // 			upper=  np.array([pixel[0] + 10, pixel[1] + 10, pixel[2] + 40])
