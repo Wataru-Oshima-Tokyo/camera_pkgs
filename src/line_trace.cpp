@@ -43,7 +43,7 @@ class LINETRACE{
     const std::string MG400_PICKUP_SERVICE_STOP = "/mg400/pickup_stop";
     bool RUN = false;
     bool MG_WORK =false;
-    std_srvs::Empty emp;
+    std_srvs::Empty _emp;
     LINETRACE();
     ~LINETRACE();
 };
@@ -121,6 +121,8 @@ void LINETRACE::ir_callback(const sensor_msgs::ImageConstPtr& msg)
     ir = cv_ptr->image;
     vector<int> z_arr;
     int fheight = ir.size().height, fwidth = ir.size().width;
+
+    // only see the front of robot
     for(int i = fwidth/3 ; i<(2*fwidth)/3; i++){
       for(int j = fheight/3; j<(2*fheight)/3; j++){
           int z = ir.at<uint16_t>((uint16_t)j,(uint16_t)i);
@@ -134,13 +136,13 @@ void LINETRACE::ir_callback(const sensor_msgs::ImageConstPtr& msg)
     if(z<100 && RUN){
       MG_WORK =true;
       if(MG_WORK && RUN){
-        mg400_work_start.call(emp);
+        mg400_work_start.call(_emp); //calling the mg400_work_start service
       }
       RUN=false;
     }else{
       RUN=true;
       if(MG_WORK && RUN){
-        mg400_work_stop.call(emp);
+        mg400_work_stop.call(_emp); //calling the mg400_work_stop service
       }
       MG_WORK=false;
     }
