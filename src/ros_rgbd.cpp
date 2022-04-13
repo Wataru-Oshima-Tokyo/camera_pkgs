@@ -255,7 +255,7 @@ void mouseEvent(int event, int x, int y, int flags, void* userdata)
      {
           //I got the erro for getting the belwo one I guess because this function is dervied from the 
           // z = cc->depth.at<u_int16_t>(x,y);
-          Coordinate tempv;
+          camera_pkg::Coordinate tempv;
           tempv = MaskThreshold(x,y);
           x=tempv.x;
           y=tempv.y;
