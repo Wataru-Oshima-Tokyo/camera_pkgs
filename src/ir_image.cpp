@@ -177,8 +177,8 @@ int main( int argc, char** argv )
       if(!cc.src.empty()){
         // setMouseCallback("src", mouseEvent, &cc);
         clock_gettime(CLOCK_MONOTONIC, &stop); fstop=(double)stop.tv_sec + ((double)stop.tv_nsec/1000000000.0);
-        double fps = (double)1/(double)(fstop-fstart);
-        std::string fps= "FPS: " + std::to_string(fps);
+        double _fps = (double)1/(double)(fstop-fstart);
+        std::string fps= "FPS: " + std::to_string(_fps);
         putText(cc.src, //target image
           fps, //text
           Point(10, 30), //top-left position
