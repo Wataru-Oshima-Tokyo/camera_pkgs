@@ -21,6 +21,7 @@
  #define IMG_WIDTH (320)
  #define rep(i,a,b) for(int i=a;i<b;i++)
  #define fore(i,a) for(auto &i:a)
+ #define IR
  using namespace std;
  using namespace cv;
 
