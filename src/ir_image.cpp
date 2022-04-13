@@ -150,8 +150,8 @@ camera_pkg::Coordinate CAMERA_CV::MaskThreshold(int x, int y){
    
    cv::Moments M = cv::moments(mask); // get the center of gravity
    if (M.m00 >0){
-   			int cx = int(M.m10/M.m00); //the center of mass for x
-   			int cy = int(M.m01/M.m00); //the cneter of mass for y
+	int cx = int(M.m10/M.m00); //the center of mass for x
+	int cy = int(M.m01/M.m00); //the cneter of mass for y
       
       cv::circle(src, cv::Point(cx,cy), 5, cv::Scalar(0, 0, 255));
       rvalue.t="f";
@@ -259,20 +259,22 @@ void mouseEvent(int event, int x, int y, int flags, void* userdata)
      {
           //I got the erro for getting the belwo one I guess because this function is dervied from the 
           // z = cc->depth.at<u_int16_t>(x,y);
-          camera_pkg::Coordinate tempv;
-          tempv = cc->MaskThreshold(x,y);
-	  if(tempv.t =="e"){
-		x=tempv.x;
-          	y=tempv.y;
-		cout << "Left button of the mouse is clicked - position (" << x << ", " << y << ", " << z << ")" << endl;
-          	temp = "L";
-		z =1;
-	  }
+//           camera_pkg::Coordinate tempv;
+//           tempv = cc->MaskThreshold(x,y);
+// 	  if(tempv.t =="e"){
+// 		x=tempv.x;
+//           	y=tempv.y;
+// 		
+
+// 	  }
+	 cout << "Left button of the mouse is clicked - position (" << x << ", " << y << ", " << z << ")" << endl;
+	 temp = "L";
+	 z =1;
 
 
           
           
-          // cout << z << endl;
+//           cout << z << endl;
            
      }
      else if  ( event == EVENT_RBUTTONDOWN )
