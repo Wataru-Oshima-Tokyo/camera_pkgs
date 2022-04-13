@@ -149,7 +149,7 @@ void CAMERA_CV::ir_callback(const sensor_msgs::ImageConstPtr& msg){
         return;
     }
 
-    depth = cv_ptr->image;
+    src = cv_ptr->image;
 
 }
 
