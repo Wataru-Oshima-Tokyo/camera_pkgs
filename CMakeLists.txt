@@ -154,6 +154,8 @@ add_library(${PROJECT_NAME}
 
 add_executable(ros_rgbd src/ros_rgbd.cpp)
 target_link_libraries(ros_rgbd ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
+add_executable(ir_image src/ir_image.cpp)
+target_link_libraries(ir_image ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
 add_executable(line_trace src/line_trace.cpp)
 target_link_libraries(line_trace ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 add_executable(camera_astra src/astra.cpp)
