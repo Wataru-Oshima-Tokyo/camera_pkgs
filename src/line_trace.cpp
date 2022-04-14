@@ -12,7 +12,8 @@
  #include <sensor_msgs/image_encodings.h>
  #include <pthread.h>
  #include <geometry_msgs/Twist.h>
-  #include "std_srvs/Empty.h"
+ #include "std_srvs/Empty.h"
+ #include <vector>
  #define IMG_HEIGHT (240)
  #define IMG_WIDTH (320)
  #define NUM_THREADS 4
@@ -30,7 +31,7 @@ class LINETRACE{
     ros::NodeHandle nh;
     // Publisher
     ros::Publisher cmd_vel_pub;
-    Mat ir;
+    cv::Mat ir;
     ros::ServiceServer linetrace_start, linetrace_stop;
     ros::ServiceClient mg400_work_start, mg400_work_stop;
     void image_callback(const sensor_msgs::ImageConstPtr& msg);
@@ -119,7 +120,7 @@ void LINETRACE::ir_callback(const sensor_msgs::ImageConstPtr& msg)
     }
 
     ir = cv_ptr->image;
-    vector<int> z_arr;
+    std::vector<int> z_arr;
     int fheight = ir.size().height, fwidth = ir.size().width;
 
     // only see the front of robot
