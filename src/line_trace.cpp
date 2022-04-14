@@ -40,7 +40,7 @@ class LINETRACE{
     void image_callback(const sensor_msgs::ImageConstPtr& msg);
     void scan_callnack(const sensor_msgs::LaserScan::ConstPtr& msg);
     double null_check(double target);
-    vector<double> meanWithoutInf(vector<double> vec)
+    std::vector<double> meanWithoutInf(std::vector<double> vec)
     virtual bool linetrace_start_service(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);
     virtual bool linetrace_stop_service(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);
     const std::string LINETRACE_SERVICE_START = "/linetrace/start";
@@ -107,8 +107,8 @@ void *makeBlack(void *arguments){
 
 }
 
-vector<double> LINETRACE::meanWithoutInf(vector<double> vec){
-        vector<double> result;
+std::vector<double> LINETRACE::meanWithoutInf(std::vector<double> vec){
+        std::vector<double> result;
         for (int i = 0; i < vec.size(); i++)
         {
             if(vec[i]<10 && vec[i] > 0.4){
@@ -285,8 +285,8 @@ void LINETRACE::image_callback(const sensor_msgs::ImageConstPtr& msg){
 
    // Print "Hello ROS!" to the terminal and ROS log file
    ROS_INFO_STREAM("Hello from ROS node " << ros::this_node::getName());
-   rgb_sub = lt.nh.subscribe(IMAGE_TOPIC, 1000, &LINETRACE::image_callback, &lt);
-   scan_sub = lt.nh.subscribe(SCAN_TOPIC, 1000, &LINETRACE::scan_callnack, &lt);
+   lt.rgb_sub = lt.nh.subscribe(IMAGE_TOPIC, 1000, &LINETRACE::image_callback, &lt);
+   lt.scan_sub = lt.nh.subscribe(SCAN_TOPIC, 1000, &LINETRACE::scan_callnack, &lt);
    lt.linetrace_start = lt.nh.advertiseService(lt.LINETRACE_SERVICE_START, &LINETRACE::linetrace_start_service, &lt);
    lt.linetrace_stop =lt.nh.advertiseService(lt.LINETRACE_SERVICE_STOP, &LINETRACE::linetrace_stop_service, &lt);
    lt.mg400_work_start = lt.nh.serviceClient<std_srvs::Empty>(lt.MG400_PICKUP_SERVICE_START);
