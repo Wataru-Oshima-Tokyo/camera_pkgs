@@ -12,8 +12,10 @@
  #include <sensor_msgs/image_encodings.h>
  #include <pthread.h>
  #include <geometry_msgs/Twist.h>
- #include "std_srvs/Empty.h"
+ #include <std_srvs/Empty.h>
+ #include <sensor_msgs/LaserScan.h>
  #include <vector>
+ #include <camera_pkg/Coordinate.h>
  #define IMG_HEIGHT (240)
  #define IMG_WIDTH (320)
  #define NUM_THREADS 4
@@ -23,7 +25,7 @@ static const std::string OPENCV_WINDOW = "Image window";
 // Topics
 static const std::string IMAGE_TOPIC = "/camera/rgb/image_raw";
 static const std::string PUBLISH_TOPIC = "/image_converter/output_video";
-static const std::string IR_TOPIC ="/camera/ir/image";
+static const std::string SCAN_TOPIC ="/scan";
 class LINETRACE{
  
  public:
@@ -31,11 +33,14 @@ class LINETRACE{
     ros::NodeHandle nh;
     // Publisher
     ros::Publisher cmd_vel_pub, ditance_pub;
+    ros::Subscriber rgb_sub, scan_sub;
     cv::Mat ir;
     ros::ServiceServer linetrace_start, linetrace_stop;
     ros::ServiceClient mg400_work_start, mg400_work_stop;
     void image_callback(const sensor_msgs::ImageConstPtr& msg);
-    void ir_callback(const sensor_msgs::ImageConstPtr& msg);
+    void scan_callnack(const sensor_msgs::LaserScan::ConstPtr& msg);
+    double null_check(double target);
+    vector<double> meanWithoutInf(vector<double> vec)
     virtual bool linetrace_start_service(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);
     virtual bool linetrace_stop_service(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);
     const std::string LINETRACE_SERVICE_START = "/linetrace/start";
@@ -46,6 +51,7 @@ class LINETRACE{
     bool RUN = false;
     bool MG_WORK =false;
     std_srvs::Empty _emp;
+    sensor_msgs::LaserScan _scan;
     LINETRACE();
     ~LINETRACE();
 };
@@ -101,56 +107,82 @@ void *makeBlack(void *arguments){
 
 }
 
-void LINETRACE::ir_callback(const sensor_msgs::ImageConstPtr& msg)
+vector<double> LINETRACE::meanWithoutInf(vector<double> vec){
+        vector<double> result;
+        for (int i = 0; i < vec.size(); i++)
+        {
+            if(vec[i]<10 && vec[i] > 0.4){
+                result.push_back(vec[i]);
+            }
+        }
+        return result;
+    }
+double LINETRACE::null_check(double target){
+      if(!(target >0)){
+          target=(double)RANGE_MAX;
+      }
+
+      return target;
+  }
+
+void LINETRACE::scan_callnack(const sensor_msgs::LaserScan::ConstPtr& msg)
 {
-    std_msgs::Header msg_header = msg->header;
-    std::string frame_id = msg_header.frame_id.c_str();
-    // ROS_INFO_STREAM("New Image from " << frame_id);
-    camera_pkg::Coordinate _distance;
-    ditance_pub = nh.advertise<camera_pkg::Coordinate>(DISTANCE_TOPIC, 10, true);
-    cv_bridge::CvImagePtr cv_ptr;
-    try
-    {
-        cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::TYPE_16UC1);
-        // cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
-
-    }
-    catch (cv_bridge::Exception& e)
-    {
-        ROS_ERROR("cv_bridge exception: %s", e.what());
-        return;
-    }
-
-    ir = cv_ptr->image;
-    std::vector<int> z_arr;
-    int fheight = ir.size().height, fwidth = ir.size().width;
-
-    // only see the front of robot
-    for(int i = fwidth/3 ; i<(2*fwidth)/3; i++){
-      for(int j = fheight/3; j<(2*fheight)/3; j++){
-          int z = ir.at<uint16_t>((uint16_t)j,(uint16_t)i);
-          z_arr.push_back(z);
+      double center_number = (-msg->angle_min)/msg->angle_increment;
+      double angle_min = (msg->angle_min)/msg->angle_increment;
+      double angle_max = (msg->angle_max)/msg->angle_increment;
+      double center=msg->ranges[center_number+180];
+      double left=msg->ranges[center_number+128];
+      double right=msg->ranges[center_number-128];
+      std::vector<double> q1,q2, q3, q4, q5, q6,q7,q8;
+      double min1=0;
+      double min2=0;
+      double min3=0; 
+      double min4=0;
+      // angle 0 - 180, -179 - 0
+      for (double angle = angle_min; angle < angle_max; angle++)            
+      {
+          if(angle >=0 && angle<90){
+              q1.push_back(msg->ranges[center_number+angle]);
+          }else if (angle >=90 && angle <angle_max){
+              q2.push_back(msg->ranges[center_number+angle]);
+          }
+          if (angle >=angle_min && angle <-90){
+              q3.push_back(msg->ranges[center_number+angle]);
+          }else if (angle >=-90 && angle <0){
+              q4.push_back(msg->ranges[center_number+angle]);
+          }
       }
-    }
-    // get the mean of z_arr
-    // int z = z_arr[z_arr.size()/2];
-    int z = max_element(z_arr.begin(), z_arr.end());
-    _distance.z =z;
-    //start the picking behavior
-    if(z<100 && RUN){
-      MG_WORK =true;
-      if(MG_WORK && RUN){
-        mg400_work_start.call(_emp); //calling the mg400_work_start service
-      }
-      RUN=false;
-    }else{
-      RUN=true;
-      if(MG_WORK && RUN){
-        mg400_work_stop.call(_emp); //calling the mg400_work_stop service
-      }
-      MG_WORK=false;
-    }
-    ditance_pub.publish(_distance);
+      
+      center=null_check(center);
+      left=null_check(left);
+      right=null_check(right);
+
+      ROS_INFO("center:[%If], left[%If], right[%If]", center, left, right);
+      ROS_INFO("center_number: [%If]", center_number);
+
+      try
+        {
+            q1 = meanWithoutInf(q1);
+            q2 = meanWithoutInf(q2);
+            q3 = meanWithoutInf(q3);
+            q4 = meanWithoutInf(q4);
+            auto sm1 = std::min_element(q1.begin(), q1.end());
+            auto sm2 = std::min_element(q2.begin(), q2.end());
+            auto sm3 = std::min_element(q3.begin(), q3.end());
+            auto sm4 = std::min_element(q4.begin(), q4.end());
+            min1 = *sm1;
+            min2 = *sm2;
+            min3 = *sm3;
+            min4 = *sm4;
+            angles << " left front: " << min1
+            << "// " << "left back: " << min2
+            << "// " << "right back: " << min3
+            << "// " << "right front: " << min4;
+        }
+        catch(const std::exception& e)
+        {
+
+        }
 
 }
 
@@ -183,6 +215,9 @@ void LINETRACE::image_callback(const sensor_msgs::ImageConstPtr& msg){
    int fheight = frame.size().height, fwidth = frame.size().width;
    int search_top = (fheight/4)*3;
    int search_bot = search_top + 20;
+
+
+
 
    //erase unnessesary pixles by blacking
 
@@ -250,8 +285,8 @@ void LINETRACE::image_callback(const sensor_msgs::ImageConstPtr& msg){
 
    // Print "Hello ROS!" to the terminal and ROS log file
    ROS_INFO_STREAM("Hello from ROS node " << ros::this_node::getName());
-   ros::Subscriber rgb_sub = lt.nh.subscribe(IMAGE_TOPIC, 1000, &LINETRACE::image_callback, &lt);
-   ros::Subscriber ir_sub = lt.nh.subscribe(IR_TOPIC, 1000, &LINETRACE::ir_callback, &lt);
+   rgb_sub = lt.nh.subscribe(IMAGE_TOPIC, 1000, &LINETRACE::image_callback, &lt);
+   scan_sub = lt.nh.subscribe(SCAN_TOPIC, 1000, &LINETRACE::scan_callnack, &lt);
    lt.linetrace_start = lt.nh.advertiseService(lt.LINETRACE_SERVICE_START, &LINETRACE::linetrace_start_service, &lt);
    lt.linetrace_stop =lt.nh.advertiseService(lt.LINETRACE_SERVICE_STOP, &LINETRACE::linetrace_stop_service, &lt);
    lt.mg400_work_start = lt.nh.serviceClient<std_srvs::Empty>(lt.MG400_PICKUP_SERVICE_START);
