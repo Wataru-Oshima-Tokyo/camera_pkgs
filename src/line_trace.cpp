@@ -106,8 +106,8 @@ void LINETRACE::ir_callback(const sensor_msgs::ImageConstPtr& msg)
     std_msgs::Header msg_header = msg->header;
     std::string frame_id = msg_header.frame_id.c_str();
     // ROS_INFO_STREAM("New Image from " << frame_id);
-    // geometry_msgs::Twist cmd_msg;
-    // ditance_pub = nh.advertise<geometry_msgs::Twist>(DISTANCE_TOPIC, 10, true);
+    camera_pkg::Coordinate _distance;
+    ditance_pub = nh.advertise<camera_pkg::Coordinate>(DISTANCE_TOPIC, 10, true);
     cv_bridge::CvImagePtr cv_ptr;
     try
     {
@@ -134,7 +134,7 @@ void LINETRACE::ir_callback(const sensor_msgs::ImageConstPtr& msg)
     }
     // get the mean of z_arr
     int z = z_arr[z_arr.size()/2];
-    std::cout << z << std::endl;
+    _distance.z =z;
     //start the picking behavior
     if(z<100 && RUN){
       MG_WORK =true;
@@ -149,7 +149,7 @@ void LINETRACE::ir_callback(const sensor_msgs::ImageConstPtr& msg)
       }
       MG_WORK=false;
     }
-    
+    ditance_pub.publish(_distance);
 
 }
 
