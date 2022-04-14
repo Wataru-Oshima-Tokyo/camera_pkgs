@@ -30,7 +30,7 @@ class LINETRACE{
     //init node
     ros::NodeHandle nh;
     // Publisher
-    ros::Publisher cmd_vel_pub;
+    ros::Publisher cmd_vel_pub, ditance_pub;
     cv::Mat ir;
     ros::ServiceServer linetrace_start, linetrace_stop;
     ros::ServiceClient mg400_work_start, mg400_work_stop;
@@ -42,6 +42,7 @@ class LINETRACE{
     const std::string LINETRACE_SERVICE_STOP = "/linetrace/stop";
     const std::string MG400_PICKUP_SERVICE_START = "/mg400/pickup_start";
     const std::string MG400_PICKUP_SERVICE_STOP = "/mg400/pickup_stop";
+    const std::string DISTANCE_TOPIC = "/linetrace/distance";
     bool RUN = false;
     bool MG_WORK =false;
     std_srvs::Empty _emp;
@@ -105,7 +106,8 @@ void LINETRACE::ir_callback(const sensor_msgs::ImageConstPtr& msg)
     std_msgs::Header msg_header = msg->header;
     std::string frame_id = msg_header.frame_id.c_str();
     // ROS_INFO_STREAM("New Image from " << frame_id);
-
+    // geometry_msgs::Twist cmd_msg;
+    // ditance_pub = nh.advertise<geometry_msgs::Twist>(DISTANCE_TOPIC, 10, true);
     cv_bridge::CvImagePtr cv_ptr;
     try
     {
@@ -132,7 +134,7 @@ void LINETRACE::ir_callback(const sensor_msgs::ImageConstPtr& msg)
     }
     // get the mean of z_arr
     int z = z_arr[z_arr.size()/2];
-
+    std::cout << z << std::endl;
     //start the picking behavior
     if(z<100 && RUN){
       MG_WORK =true;
@@ -147,6 +149,7 @@ void LINETRACE::ir_callback(const sensor_msgs::ImageConstPtr& msg)
       }
       MG_WORK=false;
     }
+    
 
 }
 
