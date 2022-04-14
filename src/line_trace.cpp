@@ -133,7 +133,8 @@ void LINETRACE::ir_callback(const sensor_msgs::ImageConstPtr& msg)
       }
     }
     // get the mean of z_arr
-    int z = z_arr[z_arr.size()/2];
+    // int z = z_arr[z_arr.size()/2];
+    int z = max_element(z_arr.begin(), z_arr.end());
     _distance.z =z;
     //start the picking behavior
     if(z<100 && RUN){
