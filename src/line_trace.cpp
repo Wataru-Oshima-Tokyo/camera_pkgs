@@ -14,6 +14,7 @@
  #include <geometry_msgs/Twist.h>
  #include "std_srvs/Empty.h"
  #include <vector>
+ #include <camera_pkg/Coordinate.h>
  #define IMG_HEIGHT (240)
  #define IMG_WIDTH (320)
  #define NUM_THREADS 4
@@ -126,31 +127,62 @@ void LINETRACE::ir_callback(const sensor_msgs::ImageConstPtr& msg)
     int fheight = ir.size().height, fwidth = ir.size().width;
 
     // only see the front of robot
-    for(int i = fwidth/3 ; i<(2*fwidth)/3; i++){
-      for(int j = fheight/3; j<(2*fheight)/3; j++){
-          int z = ir.at<uint16_t>((uint16_t)j,(uint16_t)i);
-          z_arr.push_back(z);
+    // for(int i = fwidth/3 ; i<(2*fwidth)/3; i++){
+    //   for(int j = fheight/3; j<(2*fheight)/3; j++){
+    //       int z = ir.at<uint16_t>((uint16_t)j,(uint16_t)i);
+    //       z_arr.push_back(z);
+    //       // cv::Vec3b &color = _frame.at<cv::Vec3b>(cv::Point(j,i)); 
+    //       // color.val[0] = 0;
+    //       // color.val[1] = 0;
+    //       // color.val[2] = 0;
+    //   }
+    // }
+
+    for(int i = fwidth/4; i<(3*fwidth)/4; i++){
+      for(int j = fheight/4; j<(2*fheight)/4; j++){
+        // for(int j = 0; j<fheight; j++){
+          
+          int z = ir.at<uint16_t>((uint16_t)i,(uint16_t)j);
+          // double z = ir.at<int>((int)i,(int)j);
+          if(z>1 && z<300)
+            z_arr.push_back(z);
+          // cv::Vec3b &color = ir.at<cv::Vec3b>(cv::Point(i,j)); 
+          // color.val[0] = 0;
+          // color.val[1] = 0;
+          // color.val[2] = 0;
       }
     }
     // get the mean of z_arr
-    int z = z_arr[z_arr.size()/2];
-    _distance.z =z;
-    //start the picking behavior
-    if(z<100 && RUN){
-      MG_WORK =true;
-      if(MG_WORK && RUN){
-        mg400_work_start.call(_emp); //calling the mg400_work_start service
-      }
-      RUN=false;
-    }else{
-      RUN=true;
-      if(MG_WORK && RUN){
-        mg400_work_stop.call(_emp); //calling the mg400_work_stop service
-      }
-      MG_WORK=false;
+    if(!z_arr.empty()){
+        int avg=0;
+        for(int i=0; i<z_arr.size(); i++){
+          avg+=z_arr[i];
+        }
+        avg = avg/(z_arr.size());
+        // int z = *std::max_element(z_arr.begin(), z_arr.end());
+        // _distance.z =z;
+        _distance.z =avg;
+        //start the picking behavior
+        // if(z<100 && RUN){
+        //   MG_WORK =true;
+        //   if(MG_WORK && RUN){
+        //     // mg400_work_start.call(_emp); //calling the mg400_work_start service
+        //   }
+        //   RUN=false;
+        // }else{
+        //   RUN=true;
+        //   if(MG_WORK && RUN){
+        //     // mg400_work_stop.call(_emp); //calling the mg400_work_stop service
+        //   }
+        //   MG_WORK=false;
+        // }
+        ditance_pub.publish(_distance);
     }
-    ditance_pub.publish(_distance);
+    // int z = z_arr[z_arr.size()/2];
 
+
+  //  cv::imshow("ir", ir);
+  //  cv::waitKey(3);
 }
 
 
@@ -182,6 +214,9 @@ void LINETRACE::image_callback(const sensor_msgs::ImageConstPtr& msg){
    int fheight = frame.size().height, fwidth = frame.size().width;
    int search_top = (fheight/4)*3;
    int search_bot = search_top + 20;
+
+
+
 
    //erase unnessesary pixles by blacking
 
