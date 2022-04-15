@@ -28,6 +28,8 @@ static const std::string OPENCV_WINDOW = "Image window";
 static const std::string IMAGE_TOPIC = "/camera/rgb/image_raw";
 static const std::string PUBLISH_TOPIC = "/image_converter/output_video";
 static const std::string SCAN_TOPIC ="/scan";
+struct timespec start, stop;
+double fstart, fstop;
 class LINETRACE{
  
  public:
@@ -54,6 +56,8 @@ class LINETRACE{
     bool MG_WORK =false;
     std_srvs::Empty _emp;
     sensor_msgs::LaserScan _scan;
+    std::vector<double> stop_threashold;
+    
     LINETRACE();
     ~LINETRACE();
 };
@@ -134,71 +138,24 @@ void LINETRACE::scan_callnack(const sensor_msgs::LaserScan::ConstPtr& msg)
 
       try
         {
-            std::cout << "start" <<std::endl;
             std_msgs::String msg_data;
-            std::stringstream ss;
-            double center_number = (-msg->angle_min)/msg->angle_increment;
-            double angle_min = (msg->angle_min)/msg->angle_increment;
-            double angle_max = (msg->angle_max)/msg->angle_increment;
-            double center=msg->ranges[center_number+180];
-            double left=msg->ranges[center_number+128];
-            double right=msg->ranges[center_number-128];
-            double left_anngle=
-//             double center=12;
-//             double left=12;
-//             double right=12;
-            std::stringstream angles;
-            std::vector<double> q1,q2, q3, q4, q5, q6,q7,q8;
-            double min1=0;
-            double min2=0;
-            double min3=0; 
-            double min4=0;
-            // angle 0 - 180, -179 - 0
-            for (double angle = angle_min; angle < angle_max; angle++)            
-            {
-                if(angle >=0 && angle<90){
-                    q1.push_back(msg->ranges[center_number+angle]);
-                }else if (angle >=90 && angle <angle_max){
-                    q2.push_back(msg->ranges[center_number+angle]);
-                }
-                if (angle >=angle_min && angle <-90){
-                    q3.push_back(msg->ranges[center_number+angle]);
-                }else if (angle >=-90 && angle <0){
-                    q4.push_back(msg->ranges[center_number+angle]);
-                }
+            
+            double center=msg->ranges[180];
+            if(center<=0.001){
+                stop_threashold.push_back(1);
+            }else{
+                stop_threashold.clear();
             }
-            
-            center=null_check(center);
-            left=null_check(left);
-            right=null_check(right);
-            
-            ROS_INFO("center:[%If], left[%If], right[%If]", center, left, right);
-            ROS_INFO("center_number: [%If]", center_number);
-       
-            ss << "center: " << center << " left " << left << " right " << right << " center_number " << center_number;
-            
-            q1 = meanWithoutInf(q1);
-            q2 = meanWithoutInf(q2);
-            q3 = meanWithoutInf(q3);
-            q4 = meanWithoutInf(q4);
-            if(!q1.empty() && !q2.empty() && !q3.empty() && !q4.empty()){
-               double sm1 = *std::min_element(q1.begin(), q1.end());
-               double sm2 = *std::min_element(q2.begin(), q2.end());
-               double sm3 = *std::min_element(q3.begin(), q3.end());
-               double sm4 = *std::min_element(q4.begin(), q4.end());
-//                min1 = *sm1;
-//                min2 = *sm2;
-//                min3 = *sm3;
-//                min4 = *sm4;
-              //  angles << " left front: " << sm1
-              //  << "// " << "left back: " << sm2
-              //  << "// " << "right back: " << sm3
-              //  << "// " << "right front: " << sm4;
-              angles << " center: " << center;
-
-               msg_data.data = angles.str();
-               message_pub.publish(msg_data);
+            if(stop_threashold.size()>10){
+                clock_gettime(CLOCK_MONOTONIC, &start); fstart=(double)start.tv_sec + ((double)start.tv_nsec/1000000000.0);
+                RUN=false;
+                MG_WORK =true;
+                //call the MG400_work here
             }
+            std::stringstream _center;
+            _center << " center: " << center;
+             msg_data.data = _center.str();
+             message_pub.publish(msg_data);
 
             
 
@@ -208,7 +165,13 @@ void LINETRACE::scan_callnack(const sensor_msgs::LaserScan::ConstPtr& msg)
            ROS_ERROR("exception: %s", e.what());
 //            std::cout << e.what() <<std::endl;
         }
-
+        if(MG_WORK)
+         clock_gettime(CLOCK_MONOTONIC, &stop); fstop=(double)stop.tv_sec + ((double)stop.tv_nsec/1000000000.0);
+        //comunicate with MG400 would be better 
+        if(MG_WORK && (fstop-fstart)>30){
+            MG_WORK=false;
+            RUN=true;
+        }
 }
 
 
