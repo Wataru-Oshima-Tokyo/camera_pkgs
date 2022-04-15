@@ -181,11 +181,13 @@ void LINETRACE::scan_callnack(const sensor_msgs::LaserScan::ConstPtr& msg)
             q2 = meanWithoutInf(q2);
             q3 = meanWithoutInf(q3);
             q4 = meanWithoutInf(q4);
-            
-//             double sm1 = *std::min_element(q1.begin(), q1.end());
-//             double sm2 = *std::min_element(q2.begin(), q2.end());
-//             double sm3 = *std::min_element(q3.begin(), q3.end());
-//             double sm4 = *std::min_element(q4.begin(), q4.end());
+            if(!q1.empty() && !q2.empty() && !q3.empty() && !q4.empty()){
+               double sm1 = *std::min_element(q1.begin(), q1.end());
+               double sm2 = *std::min_element(q2.begin(), q2.end());
+               double sm3 = *std::min_element(q3.begin(), q3.end());
+               double sm4 = *std::min_element(q4.begin(), q4.end());
+            }
+
             
 //             min1 = *sm1;
 //             min2 = *sm2;
