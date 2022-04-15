@@ -195,11 +195,15 @@ void LINETRACE::scan_callnack(const sensor_msgs::LaserScan::ConstPtr& msg)
               //  << "// " << "left back: " << sm2
               //  << "// " << "right back: " << sm3
               //  << "// " << "right front: " << sm4;
-              angles << " center: " << center;
+//               angles << " center: " << center;
+
+//                msg_data.data = angles.str();
+//                message_pub.publish(msg_data);
+            }
+               angles << " center: " << center;
 
                msg_data.data = angles.str();
                message_pub.publish(msg_data);
-            }
 
             
 
