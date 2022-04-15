@@ -27,7 +27,7 @@ static const std::string OPENCV_WINDOW = "Image window";
 // Topics
 static const std::string IMAGE_TOPIC = "/camera/rgb/image_raw";
 static const std::string PUBLISH_TOPIC = "/image_converter/output_video";
-static const std::string SCAN_TOPIC ="/scan";
+static const std::string SCAN_TOPIC ="/scan1";
 class LINETRACE{
  
  public:
@@ -131,10 +131,6 @@ void LINETRACE::scan_callnack(const sensor_msgs::LaserScan::ConstPtr& msg)
 {
       std_msgs::String msg_data;
       std::stringstream ss;
-
-  
-
-
       try
         {
              double center_number = (-msg->angle_min)/msg->angle_increment;
