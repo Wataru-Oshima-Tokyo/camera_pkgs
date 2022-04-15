@@ -19,6 +19,7 @@
  #define IMG_HEIGHT (240)
  #define IMG_WIDTH (320)
  #define NUM_THREADS 4
+ #define RANGE_MAX 5.6;
   // OpenCV Window Name
 static const std::string OPENCV_WINDOW = "Image window";
 
@@ -40,7 +41,7 @@ class LINETRACE{
     void image_callback(const sensor_msgs::ImageConstPtr& msg);
     void scan_callnack(const sensor_msgs::LaserScan::ConstPtr& msg);
     double null_check(double target);
-    std::vector<double> meanWithoutInf(std::vector<double> vec)
+    std::vector<double> meanWithoutInf(std::vector<double> vec);
     virtual bool linetrace_start_service(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);
     virtual bool linetrace_stop_service(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);
     const std::string LINETRACE_SERVICE_START = "/linetrace/start";
@@ -174,10 +175,11 @@ void LINETRACE::scan_callnack(const sensor_msgs::LaserScan::ConstPtr& msg)
             min2 = *sm2;
             min3 = *sm3;
             min4 = *sm4;
-            angles << " left front: " << min1
+            std::cout << " left front: " << min1
             << "// " << "left back: " << min2
             << "// " << "right back: " << min3
-            << "// " << "right front: " << min4;
+            << "// " << "right front: " << min4
+            << std::endl;
         }
         catch(const std::exception& e)
         {
