@@ -135,12 +135,16 @@ void LINETRACE::scan_callnack(const sensor_msgs::LaserScan::ConstPtr& msg)
             std::cout << "start" <<std::endl;
             std_msgs::String msg_data;
             std::stringstream ss;
-            double center_number = 1;//(-msg->angle_min)/msg->angle_increment;
-            double angle_min = 1;//(msg->angle_min)/msg->angle_increment;
-            double angle_max = 1;//(msg->angle_max)/msg->angle_increment;
-            double center=msg->ranges[center_number+180];
-            double left=msg->ranges[center_number+128];
-            double right=msg->ranges[center_number-128];
+            double center_number = (-msg->angle_min)/msg->angle_increment;
+            double angle_min = (msg->angle_min)/msg->angle_increment;
+            double angle_max = (msg->angle_max)/msg->angle_increment;
+//             double center=msg->ranges[center_number+180];
+//             double left=msg->ranges[center_number+128];
+//             double right=msg->ranges[center_number-128];
+       
+            double center=12;
+            double left=12;
+            double right=12;
             std::stringstream angles;
             std::vector<double> q1,q2, q3, q4, q5, q6,q7,q8;
             double min1=0;
