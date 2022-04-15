@@ -177,10 +177,10 @@ void LINETRACE::scan_callnack(const sensor_msgs::LaserScan::ConstPtr& msg)
        
             ss << "center: " << center << " left " << left << " right " << right << " center_number " << center_number;
             
-//             q1 = meanWithoutInf(q1);
-//             q2 = meanWithoutInf(q2);
-//             q3 = meanWithoutInf(q3);
-//             q4 = meanWithoutInf(q4);
+            q1 = meanWithoutInf(q1);
+            q2 = meanWithoutInf(q2);
+            q3 = meanWithoutInf(q3);
+            q4 = meanWithoutInf(q4);
             
 //             double sm1 = *std::min_element(q1.begin(), q1.end());
 //             double sm2 = *std::min_element(q2.begin(), q2.end());
