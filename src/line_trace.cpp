@@ -192,7 +192,8 @@ void LINETRACE::scan_callnack(const sensor_msgs::LaserScan::ConstPtr& msg)
         }
         catch(const std::exception& e)
         {
-           std::cout << e.what() <<std::endl;
+           ROS_ERROR("exception: %s", e.what());
+//            std::cout << e.what() <<std::endl;
         }
 
 }
