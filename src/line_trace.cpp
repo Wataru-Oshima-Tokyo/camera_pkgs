@@ -131,21 +131,20 @@ void LINETRACE::scan_callnack(const sensor_msgs::LaserScan::ConstPtr& msg)
 {
       std_msgs::String msg_data;
       std::stringstream ss;
+      double center_number = (-msg->angle_min)/msg->angle_increment;
+      double angle_min = (msg->angle_min)/msg->angle_increment;
+      double angle_max = (msg->angle_max)/msg->angle_increment;
+      double center=msg->ranges[center_number+180];
+      double left=msg->ranges[center_number+128];
+      double right=msg->ranges[center_number-128];
+      std::stringstream angles;
+      std::vector<double> q1,q2, q3, q4, q5, q6,q7,q8;
+      double min1=0;
+      double min2=0;
+      double min3=0; 
+      double min4=0;
       try
         {
-             double center_number = (-msg->angle_min)/msg->angle_increment;
-             double angle_min = (msg->angle_min)/msg->angle_increment;
-             double angle_max = (msg->angle_max)/msg->angle_increment;
-             double center=msg->ranges[center_number+180];
-             double left=msg->ranges[center_number+128];
-             double right=msg->ranges[center_number-128];
-             std::stringstream angles;
-             std::vector<double> q1,q2, q3, q4, q5, q6,q7,q8;
-             double min1=0;
-             double min2=0;
-             double min3=0; 
-             double min4=0;
-       
             // angle 0 - 180, -179 - 0
             for (double angle = angle_min; angle < angle_max; angle++)            
             {
@@ -180,6 +179,7 @@ void LINETRACE::scan_callnack(const sensor_msgs::LaserScan::ConstPtr& msg)
             min2 = *sm2;
             min3 = *sm3;
             min4 = *sm4;
+            std::cout << "here" <<std::endl;
             angles << " left front: " << min1
             << "// " << "left back: " << min2
             << "// " << "right back: " << min3
