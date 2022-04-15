@@ -176,11 +176,12 @@ void LINETRACE::scan_callnack(const sensor_msgs::LaserScan::ConstPtr& msg)
             ROS_INFO("center_number: [%If]", center_number);
        
             ss << "center: " << center << " left " << left << " right " << right << " center_number " << center_number;
-            std::cout << "here" <<std::endl;
+            
             q1 = meanWithoutInf(q1);
             q2 = meanWithoutInf(q2);
             q3 = meanWithoutInf(q3);
             q4 = meanWithoutInf(q4);
+            std::cout << "here" <<std::endl;
             auto sm1 = std::min_element(q1.begin(), q1.end());
             auto sm2 = std::min_element(q2.begin(), q2.end());
             auto sm3 = std::min_element(q3.begin(), q3.end());
