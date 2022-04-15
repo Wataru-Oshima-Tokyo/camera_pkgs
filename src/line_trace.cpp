@@ -168,9 +168,9 @@ void LINETRACE::scan_callnack(const sensor_msgs::LaserScan::ConstPtr& msg)
                 }
             }
             
-//             center=null_check(center);
-//             left=null_check(left);
-//             right=null_check(right);
+            center=null_check(center);
+            left=null_check(left);
+            right=null_check(right);
             
 //             ROS_INFO("center:[%If], left[%If], right[%If]", center, left, right);
 //             ROS_INFO("center_number: [%If]", center_number);
