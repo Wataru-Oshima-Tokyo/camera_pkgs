@@ -295,7 +295,7 @@ void LINETRACE::image_callback(const sensor_msgs::ImageConstPtr& msg){
    ROS_INFO_STREAM("Hello from ROS node " << ros::this_node::getName());
    lt.rgb_sub = lt.nh.subscribe(IMAGE_TOPIC, 1000, &LINETRACE::image_callback, &lt);
    lt.scan_sub = lt.nh.subscribe(SCAN_TOPIC, 1000, &LINETRACE::scan_callnack, &lt);
-   lt.message_pub = n.advertise<std_msgs::String>("/scan/angle", 1000);
+   lt.message_pub = lt.nh.advertise<std_msgs::String>("/scan/angle", 1000);
    lt.linetrace_start = lt.nh.advertiseService(lt.LINETRACE_SERVICE_START, &LINETRACE::linetrace_start_service, &lt);
    lt.linetrace_stop =lt.nh.advertiseService(lt.LINETRACE_SERVICE_STOP, &LINETRACE::linetrace_stop_service, &lt);
    lt.mg400_work_start = lt.nh.serviceClient<std_srvs::Empty>(lt.MG400_PICKUP_SERVICE_START);
