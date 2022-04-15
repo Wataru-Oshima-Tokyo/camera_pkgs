@@ -167,13 +167,14 @@ void LINETRACE::scan_callnack(const sensor_msgs::LaserScan::ConstPtr& msg)
                     q4.push_back(msg->ranges[center_number+angle]);
                 }
             }
-            std::cout << "here" <<std::endl;
+            
             center=null_check(center);
             left=null_check(left);
             right=null_check(right);
-
+            std::cout << "here" <<std::endl;
             ROS_INFO("center:[%If], left[%If], right[%If]", center, left, right);
             ROS_INFO("center_number: [%If]", center_number);
+       
             ss << "center: " << center << " left " << left << " right " << right << " center_number " << center_number;  
             q1 = meanWithoutInf(q1);
             q2 = meanWithoutInf(q2);
