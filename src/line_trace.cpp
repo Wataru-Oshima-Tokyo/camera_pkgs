@@ -187,18 +187,18 @@ void LINETRACE::scan_callnack(const sensor_msgs::LaserScan::ConstPtr& msg)
             double sm3 = std::min_element(q3.begin(), q3.end());
             double sm4 = std::min_element(q4.begin(), q4.end());
             
-//             min1 = *sm1;
-//             min2 = *sm2;
-//             min3 = *sm3;
-//             min4 = *sm4;
+            min1 = *sm1;
+            min2 = *sm2;
+            min3 = *sm3;
+            min4 = *sm4;
             std::cout << "here" <<std::endl;
-            angles << " left front: " << sm1
-            << "// " << "left back: " << sm2
-            << "// " << "right back: " << sm3
-            << "// " << "right front: " << sm4;
+            angles << " left front: " << min1
+            << "// " << "left back: " << min2
+            << "// " << "right back: " << min3
+            << "// " << "right front: " << min4;
             
-            msg_data.data = angles.str();
-            message_pub.publish(msg_data);
+//             msg_data.data = angles.str();
+//             message_pub.publish(msg_data);
             std::cout << "end" <<std::endl;
         }
         catch(const std::exception& e)
