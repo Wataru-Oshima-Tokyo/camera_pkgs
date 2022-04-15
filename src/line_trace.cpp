@@ -13,6 +13,7 @@
  #include <pthread.h>
  #include <geometry_msgs/Twist.h>
  #include <std_srvs/Empty.h>
+ #include <std_msgs/String.h>
  #include <sensor_msgs/LaserScan.h>
  #include <vector>
  #include <camera_pkg/Coordinate.h>
