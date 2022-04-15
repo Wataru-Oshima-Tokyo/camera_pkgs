@@ -189,7 +189,7 @@ void LINETRACE::scan_callnack(const sensor_msgs::LaserScan::ConstPtr& msg)
         }
         catch(const std::exception& e)
         {
-           printf("%s\n",e);
+           std::cout << e.what() <<std::endl;
         }
 
 }
