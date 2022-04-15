@@ -168,24 +168,24 @@ void LINETRACE::scan_callnack(const sensor_msgs::LaserScan::ConstPtr& msg)
                 }
             }
             
-            center=null_check(center);
-            left=null_check(left);
-            right=null_check(right);
+//             center=null_check(center);
+//             left=null_check(left);
+//             right=null_check(right);
             
-            ROS_INFO("center:[%If], left[%If], right[%If]", center, left, right);
-            ROS_INFO("center_number: [%If]", center_number);
+//             ROS_INFO("center:[%If], left[%If], right[%If]", center, left, right);
+//             ROS_INFO("center_number: [%If]", center_number);
        
-            ss << "center: " << center << " left " << left << " right " << right << " center_number " << center_number;
+//             ss << "center: " << center << " left " << left << " right " << right << " center_number " << center_number;
             
-            q1 = meanWithoutInf(q1);
-            q2 = meanWithoutInf(q2);
-            q3 = meanWithoutInf(q3);
-            q4 = meanWithoutInf(q4);
+//             q1 = meanWithoutInf(q1);
+//             q2 = meanWithoutInf(q2);
+//             q3 = meanWithoutInf(q3);
+//             q4 = meanWithoutInf(q4);
             
-            double sm1 = *std::min_element(q1.begin(), q1.end());
-            double sm2 = *std::min_element(q2.begin(), q2.end());
-            double sm3 = *std::min_element(q3.begin(), q3.end());
-            double sm4 = *std::min_element(q4.begin(), q4.end());
+//             double sm1 = *std::min_element(q1.begin(), q1.end());
+//             double sm2 = *std::min_element(q2.begin(), q2.end());
+//             double sm3 = *std::min_element(q3.begin(), q3.end());
+//             double sm4 = *std::min_element(q4.begin(), q4.end());
             
 //             min1 = *sm1;
 //             min2 = *sm2;
