@@ -1,0 +1,9 @@
+<launch>
+  <!-- uvc_camera -->
+  <node pkg="libuvc_camera" name="camera_node" type="camera_node">
+      <remap from="image_raw" to="camera/rgb/image_raw"/>
+  </node>
+  <!--include file="$(find astra_camera)/launch/_astra.launch"></include-->
+
+  <node pkg="camera_pkg" name="record_video" type="record_video"/>
+</launch>
