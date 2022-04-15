@@ -33,7 +33,7 @@ class LINETRACE{
     //init node
     ros::NodeHandle nh;
     // Publisher
-    ros::Publisher cmd_vel_pub, ditance_pub;
+    ros::Publisher cmd_vel_pub, ditance_pub, message_pub;
     ros::Subscriber rgb_sub, scan_sub;
     cv::Mat ir;
     ros::ServiceServer linetrace_start, linetrace_stop;
@@ -128,12 +128,15 @@ double LINETRACE::null_check(double target){
 
 void LINETRACE::scan_callnack(const sensor_msgs::LaserScan::ConstPtr& msg)
 {
+      std_msgs::String msg_data;
+      std::stringstream ss;
       double center_number = (-msg->angle_min)/msg->angle_increment;
       double angle_min = (msg->angle_min)/msg->angle_increment;
       double angle_max = (msg->angle_max)/msg->angle_increment;
       double center=msg->ranges[center_number+180];
       double left=msg->ranges[center_number+128];
       double right=msg->ranges[center_number-128];
+      std::stringstream angles;
       std::vector<double> q1,q2, q3, q4, q5, q6,q7,q8;
       double min1=0;
       double min2=0;
@@ -160,6 +163,8 @@ void LINETRACE::scan_callnack(const sensor_msgs::LaserScan::ConstPtr& msg)
 
       ROS_INFO("center:[%If], left[%If], right[%If]", center, left, right);
       ROS_INFO("center_number: [%If]", center_number);
+      ss << "center: " << center << " left " << left << " right " << right << " center_number " << center_number;    
+
 
       try
         {
@@ -175,17 +180,17 @@ void LINETRACE::scan_callnack(const sensor_msgs::LaserScan::ConstPtr& msg)
             min2 = *sm2;
             min3 = *sm3;
             min4 = *sm4;
-            std::cout << " left front: " << min1
+            angles << " left front: " << min1
             << "// " << "left back: " << min2
             << "// " << "right back: " << min3
-            << "// " << "right front: " << min4
-            << std::endl;
+            << "// " << "right front: " << min4;
         }
         catch(const std::exception& e)
         {
 
         }
-
+            msg_data.data = angles.str();
+            message_pub.publish(msg_data);
 }
 
 
@@ -289,6 +294,7 @@ void LINETRACE::image_callback(const sensor_msgs::ImageConstPtr& msg){
    ROS_INFO_STREAM("Hello from ROS node " << ros::this_node::getName());
    lt.rgb_sub = lt.nh.subscribe(IMAGE_TOPIC, 1000, &LINETRACE::image_callback, &lt);
    lt.scan_sub = lt.nh.subscribe(SCAN_TOPIC, 1000, &LINETRACE::scan_callnack, &lt);
+   lt.message_pub = n.advertise<std_msgs::String>("/scan/angle", 1000);
    lt.linetrace_start = lt.nh.advertiseService(lt.LINETRACE_SERVICE_START, &LINETRACE::linetrace_start_service, &lt);
    lt.linetrace_stop =lt.nh.advertiseService(lt.LINETRACE_SERVICE_STOP, &LINETRACE::linetrace_stop_service, &lt);
    lt.mg400_work_start = lt.nh.serviceClient<std_srvs::Empty>(lt.MG400_PICKUP_SERVICE_START);
