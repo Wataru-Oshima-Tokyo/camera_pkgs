@@ -143,7 +143,7 @@ void LINETRACE::scan_callnack(const sensor_msgs::LaserScan::ConstPtr& msg)
             double center=msg->ranges[center_number+180];
             double left=msg->ranges[center_number+128];
             double right=msg->ranges[center_number-128];
-            double left_anngle=
+//             double left_anngle=
 //             double center=12;
 //             double left=12;
 //             double right=12;
