@@ -111,11 +111,13 @@ void *makeBlack(void *arguments){
 
 std::vector<double> LINETRACE::meanWithoutInf(std::vector<double> vec){
         std::vector<double> result;
-        for (int i = 0; i < vec.size(); i++)
-        {
-            if(vec[i]<10 && vec[i] > 0.4){
-                result.push_back(vec[i]);
-            }
+        if(!vec.empty()){
+         for (int i = 0; i < vec.size(); i++)
+         {
+             if(vec[i]<10 && vec[i] > 0.4){
+                 result.push_back(vec[i]);
+             }
+         }
         }
         return result;
     }
