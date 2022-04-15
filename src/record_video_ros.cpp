@@ -21,7 +21,7 @@
  #define NUM_THREADS 4
  #define RANGE_MAX 5.6; 
  using namespace cv;
- using namespce std;
+ using namespace std;
 // OpenCV Window Name
 static const std::string OPENCV_WINDOW = "Image window";
 
@@ -47,20 +47,20 @@ void image_callback(const sensor_msgs::ImageConstPtr& msg){
      return;
    }
     cv::Mat frame = cv_ptr->image;
-    int frame_width = frame.get(cv::CAP_PROP_FRAME_WIDTH);
-    int frame_height = frame.get(cv::CAP_PROP_FRAME_HEIGHT);
+    int frame_width = frame.size().width;
+    int frame_height = frame.size().height;
     VideoWriter video("outcpp.avi", cv::VideoWriter::fourcc('M','J','P','G'), 10, Size(frame_width,frame_height));
     video.write(frame);
 
     cv::imshow("original", frame);
     cv::waitKey(3);
-
+}
    int main(int argc, char** argv)
  {
     ros::init(argc, argv, "roscpp_example");
     ros::NodeHandle nh;
-    ros::Subscriber image;
-    nh.image.subscribe(IMAGE_TOPIC, 1000, image_callback);
+    ros::Subscriber image = nh.subscribe(IMAGE_TOPIC, 1000, image_callback);
     ros::spin();
     destroyAllWindows();
+	return 0;
  }
