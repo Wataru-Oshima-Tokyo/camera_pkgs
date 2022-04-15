@@ -179,11 +179,11 @@ void LINETRACE::scan_callnack(const sensor_msgs::LaserScan::ConstPtr& msg)
             min2 = *sm2;
             min3 = *sm3;
             min4 = *sm4;
-            std::cout << "here" <<std::endl;
             angles << " left front: " << min1
             << "// " << "left back: " << min2
             << "// " << "right back: " << min3
             << "// " << "right front: " << min4;
+            std::cout << "here" <<std::endl;
             msg_data.data = angles.str();
             message_pub.publish(msg_data);
         }
