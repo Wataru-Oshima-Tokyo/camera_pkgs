@@ -28,6 +28,8 @@ static const std::string OPENCV_WINDOW = "Image window";
 static const std::string IMAGE_TOPIC = "/camera/rgb/image_raw";
 static const std::string PUBLISH_TOPIC = "/image_converter/output_video";
 static const std::string SCAN_TOPIC ="/scan";
+struct timespec start, stop;
+double fstart, fstop;
 class LINETRACE{
  
  public:
@@ -55,6 +57,7 @@ class LINETRACE{
     std_srvs::Empty _emp;
     sensor_msgs::LaserScan _scan;
     std::vector<double> stop_threashold;
+    
     LINETRACE();
     ~LINETRACE();
 };
@@ -141,10 +144,14 @@ void LINETRACE::scan_callnack(const sensor_msgs::LaserScan::ConstPtr& msg)
             if(center>5.0){
                 stop_threashold.push_back(1);
             }else{
+                
                 stop_threashold.clear();
             }
             if(stop_threashold.size()>100){
+                clock_gettime(CLOCK_MONOTONIC, &start); fstart=(double)start.tv_sec + ((double)start.tv_nsec/1000000000.0);
                 RUN=false;
+                MG_WORK =true;
+                //call the MG400_work here
             }
             std::stringstream _center;
             _center << " center: " << center;
@@ -159,7 +166,13 @@ void LINETRACE::scan_callnack(const sensor_msgs::LaserScan::ConstPtr& msg)
            ROS_ERROR("exception: %s", e.what());
 //            std::cout << e.what() <<std::endl;
         }
-
+        if(MG_WORK)
+         clock_gettime(CLOCK_MONOTONIC, &stop); fstop=(double)stop.tv_sec + ((double)stop.tv_nsec/1000000000.0);
+        //comunicate with MG400 would be better 
+        if(MG_WORK && (fstop-fstart)>30){
+            MG_WORK=false;
+            RUN=true;
+        }
 }
 
 
