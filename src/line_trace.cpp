@@ -167,7 +167,7 @@ void LINETRACE::scan_callnack(const sensor_msgs::LaserScan::ConstPtr& msg)
                     q4.push_back(msg->ranges[center_number+angle]);
                 }
             }
-
+            std::cout << "here" <<std::endl;
             center=null_check(center);
             left=null_check(left);
             right=null_check(right);
