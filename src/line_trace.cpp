@@ -140,7 +140,7 @@ void LINETRACE::scan_callnack(const sensor_msgs::LaserScan::ConstPtr& msg)
         {
             std_msgs::String msg_data;
             
-            double center=msg->ranges[0];
+            double center=msg->ranges[180];
             if(center>5.0){
                 stop_threashold.push_back(1);
             }else{
