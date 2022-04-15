@@ -155,7 +155,7 @@ void LINETRACE::scan_callnack(const sensor_msgs::LaserScan::ConstPtr& msg)
             }
             std::stringstream _center;
             _center << " center: " << center;
-             msg_data.data = angles.str();
+             msg_data.data = _center.str();
              message_pub.publish(msg_data);
 
             
