@@ -24,7 +24,7 @@
  using namespace std;
 // OpenCV Window Name
 static const std::string OPENCV_WINDOW = "Image window";
-
+//static const std::string video_name="outcpp.avi";
 
 // Topics
 static const std::string IMAGE_TOPIC = "/camera/rgb/image_raw";
@@ -32,10 +32,12 @@ class RECORD{
     public:
         ros::NodeHandle nh;
         ros::Subscriber image;
-        VideoWriter video("./outcpp.avi", cv::VideoWriter::fourcc('M','J','P','G'), 10, Size(640,480));
+        const std::string video_name="outcpp.avi";
+
+        VideoWriter video(video_name, cv::VideoWriter::fourcc('M','J','P','G'), 10, Size(640,480));
         void image_callback(const sensor_msgs::ImageConstPtr& msg);
-        RECORD()
-        ~RECORD()
+        RECORD();
+        ~RECORD();
 };
 
 RECORD::RECORD(){}
