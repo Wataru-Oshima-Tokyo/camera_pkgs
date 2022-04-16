@@ -34,7 +34,12 @@ class RECORD{
         ros::Subscriber image;
         VideoWriter video("./outcpp.avi", cv::VideoWriter::fourcc('M','J','P','G'), 10, Size(640,480));
         void image_callback(const sensor_msgs::ImageConstPtr& msg);
+        RECORD()
+        ~RECORD()
 };
+
+RECORD::RECORD(){}
+RECORD::~RECORD(){}
 void RECORD::image_callback(const sensor_msgs::ImageConstPtr& msg){
    std_msgs::Header msg_header = msg->header;
    std::string frame_id = msg_header.frame_id.c_str();
@@ -65,7 +70,6 @@ void RECORD::image_callback(const sensor_msgs::ImageConstPtr& msg){
  {
     ros::init(argc, argv, "roscpp_example");
     RECORD rc;
-
     rc.image = rc.nh.subscribe(IMAGE_TOPIC, 1000, &RECORD::image_callback, &rc);
     ros::spin();
     destroyAllWindows();
