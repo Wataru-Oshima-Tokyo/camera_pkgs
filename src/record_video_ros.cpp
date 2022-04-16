@@ -35,8 +35,8 @@ class RECORD{
         ros::Subscriber image;
         const std::string video_name="outcpp.avi";
         int ex = static_cast<int>(inputVideo.get(CAP_PROP_FOURCC));
-        // VideoWriter video.open(video_name, cv::VideoWriter::fourcc('M','J','P','G'), 10, Size(640,480));
-        VideoWriter video.open(video_name,ex,30, Size(640,480, true);
+        VideoWriter video.open(video_name, cv::VideoWriter::fourcc('M','J','P','G'), 10, Size(640,480));
+        // VideoWriter video.open(video_name,ex,30, Size(640,480, true);
         void image_callback(const sensor_msgs::ImageConstPtr& msg);
         RECORD();
         ~RECORD();
