@@ -28,8 +28,14 @@ static const std::string OPENCV_WINDOW = "Image window";
 
 // Topics
 static const std::string IMAGE_TOPIC = "/camera/rgb/image_raw";
-
-void image_callback(const sensor_msgs::ImageConstPtr& msg){
+class RECORD{
+    public:
+        ros::NodeHandle nh;
+        ros::Subscriber image;
+        VideoWriter video("./outcpp.avi", cv::VideoWriter::fourcc('M','J','P','G'), 10, Size(640,480));
+        void image_callback(const sensor_msgs::ImageConstPtr& msg);
+};
+void RECORD::image_callback(const sensor_msgs::ImageConstPtr& msg){
    std_msgs::Header msg_header = msg->header;
    std::string frame_id = msg_header.frame_id.c_str();
 
@@ -49,7 +55,7 @@ void image_callback(const sensor_msgs::ImageConstPtr& msg){
     cv::Mat frame = cv_ptr->image;
     int frame_width = frame.size().width;
     int frame_height = frame.size().height;
-    VideoWriter video("outcpp.avi", cv::VideoWriter::fourcc('M','J','P','G'), 10, Size(frame_width,frame_height));
+   
     video.write(frame);
 
     cv::imshow("original", frame);
@@ -58,8 +64,9 @@ void image_callback(const sensor_msgs::ImageConstPtr& msg){
    int main(int argc, char** argv)
  {
     ros::init(argc, argv, "roscpp_example");
-    ros::NodeHandle nh;
-    ros::Subscriber image = nh.subscribe(IMAGE_TOPIC, 1000, image_callback);
+    RECORD rc;
+
+    rc.image = rc.nh.subscribe(IMAGE_TOPIC, 1000, &RECORD::image_callback, &rc);
     ros::spin();
     destroyAllWindows();
 	return 0;
