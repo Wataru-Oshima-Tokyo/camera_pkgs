@@ -33,7 +33,7 @@ class RECORD{
     public:
         ros::NodeHandle nh;
         ros::Subscriber image;
-        const std::string video_name="outcpp.avi";
+        const cv::String video_name="outcpp.avi";
         // int ex = static_cast<int>(inputVideo.get(CAP_PROP_FOURCC));
         VideoWriter video("outcpp.avi", cv::VideoWriter::fourcc('M','J','P','G'), 10, Size(640,480));
         // VideoWriter video.open(video_name,ex,30, Size(640,480, true);
