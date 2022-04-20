@@ -14,7 +14,7 @@
 using namespace cv;
 
 static const std::string IMAGE_TOPIC = "/camera/rgb/image_raw";
-
+Mat src, src_hsv;
 
 void image_callback(const sensor_msgs::ImageConstPtr& msg){
     std_msgs::Header msg_header = msg->header;
