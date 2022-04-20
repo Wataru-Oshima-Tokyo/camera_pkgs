@@ -19,7 +19,7 @@
 
 
 void image_callback(const sensor_msgs::ImageConstPtr& msg){
-    clock_gettime(CLOCK_MONOTONIC, &start); fstart=(double)start.tv_sec;// + ((double)start.tv_nsec/1000000000.0);
+    clock_gettime(CLOCK_MONOTONIC, &start); fstart=(double)start.tv_sec + ((double)start.tv_nsec/1000000000.0);
     std_msgs::Header msg_header = msg->header;
     std::string frame_id = msg_header.frame_id.c_str();
     // ROS_INFO_STREAM("New Image from " << frame_id);
@@ -43,8 +43,10 @@ void image_callback(const sensor_msgs::ImageConstPtr& msg){
     // namedWindow(window_name, WINDOW_AUTOSIZE );
     // CannyThreshold(0, 0);
 
-      clock_gettime(CLOCK_MONOTONIC, &stop); fstop=(double)stop.tv_sec;// + ((double)stop.tv_nsec/1000000000.0);
+      clock_gettime(CLOCK_MONOTONIC, &stop); fstop=(double)stop.tv_sec + ((double)stop.tv_nsec/1000000000.0);
       std::string fps= "FPS: " + std::to_string((fstop-fstart));
+      double fps = src.get(CAP_PROP_FPS);
+
       putText(src, //target image
           fps, //text
           Point(10, 30), //top-left position
