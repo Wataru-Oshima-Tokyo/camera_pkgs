@@ -49,7 +49,7 @@ void image_callback(const sensor_msgs::ImageConstPtr& msg){
     ros::init(argc, argv, "roscpp_example");
     ros::NodeHandle nh;
     ros::Subscriber image;
-    image = .nh.subscribe(IMAGE_TOPIC, 1000, image_callback,);
+    image = nh.subscribe(IMAGE_TOPIC, 1000, image_callback,);
 
      ros::spin();
      return 0;
