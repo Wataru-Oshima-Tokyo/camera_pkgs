@@ -27,7 +27,7 @@ class LANE_DETECTION:
         # print(line_parameters)
         slope, intercept = line_parameters
         y1 = self._lane_image.shape[0]
-        y2 = int(y1*(3/5))
+        y2 = int(y1*(5/6))
         # print(y1, y2)
         x1 = int((y1-intercept)/slope)
         x2 =int((y2-intercept)/slope)
