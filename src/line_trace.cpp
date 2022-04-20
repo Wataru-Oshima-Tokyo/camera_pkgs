@@ -147,7 +147,7 @@ void LINETRACE::scan_callnack(const sensor_msgs::LaserScan::ConstPtr& msg)
             double center=msg->ranges[center_number+180];
             std_msgs::String msg_data;
        
-            for(int i=center_number+180; i<angle_increment*30; i+=angle_increment){
+            for(int i=center_number+180; i<(msg->angle_increment*30); i+=msg->angle_increment){
               double temp = msg->ranges[i];
               if(temp <=0) temp =100.0;
               center = std::min(std::min(center, temp), 5.0);
