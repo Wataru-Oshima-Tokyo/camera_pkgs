@@ -154,7 +154,7 @@ void LINETRACE::scan_callnack(const sensor_msgs::LaserScan::ConstPtr& msg)
 //               center = std::min(std::min(center, temp), 5.0);
 //             }
 //             center = angle_min;
-           center =0;
+           double center =0;
              
             
        
