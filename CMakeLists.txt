@@ -19,6 +19,12 @@ find_package(catkin REQUIRED COMPONENTS
 
 find_package(OpenCV 4  REQUIRED)
 find_package(Threads REQUIRED)
+find_package(OpenMP REQUIRED)
+if(OPENMP_FOUND)
+  message(STATUS "OPENMP FOUND")
+  set(OpenMP_FLAGS ${OpenMP_CXX_FLAGS})  # or if you use C: ${OpenMP_C_FLAGS}
+  set(OpenMP_LIBS gomp)
+endif()
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 
@@ -113,6 +119,7 @@ catkin_package(
  LIBRARIES camera_pkg
   CATKIN_DEPENDS cv_bridge image_transport  opencv2 roscpp rospy sensor_msgs std_msgs
 #  DEPENDS system_lib
+  DEPENDS OpenMP
 )
 
 ###########
@@ -154,12 +161,18 @@ add_library(${PROJECT_NAME}
 
 add_executable(ros_rgbd src/ros_rgbd.cpp)
 target_link_libraries(ros_rgbd ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
+
 add_executable(ros_image src/ros_image.cpp)
 target_link_libraries(ros_image ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
+
 add_executable(ir_image src/ir_image.cpp)
 target_link_libraries(ir_image ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
+
 add_executable(line_trace src/line_trace.cpp)
-target_link_libraries(line_trace ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+target_compile_options(line_trace PRIVATE ${OpenMP_FLAGS})
+add_dependencies(line_trace ${catkin_EXPORTED_TARGETS})
+target_link_libraries(line_trace ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${OpenMP_LIBS})
+
 add_executable(camera_astra src/astra.cpp)
 target_link_libraries(camera_astra ${OpenCV_LIBRARIES} ${catkin_LIBRARIES})
 add_executable(sobel_img_opencv src/sobel_image.cpp)
