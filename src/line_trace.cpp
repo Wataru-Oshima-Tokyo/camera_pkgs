@@ -136,11 +136,18 @@ double LINETRACE::null_check(double target){
 void LINETRACE::scan_callnack(const sensor_msgs::LaserScan::ConstPtr& msg)
 {
 
+ 
+ 
+
       try
         {
+            double center_number = (-msg->angle_min)/msg->angle_increment;
+            double angle_min = (msg->angle_min)/msg->angle_increment;
+            double angle_max = (msg->angle_max)/msg->angle_increment;
+            double center=msg->ranges[center_number+180];
             std_msgs::String msg_data;
-            double center=1.0;
-            for(int i=720; i<740; i++){
+       
+            for(int i=center_number+180; i<angle_increment*30; i+=angle_increment){
               double temp = msg->ranges[i];
               if(temp <=0) temp =100.0;
               center = std::min(std::min(center, temp), 5.0);
