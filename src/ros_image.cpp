@@ -44,7 +44,7 @@ void image_callback(const sensor_msgs::ImageConstPtr& msg){
     // CannyThreshold(0, 0);
 
       clock_gettime(CLOCK_MONOTONIC, &stop); fstop=(double)stop.tv_sec + ((double)stop.tv_nsec/1000000000.0);
-      std::string fps= "FPS: " + std::to_string((fstop-fstart));
+      std::string _fps= "FPS: " + std::to_string((fstop-fstart));
       double fps = src.get(CAP_PROP_FPS);
 
       putText(src, //target image
