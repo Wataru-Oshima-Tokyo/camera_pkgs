@@ -44,7 +44,7 @@ void image_callback(const sensor_msgs::ImageConstPtr& msg){
 
  }
 
- int main(){
+ int main(int argc, char* argv[]){
 
     ros::init(argc, argv, "roscpp_example");
     ros::NodeHandle nh;
