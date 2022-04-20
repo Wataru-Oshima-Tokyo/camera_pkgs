@@ -19,6 +19,7 @@
 
 
 void image_callback(const sensor_msgs::ImageConstPtr& msg){
+    clock_gettime(CLOCK_MONOTONIC, &start); fstart=(double)start.tv_sec + ((double)start.tv_nsec/1000000000.0);
     std_msgs::Header msg_header = msg->header;
     std::string frame_id = msg_header.frame_id.c_str();
     // ROS_INFO_STREAM("New Image from " << frame_id);
@@ -41,9 +42,19 @@ void image_callback(const sensor_msgs::ImageConstPtr& msg){
     
     // namedWindow(window_name, WINDOW_AUTOSIZE );
     // CannyThreshold(0, 0);
-    cv::imshow("src", src);
-    cv::waitKey(3);
 
+      clock_gettime(CLOCK_MONOTONIC, &stop); fstop=(double)stop.tv_sec + ((double)stop.tv_nsec/1000000000.0);
+      std::string fps= "FPS: " + std::to_string(1/(fstop-fstart));
+
+      putText(src, //target image
+          fps, //text
+          Point(10, 30), //top-left position
+          FONT_HERSHEY_DUPLEX,
+          1.0,
+          Scalar(118, 185, 0), //font color
+          2);
+      cv::imshow("src", src);
+      cv::waitKey(3);
  }
 
  int main(int argc, char* argv[]){
@@ -51,19 +62,10 @@ void image_callback(const sensor_msgs::ImageConstPtr& msg){
     ros::init(argc, argv, "roscpp_example");
     ros::NodeHandle nh;
     ros::Subscriber image;
-    clock_gettime(CLOCK_MONOTONIC, &start); fstart=(double)start.tv_sec + ((double)start.tv_nsec/1000000000.0);
-    image = .nh.subscribe(IMAGE_TOPIC, 1000, image_callback);
-    clock_gettime(CLOCK_MONOTONIC, &stop); fstop=(double)stop.tv_sec + ((double)stop.tv_nsec/1000000000.0);
-    std::string fps= "FPS: " + std::to_string(1/(fstop-fstart));
-    putText(src, //target image
-        fps, //text
-        Point(10, 30), //top-left position
-        FONT_HERSHEY_DUPLEX,
-        1.0,
-        Scalar(118, 185, 0), //font color
-        2);
-    
+    image = nh.subscribe(IMAGE_TOPIC, 1000, image_callback);
+
+
     ros::spin();
-    destroyAllWindows()
+    destroyAllWindows();
     return 0;
  }
