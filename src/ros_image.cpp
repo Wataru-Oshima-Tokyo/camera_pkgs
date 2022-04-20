@@ -64,6 +64,6 @@ void image_callback(const sensor_msgs::ImageConstPtr& msg){
         2);
     
     ros::spin();
-    destroyAllWindows()
+    destroyAllWindows();
     return 0;
  }
