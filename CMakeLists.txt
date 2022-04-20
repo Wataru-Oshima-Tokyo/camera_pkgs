@@ -154,8 +154,8 @@ add_library(${PROJECT_NAME}
 
 add_executable(ros_rgbd src/ros_rgbd.cpp)
 target_link_libraries(ros_rgbd ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
-add_executable(record_video src/record_video_ros.cpp)
-target_link_libraries(record_video ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
+#add_executable(record_video src/record_video_ros.cpp)
+#target_link_libraries(record_video ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
 add_executable(ir_image src/ir_image.cpp)
 target_link_libraries(ir_image ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
 add_executable(line_trace src/line_trace.cpp)
@@ -166,8 +166,10 @@ add_executable(sobel_img_opencv src/sobel_image.cpp)
 target_link_libraries(sobel_img_opencv ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
 add_executable(simplecv src/simple_img_draw.cpp)
 target_link_libraries(simplecv ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
-
-
+add_executable(talker src/pub.cpp)
+target_link_libraries(talker ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
+add_executable(listener src/sub.cpp)
+target_link_libraries(listener ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
 
 
 ## Specify libraries to link a library or executable target against
