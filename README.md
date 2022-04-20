@@ -4,7 +4,7 @@
 
 #### Required packages
 ```
-realsene-ros
+realsense-ros
 vision_opencv(Make sure it is for noetic not melodic so that you can use opencv4)
 ```
 
