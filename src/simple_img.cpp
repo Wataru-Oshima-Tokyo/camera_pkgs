@@ -60,7 +60,7 @@ int main()
     //   img_modified(frame);
       // resize down
       imshow("320x240", frame);
-
+    
       if ((winInput = waitKey(10)) == ESCAPE_KEY)
       //if ((winInput = waitKey(0)) == ESCAPE_KEY)
       {

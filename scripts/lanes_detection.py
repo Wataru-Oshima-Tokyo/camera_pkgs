@@ -27,7 +27,7 @@ class LANE_DETECTION:
         # print(line_parameters)
         slope, intercept = line_parameters
         y1 = self._lane_image.shape[0]
-        y2 = int(y1*(5/6))
+        y2 = int(y1*(7/8))
         # print(y1, y2)
         x1 = int((y1-intercept)/slope)
         x2 =int((y2-intercept)/slope)
@@ -129,7 +129,7 @@ if __name__ == "__main__":
                 ld._lane_image= np.copy(ld._src) 
                 ld.canny()
                 ld.region_of_interest()
-                ld.lines = cv.HoughLinesP(ld._mask, 2, np.pi/180, 100, np.array([]),  minLineLength=30, maxLineGap=5)
+                ld.lines = cv.HoughLinesP(ld._mask, 2, np.pi/180, 100, np.array([]),  minLineLength=5, maxLineGap=5)
                 # print(ld.lines)
                 if ld.lines is not None:
                     try:
@@ -148,7 +148,7 @@ if __name__ == "__main__":
                 cv.imshow("original", ld._src)
             # plt.imshow(ld._src)
             # plt.show()
-            cv.waitKey(0)
+            cv.waitKey(3)
         cap.release()
         out.release()
         cv.destroyAllWindows()
