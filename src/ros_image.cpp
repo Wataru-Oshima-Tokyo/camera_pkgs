@@ -53,16 +53,19 @@ void image_callback(const sensor_msgs::ImageConstPtr& msg){
     clock_gettime(CLOCK_MONOTONIC, &start); fstart=(double)start.tv_sec + ((double)start.tv_nsec/1000000000.0);
     image = nh.subscribe(IMAGE_TOPIC, 1000, image_callback);
     clock_gettime(CLOCK_MONOTONIC, &stop); fstop=(double)stop.tv_sec + ((double)stop.tv_nsec/1000000000.0);
-    std::string fps= "FPS: " + std::to_string(1/(fstop-fstart));
-    putText(src, //target image
-        fps, //text
-        Point(10, 30), //top-left position
-        FONT_HERSHEY_DUPLEX,
-        1.0,
-        Scalar(118, 185, 0), //font color
-        2);
-    cv::imshow("src", src);
-    cv::waitKey(3);
+    if(!src.empty()){
+      std::string fps= "FPS: " + std::to_string(1/(fstop-fstart));
+      putText(src, //target image
+          fps, //text
+          Point(10, 30), //top-left position
+          FONT_HERSHEY_DUPLEX,
+          1.0,
+          Scalar(118, 185, 0), //font color
+          2);
+      cv::imshow("src", src);
+      cv::waitKey(3);
+    }
+
     ros::spin();
     destroyAllWindows();
     return 0;
