@@ -147,11 +147,14 @@ void LINETRACE::scan_callnack(const sensor_msgs::LaserScan::ConstPtr& msg)
             double center=msg->ranges[center_number+180];
 //             double center=msg->ranges[angle_min];
             std_msgs::String msg_data;
-       
+            double index=center_number+180;
+            
             for(int i=0; i<msg->ranges.size(); i++){
               double temp = msg->ranges[i];
+              double temp_cent = center;
               if(temp <=0) temp =100.0;
               center = std::min(std::min(center, temp), 5.0);
+              if(center < temp_cent) index = i;
             }
 
              
@@ -169,7 +172,7 @@ void LINETRACE::scan_callnack(const sensor_msgs::LaserScan::ConstPtr& msg)
                 //call the MG400_work here
             }
             std::stringstream _center;
-            _center << " center: " << center;
+            _center << " center: " << center << "index: " << index;
              msg_data.data = _center.str();
              message_pub.publish(msg_data);
 
