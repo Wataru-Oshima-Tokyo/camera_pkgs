@@ -41,8 +41,7 @@ void image_callback(const sensor_msgs::ImageConstPtr& msg){
     
     // namedWindow(window_name, WINDOW_AUTOSIZE );
     // CannyThreshold(0, 0);
-    cv::imshow("src", src);
-    cv::waitKey(3);
+
 
  }
 
@@ -62,7 +61,8 @@ void image_callback(const sensor_msgs::ImageConstPtr& msg){
         1.0,
         Scalar(118, 185, 0), //font color
         2);
-    
+    cv::imshow("src", src);
+    cv::waitKey(3);
     ros::spin();
     destroyAllWindows();
     return 0;
