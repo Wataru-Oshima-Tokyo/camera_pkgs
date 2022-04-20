@@ -12,9 +12,10 @@
  #include <cv_bridge/cv_bridge.h>
  #include <sensor_msgs/image_encodings.h>
 
-
+Mat src,
 static const std::string IMAGE_TOPIC = "/camera/rgb/image_raw";
-
+struct timespec start, stop;
+double fstart, fstop;
 
 void image_callback(const sensor_msgs::ImageConstPtr& msg){
     std_msgs::Header msg_header = msg->header;
@@ -49,8 +50,19 @@ void image_callback(const sensor_msgs::ImageConstPtr& msg){
     ros::init(argc, argv, "roscpp_example");
     ros::NodeHandle nh;
     ros::Subscriber image;
+    clock_gettime(CLOCK_MONOTONIC, &start); fstart=(double)start.tv_sec + ((double)start.tv_nsec/1000000000.0);
     image = .nh.subscribe(IMAGE_TOPIC, 1000, image_callback,);
-
-     ros::spin();
-     return 0;
+    clock_gettime(CLOCK_MONOTONIC, &stop); fstop=(double)stop.tv_sec + ((double)stop.tv_nsec/1000000000.0);
+    std::string fps= "FPS: " + std::to_string(1/(fstop-fstart));
+    putText(src, //target image
+        fps, //text
+        Point(10, 30), //top-left position
+        FONT_HERSHEY_DUPLEX,
+        1.0,
+        Scalar(118, 185, 0), //font color
+        2);
+    
+    ros::spin();
+    destroyAllWindows()
+    return 0;
  }
