@@ -37,7 +37,7 @@ class DETECTOBJ{
     ros::Publisher pub;
     ros::Subscriber image_sub, depth_sub, darknet_bbox_sub;
     ros::NodeHandle nh;
-    darknet_ros_msgs::Coordinate coordinate;
+    camera_pkg::Coordinate coordinate;
     ros::ServiceServer pickup_start, pickup_stop;
     int lowThreshold;
     int low_c[3] = {0, 0, 0};
