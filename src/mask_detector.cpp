@@ -58,11 +58,10 @@ class DETECTOBJ{
     virtual bool maskdetect_stop_service(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);
     virtual void image_callback(const sensor_msgs::ImageConstPtr&);
     virtual void depth_callback(const sensor_msgs::ImageConstPtr&);
-    virtual void bbox_callback(const darknet_ros_msgs::BoundingBoxes&);
+    virtual void bbox_callback(const camera_pkg::BoundingBoxes&);
     // Topics
     const std::string IMAGE_TOPIC = "/camera/color/image_raw";
     const std::string DEPTH_TOPIC = "/camera/aligned_depth_to_color/image_raw";
-    const std::string BBOX_TOPIC = "/darknet_ros/bounding_boxes";
     // const std::string DEPTH_TOPIC = "/camera/depth/color/image_raw";
     const std::string PUBLISH_TOPIC = "/objectdetection/coordinate";
     const std::string PICKUP_SERVICE_START = "/pickup/start";
@@ -242,7 +241,7 @@ int main( int argc, char** argv )
 //    cc.darknet_bbox_sub = cc.nh.subscribe(cc.BBOX_TOPIC, 1000, &DETECTOBJ::bbox_callback, &cc);
    cc.pickup_start = cc.nh.advertiseService(cc.PICKUP_SERVICE_START, &DETECTOBJ::maskdetect_start_service, &cc);
    cc.pickup_stop = cc.nh.advertiseService(cc.PICKUP_SERVICE_STOP, &DETECTOBJ::maskdetect_stop_service, &cc);
-   cc.pub = cc.nh.advertise<darknet_ros_msgs::Coordinate>(cc.PUBLISH_TOPIC, 1000);
+   cc.pub = cc.nh.advertise<camera_pkg::Coordinate>(cc.PUBLISH_TOPIC, 1000);
    
    std_srvs::Empty _emp;
    while(ros::ok()){
