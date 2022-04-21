@@ -166,7 +166,7 @@ void LINETRACE::scan_callnack(const sensor_msgs::LaserScan::ConstPtr& msg)
             }else{
                 stop_threashold.clear();
             }
-            if(stop_threashold.size()>10){
+            if(stop_threashold.size()>30){
                 clock_gettime(CLOCK_MONOTONIC, &start); fstart=(double)start.tv_sec + ((double)start.tv_nsec/1000000000.0);
                 RUN=false;
                 MG_WORK =true;
@@ -271,10 +271,10 @@ void LINETRACE::image_callback(const sensor_msgs::ImageConstPtr& msg){
       cv::circle(frame, cv::Point(cx,cy), 5, cv::Scalar(0, 0, 255));
       double err = (double)cx - (double)(fwidth/2);  //黄色の先の重心座標(x)と画像の中心(x)との差
       cmd_msg.linear.x =0.2;
-      cmd_msg.angular.z = -(double)(err/800);
+      cmd_msg.angular.z = -(double)(err/600);
    }else{
       cmd_msg.linear.x =0.0;
-      cmd_msg.angular.z = 0.2;
+      cmd_msg.angular.z = 0.0;
    }
    if(RUN) cmd_vel_pub.publish(cmd_msg);
 
