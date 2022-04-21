@@ -40,8 +40,8 @@ class DETECTOBJ{
     camera_pkg::Coordinate coordinate;
     ros::ServiceServer pickup_start, pickup_stop;
     int lowThreshold;
-    int low_c[3] = {168, 174, 126};
-    int high_c[3] = {188, 194, 206};
+    int low_c[3] = {162, 174, 126};
+    int high_c[3] = {188, 203, 254};
     const int max_c[3] = {179, 255, 255};
     std::string HSV[3] = {"H","S","V"};
     // int _MIN_DH =15, _MIN_DS = 60, _MIN_DV = 60;
