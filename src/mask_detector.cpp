@@ -38,7 +38,7 @@ class DETECTOBJ{
     ros::Subscriber image_sub, depth_sub, darknet_bbox_sub;
     ros::NodeHandle nh;
     darknet_ros_msgs::Coordinate coordinate;
-    ros::ServiceServer imshow_start, imshow_stop;
+    ros::ServiceServer pickup_start, pickup_stop;
     int lowThreshold;
     darknet_ros_msgs::BoundingBox detected_object;
     int low_c[3] = {0, 0, 0};
@@ -65,8 +65,8 @@ class DETECTOBJ{
     const std::string BBOX_TOPIC = "/darknet_ros/bounding_boxes";
     // const std::string DEPTH_TOPIC = "/camera/depth/color/image_raw";
     const std::string PUBLISH_TOPIC = "/objectdetection/coordinate";
-    const std::string IMSHOW_SERVICE_START = "/imshow/start";
-    const std::string IMSHOW_SERVICE_STOP = "/imshow/stop";
+    const std::string PICKUP_SERVICE_START = "/pickup/start";
+    const std::string PICKUP_SERVICE_STOP = "/pickup/stop";
     const std::string MASK_DETECT_SERVICE_START = "/maskdetect/start";
     const std::string MASK_DETECT_SERVICE_STOP = "/maskdetect/stop";
 
@@ -164,14 +164,14 @@ void DETECTOBJ::MaskThreshold(int, void*userdata){
 
 
  bool DETECTOBJ::maskdetect_start_service(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res){
-  //  cout << "start calibration" << endl;
+   cout << "detection starts" << endl;
    RUN = true;
    return RUN;
 
  }
 
  bool DETECTOBJ::maskdetect_stop_service(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res){
-  //  cout << "stop calibration" << endl;
+   cout << "detection stops" << endl;
    RUN = false;
    return RUN;
  }
@@ -237,8 +237,8 @@ int main( int argc, char** argv )
    cc.image_sub = cc.nh.subscribe(cc.IMAGE_TOPIC, 1000, &DETECTOBJ::image_callback, &cc);
    cc.depth_sub = cc.nh.subscribe(cc.DEPTH_TOPIC, 1000, &DETECTOBJ::depth_callback, &cc);
    cc.darknet_bbox_sub = cc.nh.subscribe(cc.BBOX_TOPIC, 1000, &DETECTOBJ::bbox_callback, &cc);
-   cc.imshow_start = cc.nh.advertiseService(cc.IMSHOW_SERVICE_START, &DETECTOBJ::maskdetect_start_service, &cc);
-   cc.imshow_stop = cc.nh.advertiseService(cc.IMSHOW_SERVICE_STOP, &DETECTOBJ::maskdetect_stop_service, &cc);
+   cc.pickup_start = cc.nh.advertiseService(cc.PICKUP_SERVICE_START, &DETECTOBJ::maskdetect_start_service, &cc);
+   cc.pickup_stop = cc.nh.advertiseService(cc.PICKUP_SERVICE_STOP, &DETECTOBJ::maskdetect_stop_service, &cc);
    cc.pub = cc.nh.advertise<darknet_ros_msgs::Coordinate>(cc.PUBLISH_TOPIC, 1000);
    
    std_srvs::Empty _emp;
