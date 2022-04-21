@@ -147,9 +147,9 @@ void DETECTOBJ::MaskThreshold(int, void*userdata){
    			int cy = int(M.m01/M.m00); //重心のy座標
       
       cv::circle(src, cv::Point(cx,cy), 5, cv::Scalar(0, 0, 255));
-      int z = cc->depth.at<uint16_t>(cy,cx);
-        cc->coordinate.x = center.x;
-        cc->coordinate.y = center.y;
+        int z = cc->depth.at<uint16_t>(cy,cx);
+        cc->coordinate.x = cx;
+        cc->coordinate.y = cy;
         if(cc->coordinate.x !=0 && cc->coordinate.y!=0){
         cc->coordinate.z = z;
         }else{
