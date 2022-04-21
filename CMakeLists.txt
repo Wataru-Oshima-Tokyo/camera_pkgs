@@ -170,12 +170,13 @@ target_link_libraries(ir_image ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
 
 add_executable(line_trace src/line_trace.cpp)
 target_compile_options(line_trace PRIVATE ${OpenMP_FLAGS})
+add_dependencies(line_trace ${catkin_EXPORTED_TARGETS})
+target_link_libraries(line_trace ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${OpenMP_LIBS})
 
 add_executable(mask_detect src/mask_detector.cpp)
 target_compile_options(mask_detect PRIVATE ${OpenMP_FLAGS})
-
-add_dependencies(line_trace ${catkin_EXPORTED_TARGETS})
-target_link_libraries(line_trace ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${OpenMP_LIBS})
+add_dependencies(mask_detect ${catkin_EXPORTED_TARGETS})
+target_link_libraries(mask_detect ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${OpenMP_LIBS})
 
 add_executable(camera_astra src/astra.cpp)
 target_link_libraries(camera_astra ${OpenCV_LIBRARIES} ${catkin_LIBRARIES})
