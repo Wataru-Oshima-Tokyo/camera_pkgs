@@ -40,7 +40,6 @@ class DETECTOBJ{
     darknet_ros_msgs::Coordinate coordinate;
     ros::ServiceServer pickup_start, pickup_stop;
     int lowThreshold;
-    darknet_ros_msgs::BoundingBox detected_object;
     int low_c[3] = {0, 0, 0};
     int high_c[3] = {0, 0, 0};
     const int max_c[3] = {179, 255, 255};
@@ -58,7 +57,6 @@ class DETECTOBJ{
     virtual bool maskdetect_stop_service(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);
     virtual void image_callback(const sensor_msgs::ImageConstPtr&);
     virtual void depth_callback(const sensor_msgs::ImageConstPtr&);
-    virtual void bbox_callback(const camera_pkg::BoundingBoxes&);
     // Topics
     const std::string IMAGE_TOPIC = "/camera/color/image_raw";
     const std::string DEPTH_TOPIC = "/camera/aligned_depth_to_color/image_raw";
