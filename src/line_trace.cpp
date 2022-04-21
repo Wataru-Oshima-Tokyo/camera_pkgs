@@ -159,22 +159,21 @@ void LINETRACE::scan_callnack(const sensor_msgs::LaserScan::ConstPtr& msg)
             }
 
              
-            
-       
-            if(center<=0.19){
+            if(center<=30){
+                velocity =0.07;
+            }
+            else if(center<=0.19){
                 stop_threashold.push_back(1);
             }else{
                 stop_threashold.clear();
                 velocity =0.2;
             }
            
-            if(stop_threashold.size()>20){
+            if(stop_threashold.size()>5){
                 clock_gettime(CLOCK_MONOTONIC, &start); fstart=(double)start.tv_sec + ((double)start.tv_nsec/1000000000.0);
                 RUN=false;
                 MG_WORK =true;
                 mg400_work_start.call(_emp);
-            }else if(stop_threashold.size()>5){
-                velocity =0.05;
             }
             std::stringstream _center;
             _center << " center: " << center << " index: " << index;
