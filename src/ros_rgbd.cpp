@@ -257,23 +257,23 @@ void mouseEvent(int event, int x, int y, int flags, void* userdata)
     //  cout << color[0] << " "<< color[1] << " " << color[2] <<endl; 
      if  ( event == EVENT_LBUTTONDOWN )
      {
-          //I got the erro for getting the belwo one I guess because this function is dervied from the 
-          // z = cc->depth.at<u_int16_t>(x,y);
-	  if(!cc.getRun()){
-		  camera_pkg::Coordinate tempv;
-		  tempv = cc->MaskThreshold(x,y);
-		  if(tempv.t =="e"){
-			x=tempv.x;
-			y=tempv.y;
-			cout << "Left button of the mouse is clicked - position (" << x << ", " << y << ", " << z << ")" << endl;
-			temp = "L";
-			z =1;
-		  }
-	  }else{
+//           //I got the erro for getting the belwo one I guess because this function is dervied from the 
+//           // z = cc->depth.at<u_int16_t>(x,y);
+// 	  if(!cc.getRun()){
+// 		  camera_pkg::Coordinate tempv;
+// 		  tempv = cc->MaskThreshold(x,y);
+// 		  if(tempv.t =="e"){
+// 			x=tempv.x;
+// 			y=tempv.y;
+// 			cout << "Left button of the mouse is clicked - position (" << x << ", " << y << ", " << z << ")" << endl;
+// 			temp = "L";
+// 			z =1;
+// 		  }
+// 	  }else{
 	  	cout << "Left button of the mouse is clicked - position (" << x << ", " << y << ", " << z << ")" << endl;
 		temp = "L";
 		z =1;
-	  }
+// 	  }
          
      }
      else if  ( event == EVENT_RBUTTONDOWN )
