@@ -157,7 +157,9 @@ void DETECTOBJ::MaskThreshold(int, void*userdata){
         }else{
         cc->coordinate.z =0;
         }
+        cc->pub.publish(coordinate);
    }
+ 
    
    
 }
