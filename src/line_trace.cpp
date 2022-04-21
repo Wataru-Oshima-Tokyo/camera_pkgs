@@ -54,6 +54,7 @@ class LINETRACE{
     const std::string DISTANCE_TOPIC = "/linetrace/distance";
     bool RUN = false;
     bool MG_WORK =false;
+    double velocity =0.2;
     std_srvs::Empty _emp;
     sensor_msgs::LaserScan _scan;
     std::vector<double> stop_threashold;
@@ -160,16 +161,20 @@ void LINETRACE::scan_callnack(const sensor_msgs::LaserScan::ConstPtr& msg)
              
             
        
-            if(center<=0.15){
+            if(center<=0.19){
                 stop_threashold.push_back(1);
             }else{
                 stop_threashold.clear();
+                velocity =0.2;
             }
-            if(stop_threashold.size()>30){
+           
+            if(stop_threashold.size()>20){
                 clock_gettime(CLOCK_MONOTONIC, &start); fstart=(double)start.tv_sec + ((double)start.tv_nsec/1000000000.0);
                 RUN=false;
                 MG_WORK =true;
                 mg400_work_start.call(_emp);
+            }else if((stop_threashold.size()>5){
+                velocity =0.05;
             }
             std::stringstream _center;
             _center << " center: " << center << " index: " << index;
@@ -270,7 +275,7 @@ void LINETRACE::image_callback(const sensor_msgs::ImageConstPtr& msg){
 
       cv::circle(frame, cv::Point(cx,cy), 5, cv::Scalar(0, 0, 255));
       double err = (double)cx - (double)(fwidth/2);  //黄色の先の重心座標(x)と画像の中心(x)との差
-      cmd_msg.linear.x =0.2;
+      cmd_msg.linear.x =velocity;
       cmd_msg.angular.z = -(double)(err/600);
    }else{
       cmd_msg.linear.x =0.0;
