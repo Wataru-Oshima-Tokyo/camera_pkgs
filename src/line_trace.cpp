@@ -57,7 +57,6 @@ class LINETRACE{
     std_srvs::Empty _emp;
     sensor_msgs::LaserScan _scan;
     std::vector<double> stop_threashold;
-    std_srvs::Empty _emp;
     LINETRACE();
     ~LINETRACE();
 };
