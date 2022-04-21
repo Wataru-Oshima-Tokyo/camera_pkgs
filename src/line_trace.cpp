@@ -57,7 +57,7 @@ class LINETRACE{
     std_srvs::Empty _emp;
     sensor_msgs::LaserScan _scan;
     std::vector<double> stop_threashold;
-    
+    std_srvs::Empty _emp;
     LINETRACE();
     ~LINETRACE();
 };
@@ -170,7 +170,7 @@ void LINETRACE::scan_callnack(const sensor_msgs::LaserScan::ConstPtr& msg)
                 clock_gettime(CLOCK_MONOTONIC, &start); fstart=(double)start.tv_sec + ((double)start.tv_nsec/1000000000.0);
                 RUN=false;
                 MG_WORK =true;
-                mg400_work_start.call();
+                mg400_work_start.call(_emp);
             }
             std::stringstream _center;
             _center << " center: " << center << " index: " << index;
@@ -191,7 +191,7 @@ void LINETRACE::scan_callnack(const sensor_msgs::LaserScan::ConstPtr& msg)
         if(MG_WORK && (fstop-fstart)>30){
             MG_WORK=false;
             RUN=true;
-            mg400_work_stop.call();
+            mg400_work_stop.call(_emp);
         }
 }
 
