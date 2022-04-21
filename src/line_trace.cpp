@@ -161,7 +161,7 @@ void LINETRACE::scan_callnack(const sensor_msgs::LaserScan::ConstPtr& msg)
             if(center<=0.19){
                 stop_threashold.push_back(1);
             }else if(center<=0.3){
-                velocity =0.07;
+                velocity =0.1;
             }else{
                 stop_threashold.clear();
                 velocity =0.2;
