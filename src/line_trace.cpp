@@ -149,6 +149,7 @@ void LINETRACE::scan_callnack(const sensor_msgs::LaserScan::ConstPtr& msg)
             std_msgs::String msg_data;
             double index=180;
             //40 degree front
+            if (center <=0) center =5.0;
             for(int i=160; i<200; i++){
               double temp = msg->ranges[i];
               double temp_cent = center;
