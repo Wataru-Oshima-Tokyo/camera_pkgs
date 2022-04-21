@@ -141,6 +141,7 @@ void DETECTOBJ::DrawCircle(int, void*){
 
 void DETECTOBJ::MaskThreshold(int, void*userdata){
    DETECTOBJ *cc = (DETECTOBJ*)userdata;
+   Canny(src_hsv, src_hsv, lowThreshold, lowThreshold*ratio, kernel_size );
    cv::inRange(src_hsv, cv::Scalar(low_c[0],low_c[1],low_c[1]), cv::Scalar(high_c[0],high_c[1],high_c[2]),mask);
    
    cv::Moments M = cv::moments(mask); // get the center of gravity
