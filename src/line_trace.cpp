@@ -49,8 +49,8 @@ class LINETRACE{
     virtual bool linetrace_stop_service(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);
     const std::string LINETRACE_SERVICE_START = "/linetrace/start";
     const std::string LINETRACE_SERVICE_STOP = "/linetrace/stop";
-    const std::string MG400_PICKUP_SERVICE_START = "/mg400/pickup_start";
-    const std::string MG400_PICKUP_SERVICE_STOP = "/mg400/pickup_stop";
+    const std::string MG400_PICKUP_SERVICE_START = "/pickup/start";
+    const std::string MG400_PICKUP_SERVICE_STOP = "/pickup/stop";
     const std::string DISTANCE_TOPIC = "/linetrace/distance";
     bool RUN = false;
     bool MG_WORK =false;
@@ -170,7 +170,7 @@ void LINETRACE::scan_callnack(const sensor_msgs::LaserScan::ConstPtr& msg)
                 clock_gettime(CLOCK_MONOTONIC, &start); fstart=(double)start.tv_sec + ((double)start.tv_nsec/1000000000.0);
                 RUN=false;
                 MG_WORK =true;
-                //call the MG400_work here
+                mg400_work_start.call();
             }
             std::stringstream _center;
             _center << " center: " << center << " index: " << index;
@@ -191,6 +191,7 @@ void LINETRACE::scan_callnack(const sensor_msgs::LaserScan::ConstPtr& msg)
         if(MG_WORK && (fstop-fstart)>30){
             MG_WORK=false;
             RUN=true;
+            mg400_work_stop.call();
         }
 }
 
