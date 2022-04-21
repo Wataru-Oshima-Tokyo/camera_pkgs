@@ -173,7 +173,7 @@ void LINETRACE::scan_callnack(const sensor_msgs::LaserScan::ConstPtr& msg)
                 RUN=false;
                 MG_WORK =true;
                 mg400_work_start.call(_emp);
-            }else if((stop_threashold.size()>5){
+            }else if(stop_threashold.size()>5){
                 velocity =0.05;
             }
             std::stringstream _center;
