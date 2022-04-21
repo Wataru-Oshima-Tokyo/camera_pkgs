@@ -159,7 +159,7 @@ void LINETRACE::scan_callnack(const sensor_msgs::LaserScan::ConstPtr& msg)
             }
 
              
-            if(center<=30){
+            if(center<=0.3){
                 velocity =0.07;
             }
             else if(center<=0.19){
