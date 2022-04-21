@@ -158,7 +158,7 @@ void DETECTOBJ::MaskThreshold(int, void*userdata){
         }
         cc->pub.publish(coordinate);
    }
-    imshow( "src", cc.src);
+    imshow( "mask", mask);
     waitKey(3);
  
    
