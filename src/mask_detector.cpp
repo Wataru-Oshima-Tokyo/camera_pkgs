@@ -49,7 +49,7 @@ class DETECTOBJ{
     void CannyThreshold(int, void*);
     void MaskThreshold(int, void*);
     void DrawCircle(int, void*);
-    void detect_object(int , void* userdata);
+//     void detect_object(int , void* userdata);
     void mouseEvent(int event, int x, int y, int flags, void* userdata);
     // Mat getDepth();
     const std::string OPENCV_WINDOW = "Image window";
@@ -94,25 +94,25 @@ bool DETECTOBJ::getRun(){
   return RUN;
 }
 
-void DETECTOBJ::detect_object(int, void* userdata){
-    DETECTOBJ *cc = (DETECTOBJ*)userdata;
-    cv::Point pt1(detected_object.xmin, detected_object.ymin);
-    cv::Point pt2(detected_object.xmax, detected_object.ymax);
-    cv::Point center((detected_object.xmax+detected_object.xmin)/2, (detected_object.ymax+detected_object.ymin)/2);
-    cv::circle(src, center, 5, cv::Scalar(0, 0, 255));
-    cv::putText(src, "Cup", pt2, FONT_HERSHEY_DUPLEX, 1.0, cv::Scalar(255, 185, 0), 2);
-    cv::rectangle(src, pt1, pt2, cv::Scalar(0,255,0));
-    int z = cc->depth.at<uint16_t>(center.y,center.x);
-    cc->coordinate.x = center.x;
-    cc->coordinate.y = center.y;
-    if(cc->coordinate.x !=0 && cc->coordinate.y!=0){
-      cc->coordinate.z = z;
-    }else{
-      cc->coordinate.z =0;
-    }
+// void DETECTOBJ::detect_object(int, void* userdata){
+//     DETECTOBJ *cc = (DETECTOBJ*)userdata;
+//     cv::Point pt1(detected_object.xmin, detected_object.ymin);
+//     cv::Point pt2(detected_object.xmax, detected_object.ymax);
+//     cv::Point center((detected_object.xmax+detected_object.xmin)/2, (detected_object.ymax+detected_object.ymin)/2);
+//     cv::circle(src, center, 5, cv::Scalar(0, 0, 255));
+//     cv::putText(src, "Cup", pt2, FONT_HERSHEY_DUPLEX, 1.0, cv::Scalar(255, 185, 0), 2);
+//     cv::rectangle(src, pt1, pt2, cv::Scalar(0,255,0));
+//     int z = cc->depth.at<uint16_t>(center.y,center.x);
+//     cc->coordinate.x = center.x;
+//     cc->coordinate.y = center.y;
+//     if(cc->coordinate.x !=0 && cc->coordinate.y!=0){
+//       cc->coordinate.z = z;
+//     }else{
+//       cc->coordinate.z =0;
+//     }
     
-    cc->pub.publish(coordinate);
-}
+//     cc->pub.publish(coordinate);
+// }
 
 
 void DETECTOBJ::DrawCircle(int, void*){
