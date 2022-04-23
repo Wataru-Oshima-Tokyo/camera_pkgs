@@ -272,7 +272,7 @@ void mouseEvent(int event, int x, int y, int flags, void* userdata)
 // 	  }else{
 	  	cout << "Left button of the mouse is clicked - position (" << x << ", " << y << ", " << z << ")" << endl;
 		temp = "L";
-		z =1;
+// 		z = cc->depth.at<u_int16_t>(x,y);
 // 	  }
          
      }
