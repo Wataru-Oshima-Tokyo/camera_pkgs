@@ -168,7 +168,7 @@ void LINETRACE::scan_callnack(const sensor_msgs::LaserScan::ConstPtr& msg)
             }
            
             if(!MG_WORK && (stop_threashold.size()>5)){
-                clock_gettime(CLOCK_MONOTONIC, &start); istart=(double)interval_stop.tv_sec + ((double)interval_stop.tv_nsec/1000000000.0);
+                clock_gettime(CLOCK_MONOTONIC, &interval_start); istart=(double)interval_start.tv_sec + ((double)interval_start.tv_nsec/1000000000.0);
                 RUN=false;
                 MG_WORK =true;
                 mg400_work_start.call(_emp);
@@ -187,7 +187,7 @@ void LINETRACE::scan_callnack(const sensor_msgs::LaserScan::ConstPtr& msg)
 //            std::cout << e.what() <<std::endl;
         }
         if(MG_WORK)
-         clock_gettime(CLOCK_MONOTONIC, &stop); istop=(double)interval_stop.tv_sec + ((double)interval_stop.tv_nsec/1000000000.0);
+         clock_gettime(CLOCK_MONOTONIC, &interval_stop); istop=(double)interval_stop.tv_sec + ((double)interval_stop.tv_nsec/1000000000.0);
         //comunicate with MG400 would be better 
         if(MG_WORK && (istop-istart)>30){
             MG_WORK=false;
@@ -199,7 +199,7 @@ void LINETRACE::scan_callnack(const sensor_msgs::LaserScan::ConstPtr& msg)
 
 
 void LINETRACE::image_callback(const sensor_msgs::ImageConstPtr& msg){
-   clock_gettime(CLOCK_MONOTONIC, &start); fstart=(double)fps_start.tv_sec + ((double)fps_start.tv_nsec/1000000000.0);
+   clock_gettime(CLOCK_MONOTONIC, &fps_start); fstart=(double)fps_start.tv_sec + ((double)fps_start.tv_nsec/1000000000.0);
    std_msgs::Header msg_header = msg->header;
    geometry_msgs::Twist cmd_msg;
    std::string frame_id = msg_header.frame_id.c_str();
@@ -280,7 +280,7 @@ void LINETRACE::image_callback(const sensor_msgs::ImageConstPtr& msg){
       cmd_msg.angular.z = 0.0;
    }
    if(RUN) cmd_vel_pub.publish(cmd_msg);
-   clock_gettime(CLOCK_MONOTONIC, &stop); fstop=(double)fps_stop.tv_sec + ((double)fps_stop.tv_nsec/1000000000.0);
+   clock_gettime(CLOCK_MONOTONIC, &fps_stop); fstop=(double)fps_stop.tv_sec + ((double)fps_stop.tv_nsec/1000000000.0);
    std::string fps= "FPS: " + std::to_string(1/(fstop-fstart));
         cv::putText(frame, //target image
           fps, //text
