@@ -282,12 +282,12 @@ void LINETRACE::image_callback(const sensor_msgs::ImageConstPtr& msg){
    if(RUN) cmd_vel_pub.publish(cmd_msg);
    clock_gettime(CLOCK_MONOTONIC, &stop); fstop=(double)stop.tv_sec + ((double)stop.tv_nsec/1000000000.0);
    std::string fps= "FPS: " + std::to_string(1/(fstop-fstart));
-        putText(frame, //target image
+        cv::putText(frame, //target image
           fps, //text
-          Point(10, 30), //top-left position
+          cv::Point(10, 30), //top-left position
           FONT_HERSHEY_DUPLEX,
           1.0,
-          Scalar(118, 185, 0), //font color
+          cv::Scalar(118, 185, 0), //font color
           2);
    cv::imshow("original", frame);
    cv::waitKey(3);
