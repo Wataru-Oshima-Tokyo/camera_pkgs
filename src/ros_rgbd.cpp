@@ -71,11 +71,6 @@ class CAMERA_CV{
     bool getRun(); 
     const int max_lowThreshold = 100;
     const std::string window_name = "Edge Map";
-    // static constexpr char* window_name = "Edge Map";
-    // static void callback(int event, int x, int y, int flags, void* userdata) { // because the mouse call back cannot accept non-static func
-    //     CAMERA_CV *foo = (CAMERA_CV*)userdata; // cast user data back to "this"
-    //     foo->mouseEvent(event, x, y, flags, foo);
-    // }
 private:
     bool RUN = false;
     bool start_call = true;
@@ -216,6 +211,7 @@ void CAMERA_CV::depth_callback(const sensor_msgs::ImageConstPtr& msg){
 }
 
  void CAMERA_CV::image_callback(const sensor_msgs::ImageConstPtr& msg){
+    clock_gettime(CLOCK_MONOTONIC, &start); fstart=(double)start.tv_sec + ((double)start.tv_nsec/1000000000.0);
     std_msgs::Header msg_header = msg->header;
     std::string frame_id = msg_header.frame_id.c_str();
     // ROS_INFO_STREAM("New Image from " << frame_id);
@@ -320,7 +316,7 @@ int main( int argc, char** argv )
    std_srvs::Empty _emp;
    while(ros::ok()){
       // cout << cc.getRun() << endl;
-       clock_gettime(CLOCK_MONOTONIC, &start); fstart=(double)start.tv_sec + ((double)start.tv_nsec/1000000000.0);
+       
        
       if(cc.getRun()){
             cc.DrawCircle(0,0);
