@@ -285,7 +285,7 @@ void LINETRACE::image_callback(const sensor_msgs::ImageConstPtr& msg){
         cv::putText(frame, //target image
           fps, //text
           cv::Point(10, 30), //top-left position
-          FONT_HERSHEY_DUPLEX,
+          cv::FONT_HERSHEY_DUPLEX,
           1.0,
           cv::Scalar(118, 185, 0), //font color
           2);
