@@ -199,6 +199,7 @@ void LINETRACE::scan_callnack(const sensor_msgs::LaserScan::ConstPtr& msg)
 
 
 void LINETRACE::image_callback(const sensor_msgs::ImageConstPtr& msg){
+   clock_gettime(CLOCK_MONOTONIC, &start); fstart=(double)start.tv_sec + ((double)start.tv_nsec/1000000000.0);
    std_msgs::Header msg_header = msg->header;
    geometry_msgs::Twist cmd_msg;
    std::string frame_id = msg_header.frame_id.c_str();
@@ -279,7 +280,15 @@ void LINETRACE::image_callback(const sensor_msgs::ImageConstPtr& msg){
       cmd_msg.angular.z = 0.0;
    }
    if(RUN) cmd_vel_pub.publish(cmd_msg);
-
+   clock_gettime(CLOCK_MONOTONIC, &stop); fstop=(double)stop.tv_sec + ((double)stop.tv_nsec/1000000000.0);
+   std::string fps= "FPS: " + std::to_string(1/(fstop-fstart));
+        putText(frame, //target image
+          fps, //text
+          Point(10, 30), //top-left position
+          FONT_HERSHEY_DUPLEX,
+          1.0,
+          Scalar(118, 185, 0), //font color
+          2);
    cv::imshow("original", frame);
    cv::waitKey(3);
 }
