@@ -171,6 +171,7 @@ void LINETRACE::scan_callnack(const sensor_msgs::LaserScan::ConstPtr& msg)
                 clock_gettime(CLOCK_MONOTONIC, &start); fstart=(double)start.tv_sec + ((double)start.tv_nsec/1000000000.0);
                 RUN=false;
                 MG_WORK =true;
+				sleep(2);
                 mg400_work_start.call(_emp);
             }
             std::stringstream _center;
