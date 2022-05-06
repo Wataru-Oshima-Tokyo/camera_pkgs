@@ -140,7 +140,7 @@ double LINETRACE::null_check(double target){
 
 
 void LINETRACE::qrstatus_callnack(const std_msgs::Int8::ConstPtr& msg){
-   if(msg==1){
+   if(msg->data==1){
      QR=false;
    }else{
      QR=true;
