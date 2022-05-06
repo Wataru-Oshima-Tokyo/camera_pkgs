@@ -43,6 +43,7 @@ class LINETRACE{
     ros::ServiceClient mg400_work_start, mg400_work_stop;
     void image_callback(const sensor_msgs::ImageConstPtr& msg);
     void scan_callnack(const sensor_msgs::LaserScan::ConstPtr& msg);
+    void qrstatus_callnack(const std_msgs::Int8::ConstPtr& msg);
     double null_check(double target);
     std::vector<double> meanWithoutInf(std::vector<double> vec);
     virtual bool linetrace_start_service(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);
@@ -52,7 +53,9 @@ class LINETRACE{
     const std::string MG400_PICKUP_SERVICE_START = "/pickup/start";
     const std::string MG400_PICKUP_SERVICE_STOP = "/pickup/stop";
     const std::string DISTANCE_TOPIC = "/linetrace/distance";
+    const std::string QRSTATUS_TOPIC ="/visp_auto_tracker/status_topic";
     bool RUN = false;
+    bool QR =false;
     bool MG_WORK =false;
     double velocity =0.2;
     std_srvs::Empty _emp;
@@ -133,11 +136,18 @@ double LINETRACE::null_check(double target){
       return target;
   }
 
+
+void LINETRACE::qrstatus_callnack(const std_msgs::Int8::ConstPtr& msg){
+   if(msg==1){
+     QR=false;
+   }else{
+     QR=true;
+   }
+}
+
+
 void LINETRACE::scan_callnack(const sensor_msgs::LaserScan::ConstPtr& msg)
 {
-
- 
- 
 
       try
         {
@@ -167,7 +177,7 @@ void LINETRACE::scan_callnack(const sensor_msgs::LaserScan::ConstPtr& msg)
                 velocity =0.2;
             }
            
-            if(!MG_WORK && (stop_threashold.size()>5)){
+            if(!MG_WORK && (stop_threashold.size()>5) && QR){
                 clock_gettime(CLOCK_MONOTONIC, &interval_start); istart=(double)interval_start.tv_sec + ((double)interval_start.tv_nsec/1000000000.0);
                 RUN=false;
                 MG_WORK =true;
@@ -306,6 +316,7 @@ void LINETRACE::image_callback(const sensor_msgs::ImageConstPtr& msg){
    ROS_INFO_STREAM("Hello from ROS node " << ros::this_node::getName());
    lt.rgb_sub = lt.nh.subscribe(IMAGE_TOPIC, 1000, &LINETRACE::image_callback, &lt);
    lt.scan_sub = lt.nh.subscribe(SCAN_TOPIC, 1000, &LINETRACE::scan_callnack, &lt);
+   lt.qr_sub = lt.nh.subscribe(QRSTATUS_TOPIC, 1000, &LINETRACE::qrstatus_callnack, &lt);
    lt.message_pub = lt.nh.advertise<std_msgs::String>("/scan/angle", 1000);
    lt.linetrace_start = lt.nh.advertiseService(lt.LINETRACE_SERVICE_START, &LINETRACE::linetrace_start_service, &lt);
    lt.linetrace_stop =lt.nh.advertiseService(lt.LINETRACE_SERVICE_STOP, &LINETRACE::linetrace_stop_service, &lt);
