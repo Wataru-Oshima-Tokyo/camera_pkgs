@@ -14,6 +14,7 @@
  #include <geometry_msgs/Twist.h>
  #include <std_srvs/Empty.h>
  #include <std_msgs/String.h>
+#include <std_msgs/Int8.h>
  #include <sensor_msgs/LaserScan.h>
  #include <vector>
  #include <camera_pkg/Coordinate.h>
@@ -28,6 +29,7 @@ static const std::string OPENCV_WINDOW = "Image window";
 static const std::string IMAGE_TOPIC = "/camera/rgb/image_raw";
 static const std::string PUBLISH_TOPIC = "/image_converter/output_video";
 static const std::string SCAN_TOPIC ="/scan";
+static const std::string QRSTATUS_TOPIC ="/visp_auto_tracker/status_topic";
 struct timespec fps_start, fps_stop, interval_start, interval_stop;
 double fstart, fstop, istart, istop;
 class LINETRACE{
@@ -37,7 +39,7 @@ class LINETRACE{
     ros::NodeHandle nh;
     // Publisher
     ros::Publisher cmd_vel_pub, ditance_pub, message_pub;
-    ros::Subscriber rgb_sub, scan_sub;
+    ros::Subscriber rgb_sub, scan_sub, qr_sub;
     cv::Mat ir;
     ros::ServiceServer linetrace_start, linetrace_stop;
     ros::ServiceClient mg400_work_start, mg400_work_stop;
@@ -53,7 +55,7 @@ class LINETRACE{
     const std::string MG400_PICKUP_SERVICE_START = "/pickup/start";
     const std::string MG400_PICKUP_SERVICE_STOP = "/pickup/stop";
     const std::string DISTANCE_TOPIC = "/linetrace/distance";
-    const std::string QRSTATUS_TOPIC ="/visp_auto_tracker/status_topic";
+    
     bool RUN = false;
     bool QR =false;
     bool MG_WORK =false;
