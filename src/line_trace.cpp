@@ -29,7 +29,7 @@ static const std::string OPENCV_WINDOW = "Image window";
 static const std::string IMAGE_TOPIC = "/camera/rgb/image_raw";
 static const std::string PUBLISH_TOPIC = "/image_converter/output_video";
 static const std::string SCAN_TOPIC ="/scan";
-static const std::string QRSTATUS_TOPIC ="/visp_auto_tracker/status_topic";
+static const std::string QRSTATUS_TOPIC ="/visp_auto_tracker/status";
 struct timespec fps_start, fps_stop, interval_start, interval_stop;
 double fstart, fstop, istart, istop;
 class LINETRACE{
