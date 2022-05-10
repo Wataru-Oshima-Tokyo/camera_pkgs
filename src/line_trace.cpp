@@ -188,7 +188,6 @@ void LINETRACE::scan_callback(const sensor_msgs::LaserScan::ConstPtr& msg)
                 mg400_work_start.call(_emp);
             }else if(stop_threashold.size()>5){
 	    	RUN=false;
-		sleep(2);
 	    }
 		    
             std::stringstream _center;
