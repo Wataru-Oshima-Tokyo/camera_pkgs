@@ -162,7 +162,7 @@ void LINETRACE::scan_callback(const sensor_msgs::LaserScan::ConstPtr& msg)
             double index=180;
             //40 degree front
             if (center <=0) center =5.0;
-            for(int i=160; i<200; i++){
+            for(int i=140; i<220; i++){
               double temp = msg->ranges[i];
               double temp_cent = center;
               if(temp <=0) temp =100.0;
