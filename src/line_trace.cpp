@@ -57,6 +57,7 @@ class LINETRACE{
     const std::string DISTANCE_TOPIC = "/linetrace/distance";
     
     bool RUN = false;
+    bool STOP = false;
     bool QR =false;
     bool MG_WORK =false;
     double velocity =0.2;
@@ -173,15 +174,20 @@ void LINETRACE::scan_callback(const sensor_msgs::LaserScan::ConstPtr& msg)
               center = std::min(std::min(center, temp), 5.0);
               if(center < temp_cent) index = i;
             }
-
+	   
             if(center<=0.35){
                 stop_threashold.push_back(1);
 	    }else if(center<=0.5){
                 velocity =0.1;
+		
             }else{
                 stop_threashold.clear();
                 velocity =0.2;
-		RUN=true;
+		if (STOP){
+	          STOP = false;
+		  RUN=true;
+		}
+		
             }
            
             if(!MG_WORK && (stop_threashold.size()>5) && QR){
@@ -192,6 +198,7 @@ void LINETRACE::scan_callback(const sensor_msgs::LaserScan::ConstPtr& msg)
                 mg400_work_start.call(_emp);
             }else if(stop_threashold.size()>2){
 	    	RUN=false;
+		STOP = true;
 	    }
 		    
             std::stringstream _center;
