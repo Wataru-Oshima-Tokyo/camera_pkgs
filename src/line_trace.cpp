@@ -62,7 +62,7 @@ class LINETRACE{
     double velocity =0.2;
     double angular = 0.0;
     const int kernel_size = 3;
-    int lowThreshold = 6;
+    int lowThreshold = 100;
     const int ratio = 3;
     std_srvs::Empty _emp;
     sensor_msgs::LaserScan _scan;
