@@ -60,6 +60,7 @@ class LINETRACE{
     bool QR =false;
     bool MG_WORK =false;
     double velocity =0.2;
+    double angular = 0.0;
     std_srvs::Empty _emp;
     sensor_msgs::LaserScan _scan;
     std::vector<double> stop_threashold;
@@ -172,7 +173,10 @@ void LINETRACE::scan_callback(const sensor_msgs::LaserScan::ConstPtr& msg)
 
             if(center<=0.25){
                 stop_threashold.push_back(1);
-            }else if(center<=0.5){
+            }elseif(center<=0.35){
+	    	velocity =0.05;
+		angular = 0.0;
+	    }else if(center<=0.5){
                 velocity =0.1;
             }else{
                 stop_threashold.clear();
@@ -291,7 +295,8 @@ void LINETRACE::image_callback(const sensor_msgs::ImageConstPtr& msg){
       cv::circle(frame, cv::Point(cx,cy), 5, cv::Scalar(0, 0, 255));
       double err = (double)cx - (double)(fwidth/2);  //黄色の先の重心座標(x)と画像の中心(x)との差
       cmd_msg.linear.x =velocity;
-      cmd_msg.angular.z = -(double)(err/300);
+      angular = -(double)(err/300);
+      cmd_msg.angular.z = angular;
    }else{
       cmd_msg.linear.x =0.0;
       cmd_msg.angular.z = 0.0;
