@@ -287,7 +287,7 @@ void LINETRACE::image_callback(const sensor_msgs::ImageConstPtr& msg){
       cv::circle(frame, cv::Point(cx,cy), 5, cv::Scalar(0, 0, 255));
       double err = (double)cx - (double)(fwidth/2);  //黄色の先の重心座標(x)と画像の中心(x)との差
       cmd_msg.linear.x =velocity;
-      cmd_msg.angular.z = -(double)(err/600);
+      cmd_msg.angular.z = -(double)(err/300);
    }else{
       cmd_msg.linear.x =0.0;
       cmd_msg.angular.z = 0.0;
