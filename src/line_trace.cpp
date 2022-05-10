@@ -177,15 +177,20 @@ void LINETRACE::scan_callback(const sensor_msgs::LaserScan::ConstPtr& msg)
             }else{
                 stop_threashold.clear();
                 velocity =0.2;
+		RUN=true;
             }
            
             if(!MG_WORK && (stop_threashold.size()>5) && QR){
                 clock_gettime(CLOCK_MONOTONIC, &interval_start); istart=(double)interval_start.tv_sec + ((double)interval_start.tv_nsec/1000000000.0);
                 RUN=false;
                 MG_WORK =true;
-				sleep(2);
+		sleep(2);
                 mg400_work_start.call(_emp);
-            }
+            }else if((stop_threashold.size()>5){
+	    	RUN=false;
+		sleep(2);
+	    }
+		    
             std::stringstream _center;
             _center << " center: " << center << " index: " << index;
              msg_data.data = _center.str();
