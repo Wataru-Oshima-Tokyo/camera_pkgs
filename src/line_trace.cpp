@@ -286,7 +286,7 @@ void LINETRACE::image_callback(const sensor_msgs::ImageConstPtr& msg){
 
       //mask the image in yellow
    cv::inRange(frame_HSV, cv::Scalar(low_c[0],low_c[1],low_c[1]), cv::Scalar(high_c[0],high_c[1],high_c[2]),mask);
-   blur( mask, mask, Size(3,3) );
+   blur( mask, mask, cv::Size(3,3) );
    Canny( mask, mask, lowThreshold, lowThreshold*ratio, kernel_size );
    cv::Moments M = cv::moments(mask); // get the center of gravity
    if (M.m00 >0){
