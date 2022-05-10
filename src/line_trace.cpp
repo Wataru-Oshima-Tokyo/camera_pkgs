@@ -173,7 +173,7 @@ void LINETRACE::scan_callback(const sensor_msgs::LaserScan::ConstPtr& msg)
 
             if(center<=0.25){
                 stop_threashold.push_back(1);
-            }elseif(center<=0.35){
+            }else if(center<=0.35){
 	    	velocity =0.05;
 		angular = 0.0;
 	    }else if(center<=0.5){
