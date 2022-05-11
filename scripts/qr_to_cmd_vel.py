@@ -13,5 +13,5 @@ def qr_callback(msg):
 if __name__ == "__main__":
     rospy.init_node("QR_conveter")
     rospy.Publisher('cmd_vel', Twist, queue_size=1)
-    rospy.Suscriber("/visp_auto_tracker/object_position", PoseStamped, qr_callback)
+    rospy.Subscriber("/visp_auto_tracker/object_position", PoseStamped, qr_callback)
     rospy.spin()
