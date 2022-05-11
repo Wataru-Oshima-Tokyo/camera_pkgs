@@ -35,5 +35,5 @@
     <remap from="/usb_cam/image_raw" to="/camera/rgb/image_raw"/>
 
   </node>
-
+<node pkg="camera_pkg" name="line_trace" type="line_trace"/>
 </launch>

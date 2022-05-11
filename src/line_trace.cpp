@@ -14,6 +14,7 @@
  #include <geometry_msgs/Twist.h>
  #include <std_srvs/Empty.h>
  #include <std_msgs/String.h>
+#include <std_msgs/Int8.h>
  #include <sensor_msgs/LaserScan.h>
  #include <vector>
  #include <camera_pkg/Coordinate.h>
@@ -28,6 +29,7 @@ static const std::string OPENCV_WINDOW = "Image window";
 static const std::string IMAGE_TOPIC = "/camera/rgb/image_raw";
 static const std::string PUBLISH_TOPIC = "/image_converter/output_video";
 static const std::string SCAN_TOPIC ="/scan";
+static const std::string QRSTATUS_TOPIC ="/visp_auto_tracker/status";
 struct timespec fps_start, fps_stop, interval_start, interval_stop;
 double fstart, fstop, istart, istop;
 class LINETRACE{
@@ -37,13 +39,13 @@ class LINETRACE{
     ros::NodeHandle nh;
     // Publisher
     ros::Publisher cmd_vel_pub, ditance_pub, message_pub;
-    ros::Subscriber rgb_sub, scan_sub;
+    ros::Subscriber rgb_sub, scan_sub, qr_sub;
     cv::Mat ir;
     ros::ServiceServer linetrace_start, linetrace_stop;
     ros::ServiceClient mg400_work_start, mg400_work_stop;
     void image_callback(const sensor_msgs::ImageConstPtr& msg);
-    void scan_callnack(const sensor_msgs::LaserScan::ConstPtr& msg);
-    void qrstatus_callnack(const std_msgs::Int8::ConstPtr& msg);
+    void scan_callback(const sensor_msgs::LaserScan::ConstPtr& msg);
+    void qrstatus_callback(const std_msgs::Int8::ConstPtr& msg);
     double null_check(double target);
     std::vector<double> meanWithoutInf(std::vector<double> vec);
     virtual bool linetrace_start_service(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);
@@ -53,11 +55,16 @@ class LINETRACE{
     const std::string MG400_PICKUP_SERVICE_START = "/pickup/start";
     const std::string MG400_PICKUP_SERVICE_STOP = "/pickup/stop";
     const std::string DISTANCE_TOPIC = "/linetrace/distance";
-    const std::string QRSTATUS_TOPIC ="/visp_auto_tracker/status_topic";
+    
     bool RUN = false;
+    bool STOP = false;
     bool QR =false;
     bool MG_WORK =false;
     double velocity =0.2;
+    double angular = 0.0;
+    const int kernel_size = 3;
+    int lowThreshold = 100;
+    const int ratio = 3;
     std_srvs::Empty _emp;
     sensor_msgs::LaserScan _scan;
     std::vector<double> stop_threashold;
@@ -137,8 +144,8 @@ double LINETRACE::null_check(double target){
   }
 
 
-void LINETRACE::qrstatus_callnack(const std_msgs::Int8::ConstPtr& msg){
-   if(msg==1){
+void LINETRACE::qrstatus_callback(const std_msgs::Int8::ConstPtr& msg){
+   if(msg->data==1){
      QR=false;
    }else{
      QR=true;
@@ -146,7 +153,7 @@ void LINETRACE::qrstatus_callnack(const std_msgs::Int8::ConstPtr& msg){
 }
 
 
-void LINETRACE::scan_callnack(const sensor_msgs::LaserScan::ConstPtr& msg)
+void LINETRACE::scan_callback(const sensor_msgs::LaserScan::ConstPtr& msg)
 {
 
       try
@@ -160,29 +167,40 @@ void LINETRACE::scan_callnack(const sensor_msgs::LaserScan::ConstPtr& msg)
             double index=180;
             //40 degree front
             if (center <=0) center =5.0;
-            for(int i=160; i<200; i++){
+            for(int i=140; i<220; i++){
               double temp = msg->ranges[i];
               double temp_cent = center;
               if(temp <=0) temp =100.0;
               center = std::min(std::min(center, temp), 5.0);
               if(center < temp_cent) index = i;
             }
-
-            if(center<=0.25){
+	   
+            if(center<=0.35){
                 stop_threashold.push_back(1);
-            }else if(center<=0.5){
+	    }else if(center<=0.5){
                 velocity =0.1;
+		
             }else{
                 stop_threashold.clear();
                 velocity =0.2;
+		if (STOP){
+	          STOP = false;
+		  RUN=true;
+		}
+		
             }
            
             if(!MG_WORK && (stop_threashold.size()>5) && QR){
                 clock_gettime(CLOCK_MONOTONIC, &interval_start); istart=(double)interval_start.tv_sec + ((double)interval_start.tv_nsec/1000000000.0);
                 RUN=false;
                 MG_WORK =true;
+		sleep(2);
                 mg400_work_start.call(_emp);
-            }
+            }else if(stop_threashold.size()>2){
+	    	RUN=false;
+		STOP = true;
+	    }
+		    
             std::stringstream _center;
             _center << " center: " << center << " index: " << index;
              msg_data.data = _center.str();
@@ -275,7 +293,8 @@ void LINETRACE::image_callback(const sensor_msgs::ImageConstPtr& msg){
 
       //mask the image in yellow
    cv::inRange(frame_HSV, cv::Scalar(low_c[0],low_c[1],low_c[1]), cv::Scalar(high_c[0],high_c[1],high_c[2]),mask);
-   
+   blur( mask, mask, cv::Size(3,3) );
+   Canny( mask, mask, lowThreshold, lowThreshold*ratio, kernel_size );
    cv::Moments M = cv::moments(mask); // get the center of gravity
    if (M.m00 >0){
         int cx = int(M.m10/M.m00); //重心のx座標
@@ -284,7 +303,8 @@ void LINETRACE::image_callback(const sensor_msgs::ImageConstPtr& msg){
       cv::circle(frame, cv::Point(cx,cy), 5, cv::Scalar(0, 0, 255));
       double err = (double)cx - (double)(fwidth/2);  //黄色の先の重心座標(x)と画像の中心(x)との差
       cmd_msg.linear.x =velocity;
-      cmd_msg.angular.z = -(double)(err/600);
+      angular = -(double)(err/400);
+      cmd_msg.angular.z = angular;
    }else{
       cmd_msg.linear.x =0.0;
       cmd_msg.angular.z = 0.0;
@@ -300,6 +320,7 @@ void LINETRACE::image_callback(const sensor_msgs::ImageConstPtr& msg){
           cv::Scalar(118, 185, 0), //font color
           2);
    cv::imshow("original", frame);
+   cv::imshow("mask", mask);
    cv::waitKey(3);
 }
 
@@ -315,8 +336,8 @@ void LINETRACE::image_callback(const sensor_msgs::ImageConstPtr& msg){
    // Print "Hello ROS!" to the terminal and ROS log file
    ROS_INFO_STREAM("Hello from ROS node " << ros::this_node::getName());
    lt.rgb_sub = lt.nh.subscribe(IMAGE_TOPIC, 1000, &LINETRACE::image_callback, &lt);
-   lt.scan_sub = lt.nh.subscribe(SCAN_TOPIC, 1000, &LINETRACE::scan_callnack, &lt);
-   lt.qr_sub = lt.nh.subscribe(QRSTATUS_TOPIC, 1000, &LINETRACE::qrstatus_callnack, &lt);
+   lt.scan_sub = lt.nh.subscribe(SCAN_TOPIC, 1000, &LINETRACE::scan_callback, &lt);
+   lt.qr_sub = lt.nh.subscribe(QRSTATUS_TOPIC, 1000, &LINETRACE::qrstatus_callback, &lt);
    lt.message_pub = lt.nh.advertise<std_msgs::String>("/scan/angle", 1000);
    lt.linetrace_start = lt.nh.advertiseService(lt.LINETRACE_SERVICE_START, &LINETRACE::linetrace_start_service, &lt);
    lt.linetrace_stop =lt.nh.advertiseService(lt.LINETRACE_SERVICE_STOP, &LINETRACE::linetrace_stop_service, &lt);
