@@ -7,7 +7,7 @@ from geometry_msgs.msg import Twist, PoseStamped
 from std_srvs.srv import Empty, EmptyResponse
 
 def qr_callback(msg):
-    print(msg.pose.position.x)
+    # print(msg.pose.position.x)
     cmd_pub =rospy.Publisher('cmd_vel', Twist, queue_size=1)
     twt = Twist()
     twt.linear.x = msg.pose.position.x
