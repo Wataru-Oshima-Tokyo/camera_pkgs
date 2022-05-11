@@ -3,8 +3,7 @@
 import rospy
 import rospkg
 from sensor_msgs.msg import LaserScan
-from sensor_msgs.msg import Twist
-from geometry_msgs.msg import PoseStamped
+from geometry_msgs.msg import Twist, PoseStamped
 from std_srvs.srv import Empty, EmptyResponse
 
 def qr_callback(msg):
