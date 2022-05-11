@@ -12,7 +12,7 @@ def qr_callback(msg):
     twt = Twist()
     twt.linear.x = msg.pose.position.x
     twt.linear.y = msg.pose.position.y
-    twt.angualar.z = msg.orientation.z
+    twt.angualar.z = msg.poseorientation.z
     cmd_pub.publish(twt)
 
 if __name__ == "__main__":
