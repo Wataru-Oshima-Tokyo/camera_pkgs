@@ -10,7 +10,7 @@ def qr_callback(msg):
     # print(msg.pose.position.x)
     cmd_pub =rospy.Publisher('cmd_vel', Twist, queue_size=1)
     twt = Twist()
-    twt.linear.x = msg.pose.position.x
+    # twt.linear.x = msg.pose.position.x
     twt.linear.y = msg.pose.position.y
     twt.angular.z = msg.pose.orientation.z
     cmd_pub.publish(twt)
