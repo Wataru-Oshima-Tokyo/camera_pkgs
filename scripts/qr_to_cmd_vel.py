@@ -9,9 +9,7 @@ from std_srvs.srv import Empty, EmptyResponse
 
 def qr_callback(msg):
     # print(msg.pose.position.x)
-    String str_msg =""
     cmd_pub =rospy.Publisher('cmd_vel', Twist, queue_size=1)
-    pose = rospy.Publisher('cmd_vel', String, queue_size=1)
     twt = Twist()
     # twt.linear.x = msg.pose.position.x
 
