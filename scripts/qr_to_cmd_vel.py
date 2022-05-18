@@ -16,7 +16,7 @@ def qr_status_callback(msg):
     else:
         RUN = True
     pub = rospy.Publisher("/tempdata", String)
-    pub.publish(data)
+    pub.publish(str(data))
 
 def qr_callback(msg):
     # print(msg.pose.position.x)
