@@ -3,7 +3,7 @@
 import rospy
 import rospkg
 from sensor_msgs.msg import LaserScan
-from std_msgs.msg import String
+from std_msgs.msg import String, Int8
 from geometry_msgs.msg import Twist, PoseStamped
 from std_srvs.srv import Empty, EmptyResponse
 
@@ -42,6 +42,6 @@ if __name__ == "__main__":
     rospy.init_node("QR_conveter")
     
     rospy.Subscriber("/visp_auto_tracker/object_position", PoseStamped, qr_callback)
-    rospy.Subscriber("/visp_auto_tracker/status", PoseStamped, status_callback)
+    rospy.Subscriber("/visp_auto_tracker/status", Int8, status_callback)
     rospy.spin()
 
