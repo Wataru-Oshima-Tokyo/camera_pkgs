@@ -9,7 +9,8 @@ from std_srvs.srv import Empty, EmptyResponse
 
 RUN = False
 
-def status_callback(msg):
+def qr_status_callback(msg):
+    print(msg.data)
     if msg.data != 1:
         RUN = False
     else:
@@ -42,6 +43,6 @@ if __name__ == "__main__":
     rospy.init_node("QR_conveter")
     
     rospy.Subscriber("/visp_auto_tracker/object_position", PoseStamped, qr_callback)
-    rospy.Subscriber("/visp_auto_tracker/status", Int8, status_callback)
+    rospy.Subscriber("/visp_auto_tracker/status", Int8, qr_status_callback)
     rospy.spin()
 
