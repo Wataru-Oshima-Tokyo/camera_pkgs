@@ -10,7 +10,7 @@ from std_srvs.srv import Empty, EmptyResponse
 RUN = False
 
 def status_callback(msg):
-    if msg != 1:
+    if msg.data != 1:
         RUN = False
     else:
         RUN = True
