@@ -10,7 +10,7 @@ from std_srvs.srv import Empty, EmptyResponse
 RUN = False
 
 def qr_status_callback(msg):
-    print(msg.data)
+    rospy.loginfo(msg.data)
     if msg.data != 1:
         RUN = False
     else:
