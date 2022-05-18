@@ -7,6 +7,14 @@ from std_msgs.msg import String
 from geometry_msgs.msg import Twist, PoseStamped
 from std_srvs.srv import Empty, EmptyResponse
 
+RUN = False
+
+def status_callback(msg):
+    if msg != 1:
+        RUN = False
+    else:
+        RUN = True
+
 def qr_callback(msg):
     # print(msg.pose.position.x)
     cmd_pub =rospy.Publisher('cmd_vel', Twist, queue_size=1)
@@ -27,11 +35,13 @@ def qr_callback(msg):
         twt.angular.z = 0
     # twt.angular.z = msg.pose.position.x
     # twt.angular.z = -msg.pose.orientation.z
-    cmd_pub.publish(twt)
+    if RUN:
+        cmd_pub.publish(twt)
 
 if __name__ == "__main__":
     rospy.init_node("QR_conveter")
     
     rospy.Subscriber("/visp_auto_tracker/object_position", PoseStamped, qr_callback)
+    rospy.Subscriber("/visp_auto_tracker/status", PoseStamped, status_callback)
     rospy.spin()
 
