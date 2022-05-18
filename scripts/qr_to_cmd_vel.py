@@ -49,7 +49,7 @@ class QR_TRACK:
             self.twt.linear.x =0.1
         elif msg.pose.position.z < 0.3:
             self.twt.linear.x =-0.1
-            self.twt.angular.z *=-1
+            # self.twt.angular.z *=-1
         else:
             self.twt.linear.x =0
         # twt.angular.z = msg.pose.position.x
