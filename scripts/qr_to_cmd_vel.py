@@ -9,9 +9,9 @@ from std_srvs.srv import Empty, EmptyResponse
 
 class QR_TRACK:
     def __init__(self):
-        RUN = False
-        twt = Twist()
-        cmd_pub =rospy.Publisher('cmd_vel', Twist, queue_size=1)
+        self.RUN = False
+        self.twt = Twist()
+        self.cmd_pub =rospy.Publisher('cmd_vel', Twist, queue_size=1)
         rospy.Subscriber("/visp_auto_tracker/object_position", PoseStamped, self.qr_callback)
         rospy.Subscriber("/visp_auto_tracker/status", Int8, self.qr_status_callback)
         
