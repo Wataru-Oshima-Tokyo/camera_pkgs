@@ -45,9 +45,9 @@ class QR_TRACK:
         else:
             self.twt.angular.z = 0
         
-        if msg.pose.position.z > 0.25:
+        if msg.pose.position.z > 0.35:
             self.twt.linear.x =0.1
-        elif msg.pose.position.z < 0.2:
+        elif msg.pose.position.z < 0.3:
             self.twt.linear.x =-0.1
             self.twt.angular.z *=-1
         else:
@@ -60,6 +60,5 @@ class QR_TRACK:
 if __name__ == "__main__":
     rospy.init_node("QR_conveter")
     qrt = QR_TRACK()
-    
     rospy.spin()
 
