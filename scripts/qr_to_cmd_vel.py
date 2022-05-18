@@ -19,10 +19,10 @@ def qr_callback(msg):
     pose.position.z is the distance from robot 0.1 is 10cm
     """
     
-    if msg.pose.position.x > 0.1:
+    if msg.pose.position.x > 0.05:
        twt.angular.z = 0.1
-    elif msg.pose.position.x < -0.1:
-       twt.angular.z = 0.1
+    elif msg.pose.position.x < -0.05:
+       twt.angular.z = -0.1
     # twt.angular.z = msg.pose.position.x
     # twt.angular.z = -msg.pose.orientation.z
     cmd_pub.publish(twt)
