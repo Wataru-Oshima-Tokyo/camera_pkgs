@@ -30,9 +30,11 @@ def qr_callback(msg):
     """
     
     if msg.pose.position.x > 0.05:
-       twt.angular.z = - 10 * msg.pose.position.x
+    #    twt.angular.z = - 10 * msg.pose.position.x
+        twt.angular.z = -0.1
     elif msg.pose.position.x < -0.05:
-       twt.angular.z = -10 * msg.pose.position.x
+    #    twt.angular.z = -10 * msg.pose.position.x
+       twt.angular.z = 0.1
     else:
         twt.angular.z = 0
     # twt.angular.z = msg.pose.position.x
