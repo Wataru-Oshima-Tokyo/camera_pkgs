@@ -48,7 +48,7 @@ class QR_TRACK:
 
 if __name__ == "__main__":
     rospy.init_node("QR_conveter")
-    
+    qrt = QR_TRACK()
     
     rospy.spin()
 
