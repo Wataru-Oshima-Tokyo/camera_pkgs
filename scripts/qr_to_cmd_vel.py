@@ -11,12 +11,11 @@ RUN = False
 
 def qr_status_callback(msg):
     data = msg.data
-    if msg.data != 1:
+    if msg.data == 1:
         RUN = False
     else:
         RUN = True
-    pub = rospy.Publisher("/tempdata", String)
-    pub.publish(str(data))
+
 
 def qr_callback(msg):
     # print(msg.pose.position.x)
