@@ -247,8 +247,8 @@ void LINETRACE::image_callback(const sensor_msgs::ImageConstPtr& msg){
      return;
    }
    
-   int low_c[3] = {17, 123, 121};
-   int high_c[3] ={37, 143, 201};
+   int low_c[3] = {14, 131, 189};
+   int high_c[3] ={34, 151, 269};
    cv::Mat frame = cv_ptr->image, frame_HSV, mask; 
    cv::cvtColor(frame, frame_HSV, cv::COLOR_BGR2HSV);
    int fheight = frame.size().height, fwidth = frame.size().width;
