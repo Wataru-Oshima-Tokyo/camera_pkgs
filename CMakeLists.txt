@@ -38,8 +38,8 @@ rosidl_generate_interfaces(${PROJECT_NAME}
 )
 
 
-add_executable(ros_img src/ros_image.cpp)
-ament_target_dependencies(ros_img rclcpp std_msgs OpenCV sensor_msgs)
+# add_executable(ros_img src/ros_image.cpp)
+# ament_target_dependencies(ros_img rclcpp std_msgs OpenCV sensor_msgs)
 
 
 install(TARGETS
