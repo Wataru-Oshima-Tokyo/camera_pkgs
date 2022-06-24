@@ -71,14 +71,16 @@ class ImageConverter(Node):
         except CvBridgeError as e:
             print(e)
 
+def main():
+        try:
+            rclpy.init()
+            image_converter = ImageConverter()
+            rclpy.spin(image_converter)
+            image_converter.destroy_node
+            rclpy.shutdown()
+        except KeyboardInterrupt:
+            print("Shutting down")
+            cv2.destroyAllWindows()
 
 if __name__ == '__main__':   
-    try:
-        rclpy.init()
-        image_converter = ImageConverter()
-        rclpy.spin(image_converter)
-        image_converter.destroy_node
-        rclpy.shutdown()
-    except KeyboardInterrupt:
-        print("Shutting down")
-        cv2.destroyAllWindows()
+    main()
