@@ -13,7 +13,7 @@
  #include "std_msgs/String.h"
  #include "std_srvs/Empty.h"
  #include <vector>
- #include <camera_pkg/Coordinate.h>
+ #include <camera_pkg_msgs/Coordinate.h>
  #include <map>
 
 // #include <camera_pkg/Camera_CV.h>
@@ -50,6 +50,7 @@ class CAMERA_CV{
     void MaskThreshold(int, void*);
     void DrawCircle(int, void*);
     void mouseEvent(int event, int x, int y, int flags, void* userdata);
+    camera_pkg_msgs::Coordinate MaskThreshold(int, int);
     // Mat getDepth();
     const std::string OPENCV_WINDOW = "Image window";
     virtual bool calibration_start_service(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);
@@ -57,8 +58,8 @@ class CAMERA_CV{
     virtual void image_callback(const sensor_msgs::ImageConstPtr&);
     virtual void depth_callback(const sensor_msgs::ImageConstPtr&);
     // Topics
-    const std::string IMAGE_TOPIC = "/camera/color/image";
-    const std::string DEPTH_TOPIC = "/camera/ir/image";
+    const std::string IMAGE_TOPIC = "/camera/color/image_raw";
+    const std::string DEPTH_TOPIC = "/camera/aligned_depth_to_color/image_raw";
     // const std::string DEPTH_TOPIC = "/camera/depth/color/image_raw";
     const std::string PUBLISH_TOPIC = "/camera_pkg/coordinate";
     const std::string IMSHOW_SERVICE_START = "/imshow/start";
@@ -70,11 +71,6 @@ class CAMERA_CV{
     bool getRun(); 
     const int max_lowThreshold = 100;
     const std::string window_name = "Edge Map";
-    // static constexpr char* window_name = "Edge Map";
-    // static void callback(int event, int x, int y, int flags, void* userdata) { // because the mouse call back cannot accept non-static func
-    //     CAMERA_CV *foo = (CAMERA_CV*)userdata; // cast user data back to "this"
-    //     foo->mouseEvent(event, x, y, flags, foo);
-    // }
 private:
     bool RUN = false;
     bool start_call = true;
@@ -130,19 +126,36 @@ void CAMERA_CV::DrawCircle(int, void*){
 
 }
 
-void CAMERA_CV::MaskThreshold(int, void*){
+camera_pkg_msgs::Coordinate CAMERA_CV::MaskThreshold(int x, int y){
+  camera_pkg_msgs::Coordinate rvalue;
+  rvalue.t="e";
+  Vec3b &color = src_hsv.at<Vec3b>(Point(y,x));
+  // 			upper=  np.array([pixel[0] + 10, pixel[1] + 10, pixel[2] + 40])
+	// lower=  np.array([pixel[0] -10, pixel[1] -10, pixel[2] -40])
+  rep(i,0,3){
+    int val=10;
+    if (i==2){
+      val=40;
+    }
+    low_c[i] = color[i] -val;
+    high_c[i] = color[i] +val;
+  }
 
-   cv::inRange(src_hsv, cv::Scalar(low_c[0],low_c[1],low_c[1]), cv::Scalar(high_c[0],high_c[1],high_c[2]),mask);
+   cv::inRange(src_hsv, cv::Scalar(low_c[0],low_c[1],low_c[2]), cv::Scalar(high_c[0],high_c[1],high_c[2]),mask);
    
    cv::Moments M = cv::moments(mask); // get the center of gravity
    if (M.m00 >0){
-   			int cx = int(M.m10/M.m00); //重心のx座標
-   			int cy = int(M.m01/M.m00); //重心のy座標
+   			int cx = int(M.m10/M.m00); //the center of mass for x
+   			int cy = int(M.m01/M.m00); //the cneter of mass for y
       
       cv::circle(src, cv::Point(cx,cy), 5, cv::Scalar(0, 0, 255));
+      rvalue.t="f";
+      rvalue.x = cx;
+      rvalue.y = cy;
+      return rvalue;
    }
-  // //  imshow("masked", src);
-  // //  waitKey(3);
+   return rvalue;
+
 }
 
 
@@ -198,6 +211,7 @@ void CAMERA_CV::depth_callback(const sensor_msgs::ImageConstPtr& msg){
 }
 
  void CAMERA_CV::image_callback(const sensor_msgs::ImageConstPtr& msg){
+    clock_gettime(CLOCK_MONOTONIC, &start); fstart=(double)start.tv_sec + ((double)start.tv_nsec/1000000000.0);
     std_msgs::Header msg_header = msg->header;
     std::string frame_id = msg_header.frame_id.c_str();
     // ROS_INFO_STREAM("New Image from " << frame_id);
@@ -230,21 +244,33 @@ void mouseEvent(int event, int x, int y, int flags, void* userdata)
      CAMERA_CV *cc = (CAMERA_CV*)userdata;
     //  ros::Publisher* _pub = cc->pub;
     //  _cc.pub = _cc.nh.advertise<std_msgs::String>(_cc.PUBLISH_TOPIC, 1000);
-     camera_pkg::Coordinate coordinate;
+     camera_pkg_msgs::Coordinate coordinate;
     //  Mat* _depth = &depth;
      std::string temp="";
      double z=0.0;
      z = cc->depth.at<uint16_t>((uint16_t)y,(uint16_t)x);
+     
+    //  cout << color[0] << " "<< color[1] << " " << color[2] <<endl; 
      if  ( event == EVENT_LBUTTONDOWN )
      {
-          //I got the erro for getting the belwo one I guess because this function is dervied from the 
-          // z = cc->depth.at<u_int16_t>(x,y);
-          
-          cout << "Left button of the mouse is clicked - position (" << x << ", " << y << ", " << z << ")" << endl;
-          temp = "L";
-          
-          // cout << z << endl;
-           
+//           //I got the erro for getting the belwo one I guess because this function is dervied from the 
+//           // z = cc->depth.at<u_int16_t>(x,y);
+// 	  if(!cc.getRun()){
+// 		  camera_pkg::Coordinate tempv;
+// 		  tempv = cc->MaskThreshold(x,y);
+// 		  if(tempv.t =="e"){
+// 			x=tempv.x;
+// 			y=tempv.y;
+// 			cout << "Left button of the mouse is clicked - position (" << x << ", " << y << ", " << z << ")" << endl;
+// 			temp = "L";
+// 			z =1;
+// 		  }
+// 	  }else{
+	  	cout << "Left button of the mouse is clicked - position (" << x << ", " << y << ", " << z << ")" << endl;
+		temp = "L";
+// 		z = cc->depth.at<u_int16_t>(x,y);
+// 	  }
+         
      }
      else if  ( event == EVENT_RBUTTONDOWN )
      {
@@ -286,11 +312,11 @@ int main( int argc, char** argv )
    cc.imshow_stop = cc.nh.advertiseService(cc.IMSHOW_SERVICE_STOP, &CAMERA_CV::calibration_stop_service, &cc);
    cc.calibration_start = cc.nh.serviceClient<std_srvs::Empty>(cc.CALIB_SERVICE_START);
    cc.calibration_stop = cc.nh.serviceClient<std_srvs::Empty>(cc.CALIB_SERVICE_STOP);
-   cc.pub = cc.nh.advertise<camera_pkg::Coordinate>(cc.PUBLISH_TOPIC, 1000);
+   cc.pub = cc.nh.advertise<camera_pkg_msgs::Coordinate>(cc.PUBLISH_TOPIC, 1000);
    std_srvs::Empty _emp;
    while(ros::ok()){
       // cout << cc.getRun() << endl;
-       clock_gettime(CLOCK_MONOTONIC, &start); fstart=(double)start.tv_sec + ((double)start.tv_nsec/1000000000.0);
+       
        
       if(cc.getRun()){
             cc.DrawCircle(0,0);

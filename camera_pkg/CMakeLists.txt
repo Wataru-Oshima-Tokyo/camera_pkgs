@@ -15,6 +15,7 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   sensor_msgs
   std_msgs
+  camera_pkg_msgs
 )
 
 find_package(OpenCV 4  REQUIRED)
@@ -59,10 +60,10 @@ endif()
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
- add_message_files(
-   FILES
-   Coordinate.msg
- )
+# add_message_files(
+#   FILES
+#   Coordinate.msg
+# )
 
 ## Generate services in the 'srv' folder
 # add_service_files(
@@ -79,11 +80,11 @@ endif()
 # )
 
 ## Generate added messages and services with any dependencies listed here
-generate_messages(
-   DEPENDENCIES
-   sensor_msgs
-   std_msgs
- )
+#generate_messages(
+#   DEPENDENCIES
+#   sensor_msgs
+#   std_msgs
+# )
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##

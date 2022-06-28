@@ -17,7 +17,7 @@
 #include <std_msgs/Int8.h>
  #include <sensor_msgs/LaserScan.h>
  #include <vector>
- #include <camera_pkg/Coordinate.h>
+ #include <camera_pkg_msgs/Coordinate.h>
  #define IMG_HEIGHT (240)
  #define IMG_WIDTH (320)
  #define NUM_THREADS 4
