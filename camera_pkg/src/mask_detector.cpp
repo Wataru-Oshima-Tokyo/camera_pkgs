@@ -58,8 +58,8 @@ class DETECTOBJ{
     virtual void image_callback(const sensor_msgs::ImageConstPtr&);
     virtual void depth_callback(const sensor_msgs::ImageConstPtr&);
     // Topics
-    const std::string IMAGE_TOPIC = "/camera/color/image_raw";
-    const std::string DEPTH_TOPIC = "/camera/aligned_depth_to_color/image_raw";
+    std::string IMAGE_TOPIC;
+    std::string DEPTH_TOPIC;
     // const std::string DEPTH_TOPIC = "/camera/depth/color/image_raw";
     const std::string PUBLISH_TOPIC = "/objectdetection/coordinate";
     const std::string PICKUP_SERVICE_START = "/pickup/start";
@@ -85,6 +85,10 @@ private:
 
 
 DETECTOBJ::DETECTOBJ(){
+  
+  ros::NodeHandle private_nh("~");
+  private_nh.param("image_topic", IMAGE_TOPIC, std::string("/camera/color/image_raw"));
+  private_nh.param("depth_topic", DEPTH_TOPIC, std::string("/camera/aligned_depth_to_color/image_raw"));
   lowThreshold = 6;
 };
 

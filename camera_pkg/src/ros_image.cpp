@@ -11,12 +11,26 @@
  #include <image_transport/image_transport.h>
  #include <cv_bridge/cv_bridge.h>
  #include <sensor_msgs/image_encodings.h>
-    using namespace cv;
+
+using namespace cv;
     struct timespec start, stop;
     double fstart, fstop;
-    static const std::string IMAGE_TOPIC = "/camera/rgb/image_raw";
+    std::string IMAGE_TOPIC;
     Mat src, src_hsv, dst;
 
+class Image{
+   public:
+	 Image();
+	 ~Image();
+};
+
+Image::Image(){
+   ros::NodeHandle private_nh("~");
+   private_nh.param("image_topic", IMAGE_TOPIC, std::string("/color/image_rect_raw"));
+
+}
+
+Image::~Image(){}
 
 void image_callback(const sensor_msgs::ImageConstPtr& msg){
     clock_gettime(CLOCK_MONOTONIC, &start); fstart=(double)start.tv_sec + ((double)start.tv_nsec/1000000000.0);
@@ -60,6 +74,7 @@ void image_callback(const sensor_msgs::ImageConstPtr& msg){
  int main(int argc, char* argv[]){
 
     ros::init(argc, argv, "roscpp_example");
+    Image img;
     ros::NodeHandle nh;
     ros::Subscriber image;
     image = nh.subscribe(IMAGE_TOPIC, 1000, image_callback);
