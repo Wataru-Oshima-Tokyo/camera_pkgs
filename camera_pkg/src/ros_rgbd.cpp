@@ -58,8 +58,8 @@ class CAMERA_CV{
     virtual void image_callback(const sensor_msgs::ImageConstPtr&);
     virtual void depth_callback(const sensor_msgs::ImageConstPtr&);
     // Topics
-    const std::string IMAGE_TOPIC = "/camera/color/image_raw";
-    const std::string DEPTH_TOPIC = "/camera/aligned_depth_to_color/image_raw";
+    const std::string IMAGE_TOPIC;
+    const std::string DEPTH_TOPIC;
     // const std::string DEPTH_TOPIC = "/camera/depth/color/image_raw";
     const std::string PUBLISH_TOPIC = "/camera_pkg/coordinate";
     const std::string IMSHOW_SERVICE_START = "/imshow/start";
@@ -82,6 +82,9 @@ private:
 
 
 CAMERA_CV::CAMERA_CV(){
+  ros::NodeHandle private_nh("~");
+  private_nh.param("image_topic", IMAGE_TOPIC, std::string("/color/image_rect_raw"));
+  private_nh.param("depth_topic", DEPTH_TOPIC, std::string("/depth/image_rect_raw"));
   lowThreshold = 6;
 };
 
