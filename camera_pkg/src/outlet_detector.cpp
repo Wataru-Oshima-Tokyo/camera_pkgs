@@ -305,7 +305,7 @@ int main( int argc, char** argv )
         clock_gettime(CLOCK_MONOTONIC, &stop); fstop=(double)stop.tv_sec + ((double)stop.tv_nsec/1000000000.0);
         std::string fps= "FPS: " + std::to_string(1/(fstop-fstart));
         std::string exp=""
-        if(cc.mode =="L"){
+        if(cc.mode =="L" || cc.cmd == "R"){
             if(cc.RUN)
                 exp ="Get Coordinate";
             else 
