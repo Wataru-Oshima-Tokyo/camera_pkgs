@@ -235,7 +235,7 @@ void OUTLET_CV::depth_callback(const sensor_msgs::ImageConstPtr& msg){
 
  void mouseEvent(int event, int x, int y, int flags, void* userdata)
 {
-     CAMERA_CV *cc = (CAMERA_CV*)userdata;
+     OUTLET_CV *cc = (OUTLET_CV*)userdata;
     //  ros::Publisher* _pub = cc->pub;
     //  _cc.pub = _cc.nh.advertise<std_msgs::String>(_cc.PUBLISH_TOPIC, 1000);
      camera_pkg_msgs::Coordinate coordinate;
@@ -250,7 +250,7 @@ void OUTLET_CV::depth_callback(const sensor_msgs::ImageConstPtr& msg){
 
 	  	cout << "Left button of the mouse is clicked - position (" << x << ", " << y << ", " << z << ")" << endl;
 		  cc->mode = "L";
-      if(RUN)
+      if(cc->RUN)
         cc->RUN =!cc->RUN;
  
      }
@@ -258,7 +258,7 @@ void OUTLET_CV::depth_callback(const sensor_msgs::ImageConstPtr& msg){
      {
           cout << "Right button of the mouse is clicked - position (" << x << ", " << y << ", " << z << ")" << endl;
           cc->mode = "R";
-          if(!RUN)
+          if(!cc->RUN)
             cc->RUN =!cc->RUN;
      }
      else if  ( event == EVENT_MBUTTONDOWN )
