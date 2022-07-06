@@ -316,10 +316,9 @@ int main( int argc, char** argv )
                 exp ="Get Coordinate";
             else 
                 exp ="Color checker";
-        }else if (cc.mode == "R"){
-            exp ="xy_calibration";
-        }else if (cc.mode == "M"){
-            exp ="z_calibration";
+        }
+        else if (cc.mode == "M"){
+            break;
         }
         putText(cc.src, //target image
           fps, //text
