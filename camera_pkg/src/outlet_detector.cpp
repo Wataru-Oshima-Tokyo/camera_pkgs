@@ -74,7 +74,7 @@ class OUTLET_CV{
     const int max_lowThreshold = 100;
     const std::string window_name = "Edge Map";
 private:
-    bool RUN = true;
+    bool RUN = false;
     double detect_probability =0.0;
     bool detected=false;
     bool start_call = true;
@@ -304,9 +304,9 @@ int main( int argc, char** argv )
       // cout << cc.getRun() << endl;
       clock_gettime(CLOCK_MONOTONIC, &start); fstart=(double)start.tv_sec + ((double)start.tv_nsec/1000000000.0);
       if(!cc.src.empty()){
-        if(cc.getRun()){
-            cc.MaskThreshold(0,&cc);
-        }
+        // if(cc.getRun()){
+        //     cc.MaskThreshold(0,&cc);
+        // }
         setMouseCallback("src", mouseEvent, &cc);
         clock_gettime(CLOCK_MONOTONIC, &stop); fstop=(double)stop.tv_sec + ((double)stop.tv_nsec/1000000000.0);
         std::string fps= "FPS: " + std::to_string(1/(fstop-fstart));
