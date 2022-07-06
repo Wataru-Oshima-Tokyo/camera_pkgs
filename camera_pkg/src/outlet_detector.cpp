@@ -245,7 +245,6 @@ void OUTLET_CV::depth_callback(const sensor_msgs::ImageConstPtr& msg){
     //  _cc.pub = _cc.nh.advertise<std_msgs::String>(_cc.PUBLISH_TOPIC, 1000);
      camera_pkg_msgs::Coordinate coordinate;
     //  Mat* _depth = &depth;
-    cc->mode 
      double z=0.0;
      z = cc->depth.at<uint16_t>((uint16_t)y,(uint16_t)x);
      
@@ -276,8 +275,10 @@ void OUTLET_CV::depth_callback(const sensor_msgs::ImageConstPtr& msg){
         Vec3b &color = cc->src_hsv.at<Vec3b>(Point(y,x));
         cc->low_c[0] = color[0] -20; cc->low_c[1] = color[1] -20; cc->low_c[2] = color[2] -20;
         cc->high_c[0] = color[0] +20; cc->high_c[1] = color[1] +20; cc->high_c[2] = color[2] +20;
-        ROS_INFO_STREAM("The MIN color: %d, %d, %d", low_c[0],low_c[1],low_c[2]);
-        ROS_INFO_STREAM("The MAX color: %d, %d, %d", high_c[0],high_c[1],high_c[2]);
+        // ROS_INFO_STREAM("The MIN color: %d, %d, %d", low_c[0],low_c[1],low_c[2]);
+        // ROS_INFO_STREAM("The MAX color: %d, %d, %d", high_c[0],high_c[1],high_c[2]);
+        printf("The MIN color: %d, %d, %\n", low_c[0],low_c[1],low_c[2]);
+        printf("The MAX color: %d, %d, %d\n", high_c[0],high_c[1],high_c[2])
       }
 
 }
