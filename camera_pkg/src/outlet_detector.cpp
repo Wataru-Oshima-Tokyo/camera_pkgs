@@ -70,7 +70,7 @@ class OUTLET_CV{
     OUTLET_CV();
     ~OUTLET_CV();
     bool getRun(); 
-    void setRun(bool run)
+    void setRun(bool run);
     const int max_lowThreshold = 100;
     const std::string window_name = "Edge Map";
 private:
@@ -311,13 +311,13 @@ int main( int argc, char** argv )
         std::string fps= "FPS: " + std::to_string(1/(fstop-fstart));
         std::string exp="";
         if(cc.mode =="L" || cc.cmd == "R"){
-            if(cc.RUN)
+            if(cc.getRun())
                 exp ="Get Coordinate";
             else 
                 exp ="Color checker";
-        }else if (cc.cmd == "R"){
+        }else if (cc.mode == "R"){
             exp ="xy_calibration";
-        }else if (cc.cmd == "M"){
+        }else if (cc.mode == "M"){
             exp ="z_calibration";
         }
         putText(cc.src, //target image
