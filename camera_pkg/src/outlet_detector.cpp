@@ -40,8 +40,8 @@ class OUTLET_CV{
     camera_pkg_msgs::Coordinate coordinate;
     ros::ServiceServer pickup_start, pickup_stop;
     int lowThreshold;
-    int low_c[3] = {162, 174, 126};
-    int high_c[3] = {188, 203, 254};
+    int low_c[3] = {50, 138, 157};
+    int high_c[3] = {100, 255, 197};
     const int max_c[3] = {179, 255, 255};
     std::string HSV[3] = {"H","S","V"};
     // int _MIN_DH =15, _MIN_DS = 60, _MIN_DV = 60;
@@ -148,7 +148,7 @@ void OUTLET_CV::DrawCircle(int, void*){
 void OUTLET_CV::MaskThreshold(int, void*userdata){
    OUTLET_CV *cc = (OUTLET_CV*)userdata;
    
-   cv::inRange(src_hsv, cv::Scalar(low_c[0],low_c[1],low_c[1]), cv::Scalar(high_c[0],high_c[1],high_c[2]),mask);
+   cv::inRange(src_hsv, cv::Scalar(low_c[0],low_c[1],low_c[2]), cv::Scalar(high_c[0],high_c[1],high_c[2]),mask);
 //    Canny(mask, mask, lowThreshold, lowThreshold*ratio, kernel_size );
  
    cv::Moments M = cv::moments(mask); // get the center of gravity
@@ -231,7 +231,7 @@ void OUTLET_CV::depth_callback(const sensor_msgs::ImageConstPtr& msg){
     dst.create(src.size(), src.type());
     //cvtColor(src, src_gray, COLOR_BGR2GRAY);
     cvtColor(src, src_hsv, COLOR_BGR2HSV);
-    
+   
     // namedWindow(window_name, WINDOW_AUTOSIZE );
     // CannyThreshold(0, 0);
 
@@ -254,7 +254,15 @@ void OUTLET_CV::depth_callback(const sensor_msgs::ImageConstPtr& msg){
 
 	  	cout << "Left button of the mouse is clicked - position (" << x << ", " << y << ", " << z << ")" << endl;
 		  cc->mode = "L";
-      if(cc->getRun())
+      if(!cc->getRun()){
+		      Vec3b &color = cc->src_hsv.at<Vec3b>(Point(y,x));
+        	cc->low_c[0] = color[0] -10; cc->low_c[1] = color[1] -10; cc->low_c[2] = color[2] -40;
+        	cc->high_c[0] = color[0] +10; cc->high_c[1] = color[1] +10; cc->high_c[2] = color[2] +20;
+        	// ROS_INFO_STREAM("The MIN color: %d, %d, %d", low_c[0],low_c[1],low_c[2]);
+        	// ROS_INFO_STREAM("The MAX color: %d, %d, %d", high_c[0],high_c[1],high_c[2]);
+        	printf("The MIN color: %d, %d, %d\n", cc->low_c[0],cc->low_c[1],cc->low_c[2]);
+        	printf("The MAX color: %d, %d, %d\n", cc->high_c[0],cc->high_c[1],cc->high_c[2]);	
+	 }
           cc->setRun(false);
  
      }
@@ -271,15 +279,6 @@ void OUTLET_CV::depth_callback(const sensor_msgs::ImageConstPtr& msg){
           cc->mode = "M";
      }
      
-      if(!cc->getRun()){
-        Vec3b &color = cc->src_hsv.at<Vec3b>(Point(y,x));
-        cc->low_c[0] = color[0] -20; cc->low_c[1] = color[1] -20; cc->low_c[2] = color[2] -20;
-        cc->high_c[0] = color[0] +20; cc->high_c[1] = color[1] +20; cc->high_c[2] = color[2] +20;
-        // ROS_INFO_STREAM("The MIN color: %d, %d, %d", low_c[0],low_c[1],low_c[2]);
-        // ROS_INFO_STREAM("The MAX color: %d, %d, %d", high_c[0],high_c[1],high_c[2]);
-        printf("The MIN color: %d, %d, %d\n", cc->low_c[0],cc->low_c[1],cc->low_c[2]);
-        printf("The MAX color: %d, %d, %d\n", cc->high_c[0],cc->high_c[1],cc->high_c[2]);
-      }
 
 }
 
@@ -307,7 +306,7 @@ int main( int argc, char** argv )
         if(cc.getRun()){
             cc.MaskThreshold(0,&cc);
         }
-        // setMouseCallback("src", mouseEvent, &cc);
+        setMouseCallback("src", mouseEvent, &cc);
         clock_gettime(CLOCK_MONOTONIC, &stop); fstop=(double)stop.tv_sec + ((double)stop.tv_nsec/1000000000.0);
         std::string fps= "FPS: " + std::to_string(1/(fstop-fstart));
         std::string exp="";
@@ -329,9 +328,10 @@ int main( int argc, char** argv )
           2);
         putText(cc.src, exp, Point(10, 65), FONT_HERSHEY_DUPLEX,1.0,Scalar(0, 0, 255), 2);
         imshow( "src", cc.src);
-        waitKey(3);
+        imshow("hsv", cc.src_hsv);
+	waitKey(3);
       }
-      loop_rate.sleep();
+      //loop_rate.sleep();
       ros::spinOnce();
       
    }
