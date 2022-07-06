@@ -277,8 +277,8 @@ void OUTLET_CV::depth_callback(const sensor_msgs::ImageConstPtr& msg){
         cc->high_c[0] = color[0] +20; cc->high_c[1] = color[1] +20; cc->high_c[2] = color[2] +20;
         // ROS_INFO_STREAM("The MIN color: %d, %d, %d", low_c[0],low_c[1],low_c[2]);
         // ROS_INFO_STREAM("The MAX color: %d, %d, %d", high_c[0],high_c[1],high_c[2]);
-        printf("The MIN color: %d, %d, %\n", low_c[0],low_c[1],low_c[2]);
-        printf("The MAX color: %d, %d, %d\n", high_c[0],high_c[1],high_c[2])
+        printf("The MIN color: %d, %d, %\n", cc->low_c[0],cc->low_c[1],cc->low_c[2]);
+        printf("The MAX color: %d, %d, %d\n", cc->high_c[0],cc->high_c[1],cc->high_c[2])
       }
 
 }
