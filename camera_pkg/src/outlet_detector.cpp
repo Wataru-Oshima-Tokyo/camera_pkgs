@@ -70,6 +70,7 @@ class OUTLET_CV{
     OUTLET_CV();
     ~OUTLET_CV();
     bool getRun(); 
+    void setRun(bool run)
     const int max_lowThreshold = 100;
     const std::string window_name = "Edge Map";
 private:
@@ -96,6 +97,10 @@ OUTLET_CV::~OUTLET_CV(){};
 
 bool OUTLET_CV::getRun(){    
   return RUN;
+}
+
+void OUTLET_CV::setRun(bool run){
+    RUN = run;
 }
 
 // void OUTLET_CV::detect_object(int, void* userdata){
@@ -250,16 +255,16 @@ void OUTLET_CV::depth_callback(const sensor_msgs::ImageConstPtr& msg){
 
 	  	cout << "Left button of the mouse is clicked - position (" << x << ", " << y << ", " << z << ")" << endl;
 		  cc->mode = "L";
-      if(cc->RUN)
-        cc->RUN =!cc->RUN;
+      if(cc->getRun())
+          cc->setRun(false);
  
      }
      else if  ( event == EVENT_RBUTTONDOWN )
      {
           cout << "Right button of the mouse is clicked - position (" << x << ", " << y << ", " << z << ")" << endl;
           cc->mode = "R";
-          if(!cc->RUN)
-            cc->RUN =!cc->RUN;
+      if(!cc->getRun())
+          cc->setRun(true);
      }
      else if  ( event == EVENT_MBUTTONDOWN )
      {
@@ -267,7 +272,7 @@ void OUTLET_CV::depth_callback(const sensor_msgs::ImageConstPtr& msg){
           cc->mode = "M";
      }
      
-      if(!RUN){
+      if(!cc->getRun()){
         Vec3b &color = cc->src_hsv.at<Vec3b>(Point(y,x));
         cc->low_c[0] = color[0] -20; cc->low_c[1] = color[1] -20; cc->low_c[2] = color[2] -20;
         cc->high_c[0] = color[0] +20; cc->high_c[1] = color[1] +20; cc->high_c[2] = color[2] +20;
@@ -304,7 +309,7 @@ int main( int argc, char** argv )
         setMouseCallback("src", mouseEvent, &cc);
         clock_gettime(CLOCK_MONOTONIC, &stop); fstop=(double)stop.tv_sec + ((double)stop.tv_nsec/1000000000.0);
         std::string fps= "FPS: " + std::to_string(1/(fstop-fstart));
-        std::string exp=""
+        std::string exp="";
         if(cc.mode =="L" || cc.cmd == "R"){
             if(cc.RUN)
                 exp ="Get Coordinate";
