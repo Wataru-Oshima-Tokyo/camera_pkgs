@@ -107,7 +107,35 @@ void OUTLET_CV::setRun(bool run){
 }
 
 void OUTLET_CV::bbox_callback(const darknet_ros_msgs::BoundingBoxes& cod){
-  cv::rectangle(src, cv::Point(cod.bounding_boxes[0].xmin, cod.bounding_boxes[0].ymin), cv::Point(cod.bounding_boxes[0].xmax,cod.bounding_boxes[0].ymax), cv::Scalar(255,0,0),3);
+	int xmin = cod.bounding_boxes[0].xmin;
+	int xmax = cod.bounding_boxes[0].xmax
+	int ymin = cod.bounding_boxes[0].ymin;
+	int ymax = cod.bounding_boxes[0].ymax;
+  cv::rectangle(src, cv::Point(xmin, ymin), cv::Point(xmax,ymax), cv::Scalar(255,0,0),3);
+  //get the center coordinate of the rectabgle
+	int cx = (xmax+xmin)/2;
+	int cy = (ymax+ymin)/2;
+	std::vector<double> z_array;
+	double z=0.0;
+	// below process needs to be done because the z-value of realsense is not stable
+	rep(i,0,5)
+		rep(j,0,5){
+		  z = cc->depth.at<uint16_t>((uint16_t)(cy+j),(uint16_t)(cx+i));
+		  z_array.push_back(z);
+		}
+	std::sort(z_array.begin(), z_array.end());
+	z = z_array[z_array.size()-1];
+        cc->coordinate.x = cx;
+        cc->coordinate.y = cy;
+        if(cc->coordinate.x !=0 && cc->coordinate.y!=0){
+        cc->coordinate.z = z;
+        }else{
+        cc->coordinate.z =0;
+        }
+	if(cc->coordinate.z !=0){
+		cc->pub.publish(coordinate);
+		RUN = false;
+	}
 }
 
 // void OUTLET_CV::DrawCircle(int, void*){
@@ -156,8 +184,6 @@ void OUTLET_CV::bbox_callback(const darknet_ros_msgs::BoundingBoxes& cod){
 //     imshow( "mask", mask);
 //     waitKey(3);
  
-   
-   
 // }
 
 
@@ -313,9 +339,9 @@ int main( int argc, char** argv )
           Scalar(118, 185, 0), //font color
           2);
         putText(cc.src, exp, Point(10, 65), FONT_HERSHEY_DUPLEX,1.0,Scalar(0, 0, 255), 2);
-        imshow( "src", cc.src);
+//         imshow( "src", cc.src);
         //imshow("hsv", cc.src_hsv);
-	waitKey(3);
+// 	waitKey(3);
       }
       loop_rate.sleep();
       ros::spinOnce();
