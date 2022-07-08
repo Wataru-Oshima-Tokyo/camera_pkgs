@@ -58,6 +58,7 @@ class OUTLET_CV{
     virtual bool outletdetect_stop_service(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);
     virtual void image_callback(const sensor_msgs::ImageConstPtr&);
     virtual void depth_callback(const sensor_msgs::ImageConstPtr&);
+    virtual void bbox_callback(const darknet_ros_msgs::BoundingBoxes& cod);
     // Topics
     std::string IMAGE_TOPIC;
     std::string DEPTH_TOPIC;
@@ -105,8 +106,8 @@ void OUTLET_CV::setRun(bool run){
     RUN = run;
 }
 
-void OUTLET_CV::bounding_boxes(const darknet_ros_msgs::BoundingBoxes& cod){
-  cv::rectangle(src, cv::Point(cod.xmin, cod.ymin), cv::Point(cod.xmax,cod.ymax), cv::Scalar(255,0,0),3);
+void OUTLET_CV::bbox_callback(const darknet_ros_msgs::BoundingBoxes& cod){
+  cv::rectangle(src, cv::Point(cod.bounding_boxes[0].xmin, cod.bounding_boxes[0].ymin), cv::Point(cod.bounding_boxes[0].xmax,cod.bounding_boxes[0].ymax), cv::Scalar(255,0,0),3);
 }
 
 // void OUTLET_CV::DrawCircle(int, void*){
@@ -199,6 +200,7 @@ void OUTLET_CV::depth_callback(const sensor_msgs::ImageConstPtr& msg){
  void OUTLET_CV::image_callback(const sensor_msgs::ImageConstPtr& msg){
     std_msgs::Header msg_header = msg->header;
     std::string frame_id = msg_header.frame_id.c_str();
+    clock_gettime(CLOCK_MONOTONIC, &start); fstart=(double)start.tv_sec + ((double)start.tv_nsec/1000000000.0);
     // ROS_INFO_STREAM("New Image from " << frame_id);
 
     cv_bridge::CvImagePtr cv_ptr;
@@ -215,7 +217,7 @@ void OUTLET_CV::depth_callback(const sensor_msgs::ImageConstPtr& msg){
     src = cv_ptr->image;
     dst.create(src.size(), src.type());
     //cvtColor(src, src_gray, COLOR_BGR2GRAY);
-    cvtColor(src, src_hsv, COLOR_BGR2HSV);
+    //cvtColor(src, src_hsv, COLOR_BGR2HSV);
    
     // namedWindow(window_name, WINDOW_AUTOSIZE );
     // CannyThreshold(0, 0);
@@ -274,26 +276,23 @@ int main( int argc, char** argv )
    ros::init(argc, argv, "mask_detector");
    OUTLET_CV cc;
    // Initialize the ROS Node "roscpp_example"
-   ros::Rate loop_rate(20);
+   ros::Rate loop_rate(1000);
    
    cc.image_sub = cc.nh.subscribe(cc.IMAGE_TOPIC, 1000, &OUTLET_CV::image_callback, &cc);
    cc.depth_sub = cc.nh.subscribe(cc.DEPTH_TOPIC, 1000, &OUTLET_CV::depth_callback, &cc);
    cc.darknet_bbox_sub = cc.nh.subscribe(cc.BOUNDING_BOX_TOPIC, 1000, &OUTLET_CV::bbox_callback, &cc);
-   cc.pickup_start = cc.nh.advertiseService(cc.PICKUP_SERVICE_START, &OUTLET_CV::maskdetect_start_service, &cc);
-   cc.pickup_stop = cc.nh.advertiseService(cc.PICKUP_SERVICE_STOP, &OUTLET_CV::maskdetect_stop_service, &cc);
+   cc.pickup_start = cc.nh.advertiseService(cc.PICKUP_SERVICE_START, &OUTLET_CV::outletdetect_start_service, &cc);
+   cc.pickup_stop = cc.nh.advertiseService(cc.PICKUP_SERVICE_STOP, &OUTLET_CV::outletdetect_stop_service, &cc);
    cc.pub = cc.nh.advertise<camera_pkg_msgs::Coordinate>(cc.PUBLISH_TOPIC, 1000);
    
    std_srvs::Empty _emp;
    while(ros::ok()){
       // cout << cc.getRun() << endl;
-      clock_gettime(CLOCK_MONOTONIC, &start); fstart=(double)start.tv_sec + ((double)start.tv_nsec/1000000000.0);
       if(!cc.src.empty()){
         if(cc.getRun()){
             // cc.MaskThreshold(0,&cc);
         }
         // setMouseCallback("src", mouseEvent, &cc);
-        clock_gettime(CLOCK_MONOTONIC, &stop); fstop=(double)stop.tv_sec + ((double)stop.tv_nsec/1000000000.0);
-        std::string fps= "FPS: " + std::to_string(1/(fstop-fstart));
         std::string exp="";
         if(cc.mode =="L" || cc.mode == "R"){
             if(cc.getRun())
@@ -304,6 +303,8 @@ int main( int argc, char** argv )
         else if (cc.mode == "M"){
             break;
         }
+	clock_gettime(CLOCK_MONOTONIC, &stop); fstop=(double)stop.tv_sec + ((double)stop.tv_nsec/1000000000.0);
+	std::string fps= "FPS: " + std::to_string(1/(fstop-fstart));
         putText(cc.src, //target image
           fps, //text
           Point(10, 30), //top-left position
@@ -313,10 +314,10 @@ int main( int argc, char** argv )
           2);
         putText(cc.src, exp, Point(10, 65), FONT_HERSHEY_DUPLEX,1.0,Scalar(0, 0, 255), 2);
         imshow( "src", cc.src);
-        imshow("hsv", cc.src_hsv);
+        //imshow("hsv", cc.src_hsv);
 	waitKey(3);
       }
-      //loop_rate.sleep();
+      loop_rate.sleep();
       ros::spinOnce();
       
    }
