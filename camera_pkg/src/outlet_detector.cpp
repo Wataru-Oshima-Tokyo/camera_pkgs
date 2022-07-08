@@ -245,10 +245,16 @@ void OUTLET_CV::depth_callback(const sensor_msgs::ImageConstPtr& msg){
     //  _cc.pub = _cc.nh.advertise<std_msgs::String>(_cc.PUBLISH_TOPIC, 1000);
      camera_pkg_msgs::Coordinate coordinate;
     //  Mat* _depth = &depth;
+     std::vector<double> z_array;
      double z=0.0;
-     z = cc->depth.at<uint16_t>((uint16_t)y,(uint16_t)x);
-     
-    //  cout << color[0] << " "<< color[1] << " " << color[2] <<endl; 
+     // below process needs to be done because the z-value of realsense is not stable
+     rep(i,0,5)
+        rep(j,0,5){
+          z = cc->depth.at<uint16_t>((uint16_t)(y+j),(uint16_t)(x+i));
+          z_array.push_back(z);
+        }
+      std::sort(z_array.begin(), z_array.end());
+      z = z_array[z_array.size()-1]; //get the median value 
      if  ( event == EVENT_LBUTTONDOWN )
      {
 
