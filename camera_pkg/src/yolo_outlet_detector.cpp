@@ -123,6 +123,7 @@ void OUTLET_CV::bbox_callback(const darknet_ros_msgs::BoundingBoxes& cod){
 		}
 	std::sort(z_array.begin(), z_array.end());
 	z = z_array[z_array.size()-1];
+	coordinate.t ="L";
         coordinate.x = cx;
         coordinate.y = cy;
         if(coordinate.x !=0 && coordinate.y!=0){
