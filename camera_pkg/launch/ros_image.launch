@@ -1,0 +1,8 @@
+<launch>
+  
+  <arg name="image_topic" default="/camera/color/image_raw"/>  
+
+  <node pkg="camera_pkg" name="ros_img" type="ros_image">
+    <param name="image_topic" value="$(arg image_topic)"/>
+  </node>
+</launch>
