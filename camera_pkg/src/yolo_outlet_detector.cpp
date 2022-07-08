@@ -108,7 +108,7 @@ void OUTLET_CV::setRun(bool run){
 
 void OUTLET_CV::bbox_callback(const darknet_ros_msgs::BoundingBoxes& cod){
 	int xmin = cod.bounding_boxes[0].xmin;
-	int xmax = cod.bounding_boxes[0].xmax
+	int xmax = cod.bounding_boxes[0].xmax;
 	int ymin = cod.bounding_boxes[0].ymin;
 	int ymax = cod.bounding_boxes[0].ymax;
   cv::rectangle(src, cv::Point(xmin, ymin), cv::Point(xmax,ymax), cv::Scalar(255,0,0),3);
@@ -120,20 +120,20 @@ void OUTLET_CV::bbox_callback(const darknet_ros_msgs::BoundingBoxes& cod){
 	// below process needs to be done because the z-value of realsense is not stable
 	rep(i,0,5)
 		rep(j,0,5){
-		  z = cc->depth.at<uint16_t>((uint16_t)(cy+j),(uint16_t)(cx+i));
+		  z = depth.at<uint16_t>((uint16_t)(cy+j),(uint16_t)(cx+i));
 		  z_array.push_back(z);
 		}
 	std::sort(z_array.begin(), z_array.end());
 	z = z_array[z_array.size()-1];
-        cc->coordinate.x = cx;
-        cc->coordinate.y = cy;
-        if(cc->coordinate.x !=0 && cc->coordinate.y!=0){
-        cc->coordinate.z = z;
+        coordinate.x = cx;
+        coordinate.y = cy;
+        if(coordinate.x !=0 && coordinate.y!=0){
+        	coordinate.z = z;
         }else{
-        cc->coordinate.z =0;
+        	coordinate.z =0;
         }
-	if(cc->coordinate.z !=0){
-		cc->pub.publish(coordinate);
+	if(coordinate.z !=0){
+		pub.publish(coordinate);
 		RUN = false;
 	}
 }
