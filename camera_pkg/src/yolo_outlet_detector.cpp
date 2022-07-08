@@ -130,7 +130,7 @@ void OUTLET_CV::bbox_callback(const darknet_ros_msgs::BoundingBoxes& cod){
         }else{
         	coordinate.z =0;
         }
-	if(coordinate.z !=0){
+	if(coordinate.z !=0 && RUN){
 		pub.publish(coordinate);
 		RUN = false;
 	}
@@ -177,7 +177,6 @@ void OUTLET_CV::bbox_callback(const darknet_ros_msgs::BoundingBoxes& cod){
 //         }else{
 //         cc->coordinate.z =0;
 //         }
-//         cc->pub.publish(coordinate);
 //    }
 //     imshow( "mask", mask);
 //     waitKey(3);
