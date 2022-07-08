@@ -63,7 +63,7 @@ class OUTLET_CV{
     std::string IMAGE_TOPIC;
     std::string DEPTH_TOPIC;
     // const std::string DEPTH_TOPIC = "/camera/depth/color/image_raw";
-    const std::string PUBLISH_TOPIC = "/objectdetection/coordinate";
+    const std::string PUBLISH_TOPIC = "/outlet/coordinate";
     const std::string BOUNDING_BOX_TOPIC ="/darknet_ros/bounding_boxes";
     const std::string PICKUP_SERVICE_START = "/outletdetect/start";
     const std::string PICKUP_SERVICE_STOP = "/outletdetect/stop";
