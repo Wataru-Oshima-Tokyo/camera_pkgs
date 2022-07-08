@@ -16,6 +16,7 @@ find_package(catkin REQUIRED COMPONENTS
   sensor_msgs
   std_msgs
   camera_pkg_msgs
+  darknet_ros_msgs
 )
 
 find_package(OpenCV 4  REQUIRED)
@@ -165,6 +166,9 @@ target_link_libraries(ros_rgbd ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
 
 add_executable(ros_image src/ros_image.cpp)
 target_link_libraries(ros_image ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
+
+add_executable(yolo_outlet_detector src/yolo_outlet_detector.cpp)
+target_link_libraries(yolo_outlet_detector ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
 
 add_executable(ir_image src/ir_image.cpp)
 target_link_libraries(ir_image ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
