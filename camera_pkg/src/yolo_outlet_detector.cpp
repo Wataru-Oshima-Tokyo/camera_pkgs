@@ -65,10 +65,8 @@ class OUTLET_CV{
     // const std::string DEPTH_TOPIC = "/camera/depth/color/image_raw";
     const std::string PUBLISH_TOPIC = "/objectdetection/coordinate";
     const std::string BOUNDING_BOX_TOPIC ="/darknet_ros/bounding_boxes";
-    const std::string PICKUP_SERVICE_START = "/pickup/start";
-    const std::string PICKUP_SERVICE_STOP = "/pickup/stop";
-    const std::string MASK_DETECT_SERVICE_START = "/outletdetect/start";
-    const std::string MASK_DETECT_SERVICE_STOP = "/outletdetect/stop";
+    const std::string PICKUP_SERVICE_START = "/outletdetect/start";
+    const std::string PICKUP_SERVICE_STOP = "/outletdetect/stop";
     std::string mode ="";
     OUTLET_CV();
     ~OUTLET_CV();
