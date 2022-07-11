@@ -148,7 +148,7 @@ void OUTLET_CV::MaskThreshold(int, void*userdata){
       // std::vector<double> z_array;
       // double z=0.0;
       // cv::circle(cc->ROI, cv::Point(c_x,c_y), 5, cv::Scalar(0, 0, 255),-1);
-      cv::circle(ROI, cv::Point(c_x,c_y), 2, cv::Scalar(0, 0, 255));
+      cv::circle(ROI, cv::Point(c_x,c_y), 2, cv::Scalar(0, 255, 255),2);
       // rep(i,0,5)
       //   rep(j,0,5){
       //     z = cc->depth.at<uint16_t>((uint16_t)(c_y+j),(uint16_t)(c_x+i));
