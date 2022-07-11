@@ -134,15 +134,16 @@ int getMaxAreaContourId(vector <vector<cv::Point>> contours) {
 
 void OUTLET_CV::get_circle(int, void*userdata){
   //expand the ROI to detect how off the MG400 is
+    GaussianBlur( dst, dst, Size(9, 9), 2, 2 );
     std::vector<cv::Vec3f> circles;
     cv::HoughCircles(
          dst,                    // 8ビット，シングルチャンネル，グレースケールの入力画像
          circles,                // 検出された円を出力.配列の [ 0, 1 ] に円の中心座標. [2] に円の半径が格納される
          cv::HOUGH_GRADIENT,     // cv::HOUGH_GRADIENT メソッドのみ実装されている.
          2,                      // 画像分解能に対する出力解像度の比率の逆数
-         30,                     // 検出される円の中心同士の最小距離
-         100,                    // Canny() の大きいほうの閾値.勾配がこのパラメータを超えている場合はエッジとして判定
-         50                      // Canny() の小さいほうの閾値.勾配がこのパラメータを下回っている場合は非エッジとして判定
+         50,                     // 検出される円の中心同士の最小距離
+         200,                    // Canny() の大きいほうの閾値.勾配がこのパラメータを超えている場合はエッジとして判定
+         100                      // Canny() の小さいほうの閾値.勾配がこのパラメータを下回っている場合は非エッジとして判定
          );
 
       for (auto circle : circles)
