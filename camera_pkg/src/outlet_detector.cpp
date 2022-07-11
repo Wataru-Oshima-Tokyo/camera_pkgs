@@ -181,7 +181,7 @@ void OUTLET_CV::makeRegion(int, void*userdata){
    OUTLET_CV *cc = (OUTLET_CV*)userdata;
    rep(i,0,w){
     rep(j,0,h){
-        if((i>=0 && j<=iy) || (i>=0 && i<ix) || (i>cx && i<w) ||(j<cy)){
+        if((j>=0 && j<=iy) || (i>=0 && i<ix) || (i>cx && i<w) ||(j>cy)){
           cv::Vec3b &color = ROI.at<cv::Vec3b>(cv::Point(j,i)); 
           color.val[0] = 0;
           color.val[1] = 0;
