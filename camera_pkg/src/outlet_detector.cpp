@@ -314,9 +314,9 @@ void draw_region_of_interest(int event, int x, int y, int flags, void* userdata)
     //  _cc.pub = _cc.nh.advertise<std_msgs::String>(_cc.PUBLISH_TOPIC, 1000);
      if(event == EVENT_LBUTTONDOWN){
       cc->drawing =!cc->drawing;
-      if(cc->drawing)
+      if(cc->drawing){
         cc->ix = x; cc->iy=y;
-      else{
+      }else{
         cv::rectangle(cc->src, cv::Point(cc->ix,cc->iy), cv::Point(x,y), cv::Scalar(0,255,255),2,4);
         cc->cx = x; cc->cy = y;
         cc->Drew = true;
@@ -326,10 +326,6 @@ void draw_region_of_interest(int event, int x, int y, int flags, void* userdata)
       if(cc->drawing){
         cv::rectangle(cc->src, cv::Point(cc->ix,cc->iy), cv::Point(x,y),cv::Scalar(0,255,0),-1,4);
       }
-      // else if(event == EVENT_LBUTTONUP){
-      //   cc->drawing = false;
-
-      // }
      }
 
 
