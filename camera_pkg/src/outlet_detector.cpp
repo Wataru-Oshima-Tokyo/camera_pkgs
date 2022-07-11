@@ -147,8 +147,8 @@ void OUTLET_CV::MaskThreshold(int, void*userdata){
    		 c_x = int(M.m10/M.m00); //重心のx座標
    		 c_y = int(M.m01/M.m00); //重心のy座標
       std::cout << "Momentum " <<c_x << " " << c_y <<std::endl;
-      // std::vector<double> z_array;
-      // double z=0.0;
+      std::vector<double> z_array;
+      double z=0.0;
       // cv::circle(cc->ROI, cv::Point(c_x,c_y), 5, cv::Scalar(0, 0, 255),-1);
       
       rep(i,0,5)
@@ -379,8 +379,8 @@ int main( int argc, char** argv )
             
             cv::namedWindow(cc.ROI_WINDOW,WINDOW_AUTOSIZE);
             cv::setMouseCallback(cc.ROI_WINDOW, get_hsv,&cc);
-            if(FOUND)
-              cv::circle(cc.ROI, cv::Point(c_x,c_y), 3, cv::Scalar(0, 0, 255),2);
+            if(cc.FOUND)
+              cv::circle(cc.ROI, cv::Point(cc.c_x,cc.c_y), 3, cv::Scalar(0, 0, 255),2);
             imshow(cc.ROI_WINDOW, cc.ROI);
             // imshow("hsv", cc.src_hsv);
           }
