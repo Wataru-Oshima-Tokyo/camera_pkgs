@@ -369,6 +369,7 @@ int main( int argc, char** argv )
             cv::namedWindow(cc.ROI_WINDOW,WINDOW_AUTOSIZE);
             cv::setMouseCallback(cc.ROI_WINDOW, get_hsv,&cc);
             imshow(cc.ROI_WINDOW, cc.ROI);
+            imshow("hsv", cc.src_hsv);
           }
       waitKey(3);      
       }
