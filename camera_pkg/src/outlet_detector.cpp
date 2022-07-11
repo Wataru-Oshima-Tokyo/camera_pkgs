@@ -83,8 +83,10 @@ class OUTLET_CV{
     const int max_lowThreshold = 100;
     const std::string window_name = "Edge Map";
     int w,h;
+    int c_x, c_y;
     bool Drew = false;
     bool drawing = false;
+    bool Found =false;
 private:
     bool RUN = false; 
     double detect_probability =0.0;
@@ -142,32 +144,32 @@ void OUTLET_CV::MaskThreshold(int, void*userdata){
    cv::Moments M = cv::moments(mask); // get the center of gravity
    printf("got the contour\n");
    if (M.m00 >0){
-   		int c_x = int(M.m10/M.m00); //重心のx座標
-   		int c_y = int(M.m01/M.m00); //重心のy座標
+   		 c_x = int(M.m10/M.m00); //重心のx座標
+   		 c_y = int(M.m01/M.m00); //重心のy座標
       std::cout << "Momentum " <<c_x << " " << c_y <<std::endl;
       // std::vector<double> z_array;
       // double z=0.0;
       // cv::circle(cc->ROI, cv::Point(c_x,c_y), 5, cv::Scalar(0, 0, 255),-1);
-      cv::circle(src, cv::Point(c_x,c_y), 3, cv::Scalar(0, 255, 255),2);
-      // rep(i,0,5)
-      //   rep(j,0,5){
-      //     z = cc->depth.at<uint16_t>((uint16_t)(c_y+j),(uint16_t)(c_x+i));
-      //     z_array.push_back(z);
-      //   }
-      //   std::sort(z_array.begin(), z_array.end());
-      //   z = z_array[z_array.size()-1]; 
-      //   z = cc->depth.at<uint16_t>((uint16_t)(c_y),(uint16_t)(c_x));
-      //   cc->coordinate.x = c_x;
-      //   cc->coordinate.y = c_y;
-      //   if(cc->coordinate.x !=0 && cc->coordinate.y!=0){
-      //   cc->coordinate.z = z;
-      //   }else{
-      //   cc->coordinate.z =0;
-      //   }
-      //   cc->pub.publish(coordinate);
+      
+      rep(i,0,5)
+        rep(j,0,5){
+          z = depth.at<uint16_t>((uint16_t)(c_y+j),(uint16_t)(c_x+i));
+          z_array.push_back(z);
+        }
+        std::sort(z_array.begin(), z_array.end());
+        z = z_array[z_array.size()-1]; 
+        z = cc->depth.at<uint16_t>((uint16_t)(c_y),(uint16_t)(c_x));
+        cc->coordinate.x = c_x;
+        cc->coordinate.y = c_y;
+        if(cc->coordinate.x !=0 && cc->coordinate.y!=0){
+        cc->coordinate.z = z;
+        }else{
+        cc->coordinate.z =0;
+        }
+        cc->pub.publish(coordinate);
+      Found =true;
    }
     imshow( "mask", mask);
-    imshow( "src", src);
     waitKey(3);  
    
 }
@@ -377,6 +379,8 @@ int main( int argc, char** argv )
             
             cv::namedWindow(cc.ROI_WINDOW,WINDOW_AUTOSIZE);
             cv::setMouseCallback(cc.ROI_WINDOW, get_hsv,&cc);
+            if(FOUND)
+              cv::circle(cc.ROI, cv::Point(c_x,c_y), 3, cv::Scalar(0, 0, 255),2);
             imshow(cc.ROI_WINDOW, cc.ROI);
             // imshow("hsv", cc.src_hsv);
           }
