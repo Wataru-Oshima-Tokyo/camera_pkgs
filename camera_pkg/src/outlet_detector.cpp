@@ -182,7 +182,7 @@ void OUTLET_CV::makeRegion(int, void*userdata){
    rep(i,0,w){
     rep(j,0,h){
         if((j>=0 && j<=iy) || (i>=0 && i<ix) || (i>cx && i<w) ||(j>cy)){
-          cv::Vec3b &color = ROI.at<cv::Vec3b>(cv::Point(j,i)); 
+          cv::Vec3b &color = ROI.at<cv::Vec3b>(cv::Point(i,j)); 
           color.val[0] = 0;
           color.val[1] = 0;
           color.val[2] = 0;
@@ -361,9 +361,9 @@ int main( int argc, char** argv )
           if(!cc.Drew){
               imshow(cc.SRC_WINDOW, cc.src);
           }else{
-            cv::rectangle(cc.src, cv::Point(cc.ix,cc.iy),  cv::Point(cc.cx,cc.cy), cv::Scalar(0,255,255), 2,4);
+            cv::rectangle(cc.ROI, cv::Point(cc.ix,cc.iy),  cv::Point(cc.cx,cc.cy), cv::Scalar(0,255,255), 2,4);
             //make the region of interest
-            cc.makeRegion(0, 0);
+            // cc.makeRegion(0, 0);
             imshow("ROI", cc.ROI);
             cv::namedWindow(cc.HSV_WINDOW,WINDOW_AUTOSIZE);
             cv::setMouseCallback(cc.HSV_WINDOW, get_hsv);
