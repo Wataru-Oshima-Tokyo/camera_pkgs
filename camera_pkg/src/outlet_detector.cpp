@@ -133,11 +133,11 @@ void OUTLET_CV::MaskThreshold(int, void*userdata){
    cv::inRange(src_hsv, cv::Scalar(low_c[0],low_c[1],low_c[2]), cv::Scalar(high_c[0],high_c[1],high_c[2]),mask);
    printf("made a mask\n");
 //    Canny(mask, mask, lowThreshold, lowThreshold*ratio, kernel_size );
-  //  cv::findContours(mask, contours, hierarchy, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
+   cv::findContours(mask, contours, hierarchy, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
   //   printf("got contours\n");
-  //  contour = contours[getMaxAreaContourId(contours)];
+   contour = contours[getMaxAreaContourId(contours)];
   //  printf("got a contour\n");
-  // //  cv::drawContours(mask, contour, 1, 255);
+  //  cv::drawContours(mask, contour, 1, 255);
   //  printf("drew the contour\n");
    cv::Moments M = cv::moments(mask); // get the center of gravity
    printf("got the contour\n");
@@ -148,6 +148,7 @@ void OUTLET_CV::MaskThreshold(int, void*userdata){
       // std::vector<double> z_array;
       // double z=0.0;
       // cv::circle(cc->ROI, cv::Point(c_x,c_y), 5, cv::Scalar(0, 0, 255),-1);
+      cv::circle(ROI, cv::Point(c_x,c_y), 2, cv::Scalar(0, 0, 255));
       // rep(i,0,5)
       //   rep(j,0,5){
       //     z = cc->depth.at<uint16_t>((uint16_t)(c_y+j),(uint16_t)(c_x+i));
