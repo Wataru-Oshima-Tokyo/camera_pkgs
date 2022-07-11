@@ -55,7 +55,7 @@ class OUTLET_CV{
     void MaskThreshold(int, void*);
     void DrawCircle(int, void*);
     void makeRegion(int, void*);
-    void get_circle(int, void*){
+    void get_circle(int, void*);
 
 //     void detect_object(int , void* userdata);
     void mouseEvent(int event, int x, int y, int flags, void* userdata);
