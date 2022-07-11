@@ -148,7 +148,7 @@ void OUTLET_CV::MaskThreshold(int, void*userdata){
       // std::vector<double> z_array;
       // double z=0.0;
       // cv::circle(cc->ROI, cv::Point(c_x,c_y), 5, cv::Scalar(0, 0, 255),-1);
-      cv::circle(ROI, cv::Point(c_x,c_y), 3, cv::Scalar(0, 255, 255),2);
+      cv::circle(src, cv::Point(c_x,c_y), 3, cv::Scalar(0, 255, 255),2);
       // rep(i,0,5)
       //   rep(j,0,5){
       //     z = cc->depth.at<uint16_t>((uint16_t)(c_y+j),(uint16_t)(c_x+i));
@@ -167,6 +167,7 @@ void OUTLET_CV::MaskThreshold(int, void*userdata){
       //   cc->pub.publish(coordinate);
    }
     imshow( "mask", mask);
+    imshow( "src", src);
     waitKey(3);  
    
 }
@@ -377,7 +378,7 @@ int main( int argc, char** argv )
             cv::namedWindow(cc.ROI_WINDOW,WINDOW_AUTOSIZE);
             cv::setMouseCallback(cc.ROI_WINDOW, get_hsv,&cc);
             imshow(cc.ROI_WINDOW, cc.ROI);
-            imshow("hsv", cc.src_hsv);
+            // imshow("hsv", cc.src_hsv);
           }
       waitKey(3);      
       }
