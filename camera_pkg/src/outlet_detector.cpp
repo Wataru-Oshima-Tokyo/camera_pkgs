@@ -346,9 +346,9 @@ int main( int argc, char** argv )
    cc.pub = cc.nh.advertise<camera_pkg_msgs::Coordinate>(cc.PUBLISH_TOPIC, 1000);
    
    std_srvs::Empty _emp;
-   setMouseCallback("src", draw_region_of_interest, &cc);
+   
    cv::namedWindow(cc.SRC_WINDOW,WINDOW_AUTOSIZE);
-
+   setMouseCallback("src", draw_region_of_interest, &cc);
    while(ros::ok()){
       // cout << cc.getRun() << endl;
       clock_gettime(CLOCK_MONOTONIC, &start); fstart=(double)start.tv_sec + ((double)start.tv_nsec/1000000000.0);
