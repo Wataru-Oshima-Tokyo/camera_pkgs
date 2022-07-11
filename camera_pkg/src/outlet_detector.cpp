@@ -363,7 +363,7 @@ int main( int argc, char** argv )
           }else{
             cv::rectangle(cc.ROI, cv::Point(cc.ix,cc.iy),  cv::Point(cc.cx,cc.cy), cv::Scalar(0,255,255), 2,4);
             //make the region of interest
-            cc.makeRegion(0, 0);
+            // cc.makeRegion(0, 0);
             
             cv::namedWindow(cc.ROI_WINDOW,WINDOW_AUTOSIZE);
             cv::setMouseCallback(cc.ROI_WINDOW, get_hsv);
