@@ -154,7 +154,7 @@ void OUTLET_CV::MaskThreshold(int, void*userdata){
       //   }
       //   std::sort(z_array.begin(), z_array.end());
       //   z = z_array[z_array.size()-1]; 
-        z = cc->depth.at<uint16_t>((uint16_t)(c_y),(uint16_t)(c_x));
+        // z = cc->depth.at<uint16_t>((uint16_t)(c_y),(uint16_t)(c_x));
         cc->coordinate.x = c_x;
         cc->coordinate.y = c_y;
         if(cc->coordinate.x !=0 && cc->coordinate.y!=0){
