@@ -70,7 +70,7 @@ class OUTLET_CV{
     std::string IMAGE_TOPIC;
     std::string DEPTH_TOPIC;
     // const std::string DEPTH_TOPIC = "/camera/depth/color/image_raw";
-    const std::string PUBLISH_TOPIC = "/objectdetection/coordinate";
+    const std::string PUBLISH_TOPIC = "/outlet/coordinate";
     const std::string PICKUP_SERVICE_START = "/pickup/start";
     const std::string PICKUP_SERVICE_STOP = "/pickup/stop";
     const std::string MASK_DETECT_SERVICE_START = "/maskdetect/start";
@@ -157,7 +157,8 @@ void OUTLET_CV::MaskThreshold(int, void*userdata){
         std::sort(z_array.begin(), z_array.end());
         z = z_array[z_array.size()-1]; 
         z = cc->depth.at<uint16_t>((uint16_t)(c_y),(uint16_t)(c_x));
-        cc->coordinate.x = c_x;
+        cc->coordinate.t = "L";
+	cc->coordinate.x = c_x;
         cc->coordinate.y = c_y;
           if(cc->coordinate.x !=0 && cc->coordinate.y!=0){
         cc->coordinate.z = z;

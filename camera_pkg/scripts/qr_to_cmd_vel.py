@@ -11,6 +11,7 @@ class QR_TRACK:
     def __init__(self):
         self.RUN = False
         self.twt = Twist()
+        rospy.loginfo("start")
         self.cmd_pub =rospy.Publisher('cmd_vel', Twist, queue_size=1)
         rospy.Subscriber("/visp_auto_tracker/object_position", PoseStamped, self.qr_callback)
         rospy.Subscriber("/visp_auto_tracker/status", Int8, self.qr_status_callback)

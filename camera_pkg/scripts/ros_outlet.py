@@ -1,9 +1,13 @@
+#! /usr/bin/env python
+# -*- coding: utf-8 -*-
+## coding: UTF-8
 
-#!/usr/bin/env python3
 import rospy
+import rospkg
 from cv2 import destroyAllWindows, waitKey
 import cv2 as cv 
 import os
+import sys
 import numpy as np
 from sensor_msgs.msg import Image 
 from cv_bridge import CvBridge
@@ -80,7 +84,9 @@ def process_image(msg):
     cv.setMouseCallback(windowName_src,draw_circle)
     try:
         bridge = CvBridge()
-        src = bridge.imgmsg_to_cv2(msg, "bgr8")
+        
+        src = bridge.imgmsg_to_cv2(msg, desired_encoding="bgr8")
+        print("okay")
         w,h,c = src.shape
         src = cv.resize(src, (w, h))
         ROI = np.copy(src)
@@ -122,3 +128,4 @@ if __name__ =="__main__":
         start()
     except rospy.ROSInterruptException:
         pass
+

@@ -1,0 +1,9 @@
+<launch>
+  
+  <arg name="image_topic" default="/camera/color/image_raw"/>  
+  <arg name="depth_topic" default="/camera/aligned_depth_to_color/image_raw"/>
+  <node pkg="camera_pkg" name="ros_rgbd" type="ros_rgbd">
+    <param name="image_topic" value="$(arg image_topic)"/>
+    <param name="depth_topic" value="$(arg depth_topic)"/>
+  </node>
+</launch>
