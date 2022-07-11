@@ -133,7 +133,7 @@ void OUTLET_CV::MaskThreshold(int, void*userdata){
 //    Canny(mask, mask, lowThreshold, lowThreshold*ratio, kernel_size );
    cv::findContours(mask, contours, hierarchy, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
    contour = contours[getMaxAreaContourId(contours)];
-   cv::drawContours(mask, contour, 1, color=255);
+   cv::drawContours(mask, contour, 1, 255);
    cv::Moments M = cv::moments(mask); // get the center of gravity
    if (M.m00 >0){
    		int c_x = int(M.m10/M.m00); //重心のx座標
