@@ -379,7 +379,7 @@ int main( int argc, char** argv )
             
             cv::namedWindow(cc.ROI_WINDOW,WINDOW_AUTOSIZE);
             cv::setMouseCallback(cc.ROI_WINDOW, get_hsv,&cc);
-            if(cc.FOUND)
+            if(cc.Found)
               cv::circle(cc.ROI, cv::Point(cc.c_x,cc.c_y), 3, cv::Scalar(0, 0, 255),2);
             imshow(cc.ROI_WINDOW, cc.ROI);
             // imshow("hsv", cc.src_hsv);
