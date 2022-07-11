@@ -144,6 +144,7 @@ void OUTLET_CV::MaskThreshold(int, void*userdata){
    if (M.m00 >0){
    		int c_x = int(M.m10/M.m00); //重心のx座標
    		int c_y = int(M.m01/M.m00); //重心のy座標
+      std::coiut << c_x << " " << c_y <<std::endl;
       // std::vector<double> z_array;
       // double z=0.0;
       cv::circle(cc->ROI, cv::Point(c_x,c_y), 5, cv::Scalar(0, 0, 255),-1);
