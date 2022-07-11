@@ -132,34 +132,35 @@ void OUTLET_CV::MaskThreshold(int, void*userdata){
    cv::inRange(src_hsv, cv::Scalar(low_c[0],low_c[1],low_c[2]), cv::Scalar(high_c[0],high_c[1],high_c[2]),mask);
    printf("made a mask\n");
 //    Canny(mask, mask, lowThreshold, lowThreshold*ratio, kernel_size );
-   cv::findContours(mask, contours, hierarchy, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
-    printf("got contours\n");
-   contour = contours[getMaxAreaContourId(contours)];
-   printf("got a contour\n");
-  //  cv::drawContours(mask, contour, 1, 255);
-   printf("drew the contour\n");
+  //  cv::findContours(mask, contours, hierarchy, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
+  //   printf("got contours\n");
+  //  contour = contours[getMaxAreaContourId(contours)];
+  //  printf("got a contour\n");
+  // //  cv::drawContours(mask, contour, 1, 255);
+  //  printf("drew the contour\n");
    cv::Moments M = cv::moments(mask); // get the center of gravity
+   printf("got the contour\n");
    if (M.m00 >0){
    		int c_x = int(M.m10/M.m00); //重心のx座標
    		int c_y = int(M.m01/M.m00); //重心のy座標
       std::vector<double> z_array;
       double z=0.0;
       cv::circle(src, cv::Point(c_x,c_y), 5, cv::Scalar(0, 0, 255),-1);
-      rep(i,0,5)
-        rep(j,0,5){
-          z = cc->depth.at<uint16_t>((uint16_t)(c_y+j),(uint16_t)(c_x+i));
-          z_array.push_back(z);
-        }
-        std::sort(z_array.begin(), z_array.end());
-        z = z_array[z_array.size()-1]; 
-        cc->coordinate.x = cx;
-        cc->coordinate.y = cy;
-        if(cc->coordinate.x !=0 && cc->coordinate.y!=0){
-        cc->coordinate.z = z;
-        }else{
-        cc->coordinate.z =0;
-        }
-        cc->pub.publish(coordinate);
+      // rep(i,0,5)
+      //   rep(j,0,5){
+      //     z = cc->depth.at<uint16_t>((uint16_t)(c_y+j),(uint16_t)(c_x+i));
+      //     z_array.push_back(z);
+      //   }
+      //   std::sort(z_array.begin(), z_array.end());
+      //   z = z_array[z_array.size()-1]; 
+      //   cc->coordinate.x = cx;
+      //   cc->coordinate.y = cy;
+      //   if(cc->coordinate.x !=0 && cc->coordinate.y!=0){
+      //   cc->coordinate.z = z;
+      //   }else{
+      //   cc->coordinate.z =0;
+      //   }
+      //   cc->pub.publish(coordinate);
    }
     imshow( "mask", mask);
     waitKey(3);  
