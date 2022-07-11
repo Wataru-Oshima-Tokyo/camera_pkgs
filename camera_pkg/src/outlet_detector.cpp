@@ -4,6 +4,7 @@
 
 #include <opencv2/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
+ #include <opencv2/imgproc/imgproc.hpp>
 
 
  // Include CvBridge, Image Transport, Image msg
@@ -146,11 +147,11 @@ void OUTLET_CV::MaskThreshold(int, void*userdata){
       std::vector<double> z_array;
       double z=0.0;
       cv::circle(ROI, cv::Point(c_x,c_y), 5, cv::Scalar(0, 0, 255),-1);
-      rep(i,0,5)
-        rep(j,0,5){
-          z = cc->depth.at<uint16_t>((uint16_t)(c_y+j),(uint16_t)(c_x+i));
-          z_array.push_back(z);
-        }
+      // rep(i,0,5)
+      //   rep(j,0,5){
+      //     z = cc->depth.at<uint16_t>((uint16_t)(c_y+j),(uint16_t)(c_x+i));
+      //     z_array.push_back(z);
+      //   }
       //   std::sort(z_array.begin(), z_array.end());
       //   z = z_array[z_array.size()-1]; 
         z = cc->depth.at<uint16_t>((uint16_t)(c_y),(uint16_t)(c_x));
