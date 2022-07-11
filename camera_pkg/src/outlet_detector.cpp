@@ -33,7 +33,7 @@ double fstart, fstop;
 class OUTLET_CV{
   public:
     //variables
-    Mat src, src_hsv, ROI, detected_edges, mask;
+    Mat src, src_hsv, ROI, dst, mask;
     Mat depth;
     ros::Publisher pub;
     ros::Subscriber image_sub, depth_sub, darknet_bbox_sub;
@@ -129,6 +129,31 @@ int getMaxAreaContourId(vector <vector<cv::Point>> contours) {
     return maxAreaContourId;
 } // End function
 
+
+void OUTLET_CV::get_circle(int, void*userdata){
+  //expand the ROI to detect how off the MG400 is
+    cv::HoughCircles(
+         dst,                    // 8ビット，シングルチャンネル，グレースケールの入力画像
+         circles,                // 検出された円を出力.配列の [ 0, 1 ] に円の中心座標. [2] に円の半径が格納される
+         cv::HOUGH_GRADIENT,     // cv::HOUGH_GRADIENT メソッドのみ実装されている.
+         2,                      // 画像分解能に対する出力解像度の比率の逆数
+         30,                     // 検出される円の中心同士の最小距離
+         100,                    // Canny() の大きいほうの閾値.勾配がこのパラメータを超えている場合はエッジとして判定
+         50                      // Canny() の小さいほうの閾値.勾配がこのパラメータを下回っている場合は非エッジとして判定
+         );
+
+      for (auto circle : circles)
+      {
+         cv::circle(dst, cv::Point( circle[0], circle[1] ), circle[2], cv::Scalar(0, 0, 255), 2);
+      }
+
+      cv::namedWindow("dst", 1);
+      imshow("dst", dst);
+
+      cv::waitKey(3);
+}
+
+
 void OUTLET_CV::MaskThreshold(int, void*userdata){
    OUTLET_CV *cc = (OUTLET_CV*)userdata;
    cv::inRange(src_hsv, cv::Scalar(low_c[0],low_c[1],low_c[2]), cv::Scalar(high_c[0],high_c[1],high_c[2]),mask);
@@ -143,6 +168,7 @@ void OUTLET_CV::MaskThreshold(int, void*userdata){
    cv::Moments M = cv::moments(mask); // get the center of gravity
    printf("got the contour\n");
    if (M.m00 >0){
+      Found =true;
    		 int c_x = int(M.m10/M.m00); //重心のx座標
    		 int c_y = int(M.m01/M.m00); //重心のy座標
       std::cout << "Momentum " <<c_x << " " << c_y <<std::endl;
@@ -166,7 +192,7 @@ void OUTLET_CV::MaskThreshold(int, void*userdata){
           cc->coordinate.z =0;
         }
         cc->pub.publish(coordinate);
-      Found =true;
+      
    }else {
       Found = false;
    }
@@ -245,7 +271,7 @@ void OUTLET_CV::depth_callback(const sensor_msgs::ImageConstPtr& msg){
 
     src = cv_ptr->image;
     ROI =src;
-    
+    cvtColor(src, dst, COLOR_BGR2GRAY);
     w = src.size().width;
     h = src.size().height;
     // namedWindow(window_name, WINDOW_AUTOSIZE );
@@ -328,12 +354,12 @@ int main( int argc, char** argv )
           }else{
             cv::rectangle(cc.ROI, cv::Point(cc.ix,cc.iy),  cv::Point(cc.cx,cc.cy), cv::Scalar(0,255,255), 2,4);
             //make the region of interest
-            cc.makeRegion(0, 0);
-            
+            cc.makeRegion(0, &cc);
             cv::namedWindow(cc.ROI_WINDOW,WINDOW_AUTOSIZE);
             cv::setMouseCallback(cc.ROI_WINDOW, get_hsv,&cc);
             // if(cc.Found)
             //   cc.MaskThreshold(0,&cc);
+            cc.get_circle(0, &cc);
             imshow(cc.ROI_WINDOW, cc.ROI);
             // imshow("hsv", cc.src_hsv);
           }
