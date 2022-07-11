@@ -60,7 +60,7 @@ class OUTLET_CV{
     void get_hsv(int event, int x, int y, int flags, void* userdata);
     // Mat getDepth();
     const std::string SRC_WINDOW = "src";
-    const std::string HSV_WINDOW = "hsv";
+    const std::string ROI_WINDOW = "roi";
     virtual bool maskdetect_start_service(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);
     virtual bool maskdetect_stop_service(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);
     virtual void image_callback(const sensor_msgs::ImageConstPtr&);
@@ -129,7 +129,6 @@ int getMaxAreaContourId(vector <vector<cv::Point>> contours) {
 
 void OUTLET_CV::MaskThreshold(int, void*userdata){
    OUTLET_CV *cc = (OUTLET_CV*)userdata;
-   cvtColor(cc->ROI, cc->src_hsv, COLOR_BGR2HSV);
    cv::inRange(src_hsv, cv::Scalar(low_c[0],low_c[1],low_c[2]), cv::Scalar(high_c[0],high_c[1],high_c[2]),mask);
 //    Canny(mask, mask, lowThreshold, lowThreshold*ratio, kernel_size );
    cv::findContours(mask, contours, hierarchy, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
@@ -179,10 +178,10 @@ void OUTLET_CV::MaskThreshold(int, void*userdata){
 
 void OUTLET_CV::makeRegion(int, void*userdata){
    OUTLET_CV *cc = (OUTLET_CV*)userdata;
-   rep(i,0,w){
-    rep(j,0,h){
+   rep(i,0,h){
+    rep(j,0,w){
         if((j>=0 && j<=iy) || (i>=0 && i<ix) || (i>cx && i<w) ||(j>cy)){
-          cv::Vec3b &color = ROI.at<cv::Vec3b>(cv::Point(i,j)); 
+          cv::Vec3b &color = ROI.at<cv::Vec3b>(cv::Point(j,i)); 
           color.val[0] = 0;
           color.val[1] = 0;
           color.val[2] = 0;
@@ -245,6 +244,7 @@ void get_hsv(int event, int x, int y, int flags, void* userdata){
   OUTLET_CV *cc = (OUTLET_CV*)userdata;
   if (event == EVENT_LBUTTONDOWN )
      {
+      cvtColor(cc->ROI, cc->src_hsv, COLOR_BGR2HSV);
       Vec3b &color = cc->src_hsv.at<Vec3b>(Point(y,x));
       cc->low_c[0] = color[0] -10; cc->low_c[1] = color[1] -10; cc->low_c[2] = color[2] -40;
       cc->high_c[0] = color[0] +10; cc->high_c[1] = color[1] +10; cc->high_c[2] = color[2] +40;
@@ -363,11 +363,11 @@ int main( int argc, char** argv )
           }else{
             cv::rectangle(cc.ROI, cv::Point(cc.ix,cc.iy),  cv::Point(cc.cx,cc.cy), cv::Scalar(0,255,255), 2,4);
             //make the region of interest
-            // cc.makeRegion(0, 0);
-            imshow("ROI", cc.ROI);
-            cv::namedWindow(cc.HSV_WINDOW,WINDOW_AUTOSIZE);
-            cv::setMouseCallback(cc.HSV_WINDOW, get_hsv);
-	    
+            cc.makeRegion(0, 0);
+            
+            cv::namedWindow(cc.ROI_WINDOW,WINDOW_AUTOSIZE);
+            cv::setMouseCallback(cc.ROI_WINDOW, get_hsv);
+            imshow(ROI_WINDOW, cc.ROI);
           }
       waitKey(3);      
       }
