@@ -246,6 +246,7 @@ void get_hsv(int event, int x, int y, int flags, void* userdata){
   if (event == EVENT_LBUTTONDOWN )
      {
       Vec3b &color = cc->src_hsv.at<Vec3b>(Point(y,x));
+      std::cout << color[0] << " " << color[1] << " " << color[2] << std::endl;
       cc->low_c[0] = color[0] -10; cc->low_c[1] = color[1] -10; cc->low_c[2] = color[2] -40;
       cc->high_c[0] = color[0] +10; cc->high_c[1] = color[1] +10; cc->high_c[2] = color[2] +40;
       // ROS_INFO_STREAM("The MIN color: %d, %d, %d", low_c[0],low_c[1],low_c[2]);
