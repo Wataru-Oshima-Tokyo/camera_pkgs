@@ -83,10 +83,9 @@ class OUTLET_CV{
     const std::string window_name = "Edge Map";
     int w,h;
     bool Drew = false;
-private:
     bool drawing = false;
-    bool RUN = false;
-    
+private:
+    bool RUN = false; 
     double detect_probability =0.0;
     bool detected=false;
     bool start_call = true;
@@ -318,10 +317,10 @@ void draw_region_of_interest(int event, int x, int y, int flags, void* userdata)
       cc->ix = x; cc->iy=y;
      }else if(event == EVENT_MOUSEMOVE){
       if(cc->drawing){
-        cv::rectangle(cc->src, cv::Point(cc->ix,cc->iy) cv::Point(x,y),cv::Scaler(0,255,0),-1,4);
+        cv::rectangle(cc->src, cv::Point(cc->ix,cc->iy), cv::Point(x,y),cv::Scalar(0,255,0),-1,4);
       }else if(event == EVENT_LBUTTONUP){
         cc->drawing = false;
-        cv::rectangle(cc->src, cv::Point(cc->ix,cc->iy), cv::Point(x,y), cv::Scaler(0,255,255),2,4);
+        cv::rectangle(cc->src, cv::Point(cc->ix,cc->iy), cv::Point(x,y), cv::Scalar(0,255,255),2,4);
         cc->cx = x; cc->cy = y;
         cc->Drew = true;
         cv::destroyAllWindows(); 
@@ -357,7 +356,7 @@ int main( int argc, char** argv )
           if (!cc.Drew){
             imshow(cc.SRC_WINDOW, cc.src);
           }else{
-            cv::rectangle(cc.src, cv::Point(cc.ix,cc.iy),  cv::Point(cc.cx,cc.cy), cv::Scaler(0,255,255), 2,4);
+            cv::rectangle(cc.src, cv::Point(cc.ix,cc.iy),  cv::Point(cc.cx,cc.cy), cv::Scalar(0,255,255), 2,4);
             //make the region of interest
             cc.makeRegion(0, 0);
             imshow("ROI", cc.ROI);
