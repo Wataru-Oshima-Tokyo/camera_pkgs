@@ -231,7 +231,7 @@ void OUTLET_CV::depth_callback(const sensor_msgs::ImageConstPtr& msg){
     }
 
     src = cv_ptr->image;
-    ROI.create(src.size(), src.type());
+    ROI =src;
     //cvtColor(src, src_gray, COLOR_BGR2GRAY);
     
     w = src.size().width;
