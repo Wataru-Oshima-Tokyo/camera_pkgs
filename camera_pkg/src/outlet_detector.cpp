@@ -320,7 +320,7 @@ void draw_region_of_interest(int event, int x, int y, int flags, void* userdata)
         cv::rectangle(cc->src, cv::Point(cc->ix,cc->iy), cv::Point(x,y), cv::Scalar(0,255,255),2,4);
         cc->cx = x; cc->cy = y;
         cc->Drew = true;
-        cv::destroyAllWindows(); 
+        // cv::destroyAllWindows(); 
       }
      }else if(event == EVENT_MOUSEMOVE){
       if(cc->drawing){
