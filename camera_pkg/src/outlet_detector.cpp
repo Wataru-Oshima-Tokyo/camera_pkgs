@@ -130,10 +130,14 @@ int getMaxAreaContourId(vector <vector<cv::Point>> contours) {
 void OUTLET_CV::MaskThreshold(int, void*userdata){
    OUTLET_CV *cc = (OUTLET_CV*)userdata;
    cv::inRange(src_hsv, cv::Scalar(low_c[0],low_c[1],low_c[2]), cv::Scalar(high_c[0],high_c[1],high_c[2]),mask);
+   printf("made a mask\n");
 //    Canny(mask, mask, lowThreshold, lowThreshold*ratio, kernel_size );
    cv::findContours(mask, contours, hierarchy, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
+    printf("got contours\n");
    contour = contours[getMaxAreaContourId(contours)];
+   printf("got a contour\n");
    cv::drawContours(mask, contour, 1, 255);
+   printf("drew the contour\n");
    cv::Moments M = cv::moments(mask); // get the center of gravity
    if (M.m00 >0){
    		int c_x = int(M.m10/M.m00); //重心のx座標
@@ -246,7 +250,7 @@ void get_hsv(int event, int x, int y, int flags, void* userdata){
   if (event == EVENT_LBUTTONDOWN )
      {
       Vec3b &color = cc->src_hsv.at<Vec3b>(y,x);
-      std::cout << color[0] << " " << color[1] << " " << color[2] << std::endl;
+      // std::cout << color[0] << " " << color[1] << " " << color[2] << std::endl;
       cc->low_c[0] = color[0] -10; cc->low_c[1] = color[1] -10; cc->low_c[2] = color[2] -40;
       cc->high_c[0] = color[0] +10; cc->high_c[1] = color[1] +10; cc->high_c[2] = color[2] +40;
       // ROS_INFO_STREAM("The MIN color: %d, %d, %d", low_c[0],low_c[1],low_c[2]);
