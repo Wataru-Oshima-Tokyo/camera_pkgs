@@ -188,7 +188,7 @@ void OUTLET_CV::makeRegion(int, void*userdata){
         }
       }
     }
-    cvtColor(ROI, src_hsv, COLOR_BGR2HSV);
+   
 }
 
 
@@ -232,7 +232,7 @@ void OUTLET_CV::depth_callback(const sensor_msgs::ImageConstPtr& msg){
 
     src = cv_ptr->image;
     ROI =src;
-    //cvtColor(src, src_gray, COLOR_BGR2GRAY);
+    cvtColor(src, src_hsv, COLOR_BGR2GRAY);
     
     w = src.size().width;
     h = src.size().height;
