@@ -158,7 +158,7 @@ void OUTLET_CV::MaskThreshold(int, void*userdata){
         }
         std::sort(z_array.begin(), z_array.end());
         z = z_array[z_array.size()-1]; 
-        z = cc->depth.at<uint16_t>((uint16_t)(c_y),(uint16_t)(c_x));
+        z = depth.at<uint16_t>((uint16_t)(c_y),(uint16_t)(c_x));
         cc->coordinate.x = c_x;
         cc->coordinate.y = c_y;
         if(cc->coordinate.x !=0 && cc->coordinate.y!=0){
@@ -269,55 +269,7 @@ void get_hsv(int event, int x, int y, int flags, void* userdata){
   
 }
 
- void mouseEvent(int event, int x, int y, int flags, void* userdata)
-{
-     OUTLET_CV *cc = (OUTLET_CV*)userdata;
-    //  ros::Publisher* _pub = cc->pub;
-    //  _cc.pub = _cc.nh.advertise<std_msgs::String>(_cc.PUBLISH_TOPIC, 1000);
-     camera_pkg_msgs::Coordinate coordinate;
-    //  Mat* _depth = &depth;
-     std::vector<double> z_array;
-     double z=0.0;
-     // below process needs to be done because the z-value of realsense is not stable
-     rep(i,0,5)
-        rep(j,0,5){
-          z = cc->depth.at<uint16_t>((uint16_t)(y+j),(uint16_t)(x+i));
-          z_array.push_back(z);
-        }
-      std::sort(z_array.begin(), z_array.end());
-      z = z_array[z_array.size()-1]; //get the median value 
-     if  ( event == EVENT_LBUTTONDOWN )
-     {
-
-	  	cout << "Left button of the mouse is clicked - position (" << x << ", " << y << ", " << z << ")" << endl;
-		  cc->mode = "L";
-      if(!cc->getRun()){
-		      Vec3b &color = cc->src_hsv.at<Vec3b>(Point(y,x));
-        	cc->low_c[0] = color[0] -10; cc->low_c[1] = color[1] -10; cc->low_c[2] = color[2] -40;
-        	cc->high_c[0] = color[0] +10; cc->high_c[1] = color[1] +10; cc->high_c[2] = color[2] +40;
-        	// ROS_INFO_STREAM("The MIN color: %d, %d, %d", low_c[0],low_c[1],low_c[2]);
-        	// ROS_INFO_STREAM("The MAX color: %d, %d, %d", high_c[0],high_c[1],high_c[2]);
-        	printf("The MIN color: %d, %d, %d\n", cc->low_c[0],cc->low_c[1],cc->low_c[2]);
-        	printf("The MAX color: %d, %d, %d\n", cc->high_c[0],cc->high_c[1],cc->high_c[2]);	
-	 }
-          cc->setRun(false);
  
-     }
-     else if  ( event == EVENT_RBUTTONDOWN )
-     {
-          cout << "Right button of the mouse is clicked - position (" << x << ", " << y << ", " << z << ")" << endl;
-          cc->mode = "R";
-      if(!cc->getRun())
-          cc->setRun(true);
-     }
-     else if  ( event == EVENT_MBUTTONDOWN )
-     {
-          cout << "Middle button of the mouse is clicked - position (" << x << ", " << y << ", " << z << ")" << endl;
-          cc->mode = "M";
-     }
-     
-
-}
 
 void draw_region_of_interest(int event, int x, int y, int flags, void* userdata)
 {
