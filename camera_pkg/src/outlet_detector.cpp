@@ -353,19 +353,18 @@ int main( int argc, char** argv )
       // cout << cc.getRun() << endl;
       clock_gettime(CLOCK_MONOTONIC, &start); fstart=(double)start.tv_sec + ((double)start.tv_nsec/1000000000.0);
       if(!cc.src.empty()){
-          while(!cc.Drew){
+	if(!cc.Drew){
 	    imshow(cc.SRC_WINDOW, cc.src);
-	    waitKey(3);
-	  }
-	      destroyAllWindows();
+	}else{
             cv::rectangle(cc.src, cv::Point(cc.ix,cc.iy),  cv::Point(cc.cx,cc.cy), cv::Scalar(0,255,255), 2,4);
             //make the region of interest
             cc.makeRegion(0, 0);
             imshow("ROI", cc.ROI);
             cv::namedWindow(cc.HSV_WINDOW,WINDOW_AUTOSIZE);
             cv::setMouseCallback(cc.HSV_WINDOW, get_hsv);
-	    waitKey(3);
+	    
       }
+      waitKey(3);      
       loop_rate.sleep();
       ros::spinOnce();
       
