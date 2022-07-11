@@ -144,25 +144,25 @@ void OUTLET_CV::MaskThreshold(int, void*userdata){
    if (M.m00 >0){
    		int c_x = int(M.m10/M.m00); //重心のx座標
    		int c_y = int(M.m01/M.m00); //重心のy座標
-      std::vector<double> z_array;
-      double z=0.0;
-      // cv::circle(ROI, cv::Point(c_x,c_y), 5, cv::Scalar(0, 0, 255),-1);
-      rep(i,0,5)
-        rep(j,0,5){
-          z = cc->depth.at<uint16_t>((uint16_t)(c_y+j),(uint16_t)(c_x+i));
-          z_array.push_back(z);
-        }
-        std::sort(z_array.begin(), z_array.end());
-        z = z_array[z_array.size()-1]; 
-        z = cc->depth.at<uint16_t>((uint16_t)(c_y),(uint16_t)(c_x));
-        cc->coordinate.x = c_x;
-        cc->coordinate.y = c_y;
-        if(cc->coordinate.x !=0 && cc->coordinate.y!=0){
-        cc->coordinate.z = z;
-        }else{
-        cc->coordinate.z =0;
-        }
-        cc->pub.publish(coordinate);
+      // std::vector<double> z_array;
+      // double z=0.0;
+      cv::circle(cc->ROI, cv::Point(c_x,c_y), 5, cv::Scalar(0, 0, 255),-1);
+      // rep(i,0,5)
+      //   rep(j,0,5){
+      //     z = cc->depth.at<uint16_t>((uint16_t)(c_y+j),(uint16_t)(c_x+i));
+      //     z_array.push_back(z);
+      //   }
+      //   std::sort(z_array.begin(), z_array.end());
+      //   z = z_array[z_array.size()-1]; 
+      //   z = cc->depth.at<uint16_t>((uint16_t)(c_y),(uint16_t)(c_x));
+      //   cc->coordinate.x = c_x;
+      //   cc->coordinate.y = c_y;
+      //   if(cc->coordinate.x !=0 && cc->coordinate.y!=0){
+      //   cc->coordinate.z = z;
+      //   }else{
+      //   cc->coordinate.z =0;
+      //   }
+      //   cc->pub.publish(coordinate);
    }
     imshow( "mask", mask);
     waitKey(3);  
