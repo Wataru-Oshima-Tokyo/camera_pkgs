@@ -264,7 +264,7 @@ void get_hsv(int event, int x, int y, int flags, void* userdata){
       // ROS_INFO_STREAM("The MAX color: %d, %d, %d", high_c[0],high_c[1],high_c[2]);
       printf("The MIN color: %d, %d, %d\n", cc->low_c[0],cc->low_c[1],cc->low_c[2]);
       printf("The MAX color: %d, %d, %d\n", cc->high_c[0],cc->high_c[1],cc->high_c[2]);	
-      cc->MaskThreshold(0,0);
+      cc->MaskThreshold(0,&cc);
 	 }
   
 }
