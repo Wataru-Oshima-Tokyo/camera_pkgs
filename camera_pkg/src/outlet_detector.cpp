@@ -45,6 +45,9 @@ class OUTLET_CV{
     int high_c[3] = {100, 255, 197};
     const int max_c[3] = {179, 255, 255};
     std::string HSV[3] = {"H","S","V"};
+    std::vector<std::vector<cv::Point> > contours;
+    std::vector<cv::Vec4i> hierarchy;
+    std::vector<cv::Point> contour;
     // int _MIN_DH =15, _MIN_DS = 60, _MIN_DV = 60;
     // int _MAX_DH = 15, _MAX_DS = 150, _MAX_DV = 60;
     void CannyThreshold(int, void*);
@@ -110,26 +113,37 @@ void OUTLET_CV::setRun(bool run){
     RUN = run;
 }
 
-
+int getMaxAreaContourId(vector <vector<cv::Point>> contours) {
+    double maxArea = 0;
+    int maxAreaContourId = -1;
+    for (int j = 0; j < contours.size(); j++) {
+        double newArea = cv::contourArea(contours.at(j));
+        if (newArea > maxArea) {
+            maxArea = newArea;
+            maxAreaContourId = j;
+        } // End if
+    } // End for
+    return maxAreaContourId;
+} // End function
 
 void OUTLET_CV::MaskThreshold(int, void*userdata){
    OUTLET_CV *cc = (OUTLET_CV*)userdata;
    cvtColor(cc->ROI, cc->src_hsv, COLOR_BGR2HSV);
    cv::inRange(src_hsv, cv::Scalar(low_c[0],low_c[1],low_c[2]), cv::Scalar(high_c[0],high_c[1],high_c[2]),mask);
 //    Canny(mask, mask, lowThreshold, lowThreshold*ratio, kernel_size );
-    contours, _ = cv::findContours(mask, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
-      contour = max(contours, key=lambda x: cv::contourArea(x));
-      cv::drawContours(mask, [contour], -1, color=255, thickness=-1);
+   cv::findContours(mask, contours, hierarchy, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
+   contour = contours[getMaxAreaContourId(contours)];
+   cv::drawContours(mask, contour, 1 color=255);
    cv::Moments M = cv::moments(mask); // get the center of gravity
    if (M.m00 >0){
-   		int cx = int(M.m10/M.m00); //重心のx座標
-   		int cy = int(M.m01/M.m00); //重心のy座標
+   		int c_x = int(M.m10/M.m00); //重心のx座標
+   		int c_y = int(M.m01/M.m00); //重心のy座標
       std::vector<double> z_array;
       double z=0.0;
-      cv::circle(src, cv::Point(cx,cy), 5, cv::Scalar(0, 0, 255),-1);
+      cv::circle(src, cv::Point(c_x,c_y), 5, cv::Scalar(0, 0, 255),-1);
       rep(i,0,5)
         rep(j,0,5){
-          z = cc->depth.at<uint16_t>((uint16_t)(y+j),(uint16_t)(x+i));
+          z = cc->depth.at<uint16_t>((uint16_t)(c_y+j),(uint16_t)(c_x+i));
           z_array.push_back(z);
         }
         std::sort(z_array.begin(), z_array.end());
@@ -166,7 +180,7 @@ void OUTLET_CV::makeRegion(int, void*userdata){
    OUTLET_CV *cc = (OUTLET_CV*)userdata;
    rep(i,0,w)
     rep(j,0,h){
-        if((i>=0 && j<=iy)) || (i>=0 && i<ix) || (i>cx && i<w) ||(j<cy)){
+        if((i>=0 && j<=iy) || (i>=0 && i<ix) || (i>cx && i<w) ||(j<cy)){
           cv::Vec3b &color = ROI.at<cv::Vec3b>(cv::Point(j,i)); 
           color.val[0] = 0;
           color.val[1] = 0;
@@ -348,9 +362,7 @@ int main( int argc, char** argv )
             cv::namedWindow(cc.HSV_WINDOW,WINDOW_AUTOSIZE);
             cv::setMouseCallback(cc.HSV_WINDOW, get_hsv);
           }
-        
-
-	waitKey(3);
+	    waitKey(3);
       }
       //loop_rate.sleep();
       ros::spinOnce();
