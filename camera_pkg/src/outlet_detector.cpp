@@ -4,6 +4,7 @@
 
 #include <opencv2/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
+ #include <opencv2/imgproc/imgproc.hpp>
 
 
  // Include CvBridge, Image Transport, Image msg
@@ -32,7 +33,7 @@ double fstart, fstop;
 class OUTLET_CV{
   public:
     //variables
-    Mat src, src_hsv, ROI, detected_edges, mask;
+    Mat src, src_hsv, ROI, dst, mask;
     Mat depth;
     ros::Publisher pub;
     ros::Subscriber image_sub, depth_sub, darknet_bbox_sub;
@@ -53,7 +54,7 @@ class OUTLET_CV{
     void CannyThreshold(int, void*);
     void MaskThreshold(int, void*);
     void DrawCircle(int, void*);
-    void makeRegion(int, void*userdata);
+    void makeRegion(int, void*);
 //     void detect_object(int , void* userdata);
     void mouseEvent(int event, int x, int y, int flags, void* userdata);
     void draw_region_of_interest(int event, int x, int y, int flags, void* userdata);
@@ -84,6 +85,7 @@ class OUTLET_CV{
     int w,h;
     bool Drew = false;
     bool drawing = false;
+    bool Found =false;
 private:
     bool RUN = false; 
     double detect_probability =0.0;
@@ -127,35 +129,71 @@ int getMaxAreaContourId(vector <vector<cv::Point>> contours) {
     return maxAreaContourId;
 } // End function
 
+
+void OUTLET_CV::get_circle(int, void*userdata){
+  //expand the ROI to detect how off the MG400 is
+    cv::HoughCircles(
+         dst,                    // 8ビット，シングルチャンネル，グレースケールの入力画像
+         circles,                // 検出された円を出力.配列の [ 0, 1 ] に円の中心座標. [2] に円の半径が格納される
+         cv::HOUGH_GRADIENT,     // cv::HOUGH_GRADIENT メソッドのみ実装されている.
+         2,                      // 画像分解能に対する出力解像度の比率の逆数
+         30,                     // 検出される円の中心同士の最小距離
+         100,                    // Canny() の大きいほうの閾値.勾配がこのパラメータを超えている場合はエッジとして判定
+         50                      // Canny() の小さいほうの閾値.勾配がこのパラメータを下回っている場合は非エッジとして判定
+         );
+
+      for (auto circle : circles)
+      {
+         cv::circle(dst, cv::Point( circle[0], circle[1] ), circle[2], cv::Scalar(0, 0, 255), 2);
+      }
+
+      cv::namedWindow("dst", 1);
+      imshow("dst", dst);
+
+      cv::waitKey(3);
+}
+
+
 void OUTLET_CV::MaskThreshold(int, void*userdata){
    OUTLET_CV *cc = (OUTLET_CV*)userdata;
    cv::inRange(src_hsv, cv::Scalar(low_c[0],low_c[1],low_c[2]), cv::Scalar(high_c[0],high_c[1],high_c[2]),mask);
+   printf("made a mask\n");
 //    Canny(mask, mask, lowThreshold, lowThreshold*ratio, kernel_size );
    cv::findContours(mask, contours, hierarchy, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
+  //   printf("got contours\n");
    contour = contours[getMaxAreaContourId(contours)];
-   cv::drawContours(mask, contour, 1, 255);
+  //  printf("got a contour\n");
+  //  cv::drawContours(mask, contour, 1, 255);
+  //  printf("drew the contour\n");
    cv::Moments M = cv::moments(mask); // get the center of gravity
+   printf("got the contour\n");
    if (M.m00 >0){
-   		int c_x = int(M.m10/M.m00); //重心のx座標
-   		int c_y = int(M.m01/M.m00); //重心のy座標
+      Found =true;
+   		 int c_x = int(M.m10/M.m00); //重心のx座標
+   		 int c_y = int(M.m01/M.m00); //重心のy座標
+      std::cout << "Momentum " <<c_x << " " << c_y <<std::endl;
       std::vector<double> z_array;
       double z=0.0;
-      cv::circle(src, cv::Point(c_x,c_y), 5, cv::Scalar(0, 0, 255),-1);
+      cv::circle(cc->ROI, cv::Point(c_x,c_y), 5, cv::Scalar(0, 0, 255),-1);
       rep(i,0,5)
         rep(j,0,5){
-          z = cc->depth.at<uint16_t>((uint16_t)(c_y+j),(uint16_t)(c_x+i));
+          z = depth.at<uint16_t>((uint16_t)(c_y+j),(uint16_t)(c_x+i));
           z_array.push_back(z);
         }
         std::sort(z_array.begin(), z_array.end());
         z = z_array[z_array.size()-1]; 
-        cc->coordinate.x = cx;
-        cc->coordinate.y = cy;
-        if(cc->coordinate.x !=0 && cc->coordinate.y!=0){
+        z = cc->depth.at<uint16_t>((uint16_t)(c_y),(uint16_t)(c_x));
+        cc->coordinate.x = c_x;
+        cc->coordinate.y = c_y;
+          if(cc->coordinate.x !=0 && cc->coordinate.y!=0){
         cc->coordinate.z = z;
         }else{
-        cc->coordinate.z =0;
+          cc->coordinate.z =0;
         }
         cc->pub.publish(coordinate);
+      
+   }else {
+      Found = false;
    }
     imshow( "mask", mask);
     waitKey(3);  
@@ -181,14 +219,14 @@ void OUTLET_CV::makeRegion(int, void*userdata){
    rep(i,0,w){
     rep(j,0,h){
         if((j>=0 && j<=iy) || (i>=0 && i<ix) || (i>cx && i<w) ||(j>cy)){
-          cv::Vec3b &color = ROI.at<cv::Vec3b>(cv::Point(j,i)); 
+          cv::Vec3b &color = ROI.at<cv::Vec3b>(j,i); 
           color.val[0] = 0;
           color.val[1] = 0;
           color.val[2] = 0;
         }
       }
     }
-   
+   cvtColor(ROI, src_hsv, COLOR_BGR2HSV);
 }
 
 
@@ -232,8 +270,7 @@ void OUTLET_CV::depth_callback(const sensor_msgs::ImageConstPtr& msg){
 
     src = cv_ptr->image;
     ROI =src;
-    cvtColor(src, src_hsv, COLOR_BGR2HSV);
-    
+    cvtColor(src, dst, COLOR_BGR2GRAY);
     w = src.size().width;
     h = src.size().height;
     // namedWindow(window_name, WINDOW_AUTOSIZE );
@@ -246,67 +283,19 @@ void get_hsv(int event, int x, int y, int flags, void* userdata){
   if (event == EVENT_LBUTTONDOWN )
      {
       Vec3b &color = cc->src_hsv.at<Vec3b>(y,x);
-      std::cout << color[0] << " " << color[1] << " " << color[2] << std::endl;
+      // std::cout << color[0] << " " << color[1] << " " << color[2] << std::endl;
       cc->low_c[0] = color[0] -10; cc->low_c[1] = color[1] -10; cc->low_c[2] = color[2] -40;
       cc->high_c[0] = color[0] +10; cc->high_c[1] = color[1] +10; cc->high_c[2] = color[2] +40;
       // ROS_INFO_STREAM("The MIN color: %d, %d, %d", low_c[0],low_c[1],low_c[2]);
       // ROS_INFO_STREAM("The MAX color: %d, %d, %d", high_c[0],high_c[1],high_c[2]);
       printf("The MIN color: %d, %d, %d\n", cc->low_c[0],cc->low_c[1],cc->low_c[2]);
       printf("The MAX color: %d, %d, %d\n", cc->high_c[0],cc->high_c[1],cc->high_c[2]);	
-      cc->MaskThreshold(0,0);
+      cc->MaskThreshold(0,cc);
 	 }
   
 }
 
- void mouseEvent(int event, int x, int y, int flags, void* userdata)
-{
-     OUTLET_CV *cc = (OUTLET_CV*)userdata;
-    //  ros::Publisher* _pub = cc->pub;
-    //  _cc.pub = _cc.nh.advertise<std_msgs::String>(_cc.PUBLISH_TOPIC, 1000);
-     camera_pkg_msgs::Coordinate coordinate;
-    //  Mat* _depth = &depth;
-     std::vector<double> z_array;
-     double z=0.0;
-     // below process needs to be done because the z-value of realsense is not stable
-     rep(i,0,5)
-        rep(j,0,5){
-          z = cc->depth.at<uint16_t>((uint16_t)(y+j),(uint16_t)(x+i));
-          z_array.push_back(z);
-        }
-      std::sort(z_array.begin(), z_array.end());
-      z = z_array[z_array.size()-1]; //get the median value 
-     if  ( event == EVENT_LBUTTONDOWN )
-     {
-
-	  	cout << "Left button of the mouse is clicked - position (" << x << ", " << y << ", " << z << ")" << endl;
-		  cc->mode = "L";
-      if(!cc->getRun()){
-		      Vec3b &color = cc->src_hsv.at<Vec3b>(Point(y,x));
-        	cc->low_c[0] = color[0] -10; cc->low_c[1] = color[1] -10; cc->low_c[2] = color[2] -40;
-        	cc->high_c[0] = color[0] +10; cc->high_c[1] = color[1] +10; cc->high_c[2] = color[2] +40;
-        	// ROS_INFO_STREAM("The MIN color: %d, %d, %d", low_c[0],low_c[1],low_c[2]);
-        	// ROS_INFO_STREAM("The MAX color: %d, %d, %d", high_c[0],high_c[1],high_c[2]);
-        	printf("The MIN color: %d, %d, %d\n", cc->low_c[0],cc->low_c[1],cc->low_c[2]);
-        	printf("The MAX color: %d, %d, %d\n", cc->high_c[0],cc->high_c[1],cc->high_c[2]);	
-	 }
-          cc->setRun(false);
  
-     }
-     else if  ( event == EVENT_RBUTTONDOWN )
-     {
-          cout << "Right button of the mouse is clicked - position (" << x << ", " << y << ", " << z << ")" << endl;
-          cc->mode = "R";
-      if(!cc->getRun())
-          cc->setRun(true);
-     }
-     else if  ( event == EVENT_MBUTTONDOWN )
-     {
-          cout << "Middle button of the mouse is clicked - position (" << x << ", " << y << ", " << z << ")" << endl;
-          cc->mode = "M";
-     }
-     
-
-}
 
 void draw_region_of_interest(int event, int x, int y, int flags, void* userdata)
 {
@@ -363,10 +352,15 @@ int main( int argc, char** argv )
               imshow(cc.SRC_WINDOW, cc.src);
           }else{
             cv::rectangle(cc.ROI, cv::Point(cc.ix,cc.iy),  cv::Point(cc.cx,cc.cy), cv::Scalar(0,255,255), 2,4);
+            //make the region of interest
+            cc.makeRegion(0, &cc);
             cv::namedWindow(cc.ROI_WINDOW,WINDOW_AUTOSIZE);
             cv::setMouseCallback(cc.ROI_WINDOW, get_hsv,&cc);
+            // if(cc.Found)
+            //   cc.MaskThreshold(0,&cc);
+            cc.get_circle(0, &cc);
             imshow(cc.ROI_WINDOW, cc.ROI);
-            imshow("hsv", cc.src_hsv);
+            // imshow("hsv", cc.src_hsv);
           }
       waitKey(3);      
       }
