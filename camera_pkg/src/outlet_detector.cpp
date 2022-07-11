@@ -331,8 +331,8 @@ int main( int argc, char** argv )
             
             cv::namedWindow(cc.ROI_WINDOW,WINDOW_AUTOSIZE);
             cv::setMouseCallback(cc.ROI_WINDOW, get_hsv,&cc);
-            if(cc.Found)
-              cc.MaskThreshold(0,&cc);
+            // if(cc.Found)
+            //   cc.MaskThreshold(0,&cc);
             imshow(cc.ROI_WINDOW, cc.ROI);
             // imshow("hsv", cc.src_hsv);
           }
