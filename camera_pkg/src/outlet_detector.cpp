@@ -354,7 +354,7 @@ int main( int argc, char** argv )
    std_srvs::Empty _emp;
    
    cv::namedWindow(cc.SRC_WINDOW,WINDOW_AUTOSIZE);
-   setMouseCallback("src", draw_region_of_interest, &cc);
+   setMouseCallback(cc.SRC_WINDOW, draw_region_of_interest, &cc);
    while(ros::ok()){
       // cout << cc.getRun() << endl;
       clock_gettime(CLOCK_MONOTONIC, &start); fstart=(double)start.tv_sec + ((double)start.tv_nsec/1000000000.0);
@@ -367,7 +367,7 @@ int main( int argc, char** argv )
             // cc.makeRegion(0, 0);
             
             cv::namedWindow(cc.ROI_WINDOW,WINDOW_AUTOSIZE);
-            cv::setMouseCallback(cc.ROI_WINDOW, get_hsv);
+            cv::setMouseCallback(cc.ROI_WINDOW, get_hsv,&cc);
             imshow(cc.ROI_WINDOW, cc.ROI);
           }
       waitKey(3);      
