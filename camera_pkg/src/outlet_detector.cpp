@@ -32,7 +32,7 @@ double fstart, fstop;
 class OUTLET_CV{
   public:
     //variables
-    Mat src, src_gray, src_hsv, dst, detected_edges, mask;
+    Mat src, src_hsv, ROI, detected_edges, mask;
     Mat depth;
     ros::Publisher pub;
     ros::Subscriber image_sub, depth_sub, darknet_bbox_sub;
@@ -40,6 +40,7 @@ class OUTLET_CV{
     camera_pkg_msgs::Coordinate coordinate;
     ros::ServiceServer pickup_start, pickup_stop;
     int lowThreshold;
+    int ix,iy,cx,cy;
     int low_c[3] = {50, 138, 157};
     int high_c[3] = {100, 255, 197};
     const int max_c[3] = {179, 255, 255};
@@ -49,10 +50,14 @@ class OUTLET_CV{
     void CannyThreshold(int, void*);
     void MaskThreshold(int, void*);
     void DrawCircle(int, void*);
+    void makeRegion(int, void*userdata);
 //     void detect_object(int , void* userdata);
     void mouseEvent(int event, int x, int y, int flags, void* userdata);
+    void draw_region_of_interest(int event, int x, int y, int flags, void* userdata);
+    void get_hsv(int event, int x, int y, int flags, void* userdata);
     // Mat getDepth();
-    const std::string OPENCV_WINDOW = "Image window";
+    const std::string SRC_WINDOW = "src";
+    const std::string HSV_WINDOW = "hsv";
     virtual bool maskdetect_start_service(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);
     virtual bool maskdetect_stop_service(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);
     virtual void image_callback(const sensor_msgs::ImageConstPtr&);
@@ -73,8 +78,10 @@ class OUTLET_CV{
     void setRun(bool run);
     const int max_lowThreshold = 100;
     const std::string window_name = "Edge Map";
+    int w,h;
 private:
     bool RUN = false;
+    bool Drew = false;
     double detect_probability =0.0;
     bool detected=false;
     bool start_call = true;
@@ -103,61 +110,30 @@ void OUTLET_CV::setRun(bool run){
     RUN = run;
 }
 
-// void OUTLET_CV::detect_object(int, void* userdata){
-//     OUTLET_CV *cc = (OUTLET_CV*)userdata;
-//     cv::Point pt1(detected_object.xmin, detected_object.ymin);
-//     cv::Point pt2(detected_object.xmax, detected_object.ymax);
-//     cv::Point center((detected_object.xmax+detected_object.xmin)/2, (detected_object.ymax+detected_object.ymin)/2);
-//     cv::circle(src, center, 5, cv::Scalar(0, 0, 255));
-//     cv::putText(src, "Cup", pt2, FONT_HERSHEY_DUPLEX, 1.0, cv::Scalar(255, 185, 0), 2);
-//     cv::rectangle(src, pt1, pt2, cv::Scalar(0,255,0));
-//     int z = cc->depth.at<uint16_t>(center.y,center.x);
-//     cc->coordinate.x = center.x;
-//     cc->coordinate.y = center.y;
-//     if(cc->coordinate.x !=0 && cc->coordinate.y!=0){
-//       cc->coordinate.z = z;
-//     }else{
-//       cc->coordinate.z =0;
-//     }
-    
-//     cc->pub.publish(coordinate);
-// }
 
-
-void OUTLET_CV::DrawCircle(int, void*){
-  int x = src.cols, y = src.rows;
-  vector<int> x_array = {x/2-70, x/2, x/2+70, x/2+140};
-  vector<int> y_array = {y/2-140, y/2-70, y/2, y/2+70};
-  //draw circle 9;
-  //top
-  rep(i,0,x_array.size()){
-    rep(j,0,y_array.size()){
-      int _radius =13;
-      int _saturation1 = 153;
-      int _saturation2 =0;
-      if(j%2==0 && i%2==0){ _radius =20;_saturation1 = 100; _saturation2 =100;} 
-      else if(j%2==0) {_radius = 17; _saturation1 = 0; _saturation2 =150;}
-      else if(i%2==0) {_radius = 25; _saturation1 = 200; _saturation2 =10;}
-      // cv::circle(src_hsv, cv::Point(x_array[i],y_array[j]), 15, cv::Scalar(153, 0, 255), 5);
-      cv::circle(src, cv::Point(x_array[i],y_array[j]), _radius, cv::Scalar(_saturation1, _saturation2, 255),5);
-    }
-  }
-
-}
 
 void OUTLET_CV::MaskThreshold(int, void*userdata){
    OUTLET_CV *cc = (OUTLET_CV*)userdata;
-   
+   cvtColor(cc->ROI, cc->src_hsv, COLOR_BGR2HSV);
    cv::inRange(src_hsv, cv::Scalar(low_c[0],low_c[1],low_c[2]), cv::Scalar(high_c[0],high_c[1],high_c[2]),mask);
 //    Canny(mask, mask, lowThreshold, lowThreshold*ratio, kernel_size );
- 
+    contours, _ = cv::findContours(mask, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
+      contour = max(contours, key=lambda x: cv::contourArea(x));
+      cv::drawContours(mask, [contour], -1, color=255, thickness=-1);
    cv::Moments M = cv::moments(mask); // get the center of gravity
    if (M.m00 >0){
-   			int cx = int(M.m10/M.m00); //重心のx座標
-   			int cy = int(M.m01/M.m00); //重心のy座標
-      
-      cv::circle(src, cv::Point(cx,cy), 5, cv::Scalar(0, 0, 255));
-        int z = cc->depth.at<uint16_t>(cy,cx);
+   		int cx = int(M.m10/M.m00); //重心のx座標
+   		int cy = int(M.m01/M.m00); //重心のy座標
+      std::vector<double> z_array;
+      double z=0.0;
+      cv::circle(src, cv::Point(cx,cy), 5, cv::Scalar(0, 0, 255),-1);
+      rep(i,0,5)
+        rep(j,0,5){
+          z = cc->depth.at<uint16_t>((uint16_t)(y+j),(uint16_t)(x+i));
+          z_array.push_back(z);
+        }
+        std::sort(z_array.begin(), z_array.end());
+        z = z_array[z_array.size()-1]; 
         cc->coordinate.x = cx;
         cc->coordinate.y = cy;
         if(cc->coordinate.x !=0 && cc->coordinate.y!=0){
@@ -168,9 +144,7 @@ void OUTLET_CV::MaskThreshold(int, void*userdata){
         cc->pub.publish(coordinate);
    }
     imshow( "mask", mask);
-    waitKey(3);
- 
-   
+    waitKey(3);  
    
 }
 
@@ -187,6 +161,20 @@ void OUTLET_CV::MaskThreshold(int, void*userdata){
    RUN = false;
    return RUN;
  }
+
+void OUTLET_CV::makeRegion(int, void*userdata){
+   OUTLET_CV *cc = (OUTLET_CV*)userdata;
+   rep(i,0,w)
+    rep(j,0,h){
+        if((i>=0 && j<=iy)) || (i>=0 && i<ix) || (i>cx && i<w) ||(j<cy)){
+          cv::Vec3b &color = ROI.at<cv::Vec3b>(cv::Point(j,i)); 
+          color.val[0] = 0;
+          color.val[1] = 0;
+          color.val[2] = 0;
+        }
+    }
+    }
+}
 
 
 void OUTLET_CV::depth_callback(const sensor_msgs::ImageConstPtr& msg){
@@ -228,15 +216,31 @@ void OUTLET_CV::depth_callback(const sensor_msgs::ImageConstPtr& msg){
     }
 
     src = cv_ptr->image;
-    dst.create(src.size(), src.type());
+    ROI.create(src.size(), src.type());
     //cvtColor(src, src_gray, COLOR_BGR2GRAY);
-    cvtColor(src, src_hsv, COLOR_BGR2HSV);
-   
+    
+    w = src.size().width;
+    h = src.size().height;
     // namedWindow(window_name, WINDOW_AUTOSIZE );
     // CannyThreshold(0, 0);
 
  }
 
+void get_hsv(int event, int x, int y, int flags, void* userdata){
+  OUTLET_CV *cc = (OUTLET_CV*)userdata;
+  if (event == EVENT_LBUTTONDOWN )
+     {
+      Vec3b &color = cc->src_hsv.at<Vec3b>(Point(y,x));
+      cc->low_c[0] = color[0] -10; cc->low_c[1] = color[1] -10; cc->low_c[2] = color[2] -40;
+      cc->high_c[0] = color[0] +10; cc->high_c[1] = color[1] +10; cc->high_c[2] = color[2] +40;
+      // ROS_INFO_STREAM("The MIN color: %d, %d, %d", low_c[0],low_c[1],low_c[2]);
+      // ROS_INFO_STREAM("The MAX color: %d, %d, %d", high_c[0],high_c[1],high_c[2]);
+      printf("The MIN color: %d, %d, %d\n", cc->low_c[0],cc->low_c[1],cc->low_c[2]);
+      printf("The MAX color: %d, %d, %d\n", cc->high_c[0],cc->high_c[1],cc->high_c[2]);	
+      cc->MaskThreshold(0,0);
+	 }
+  
+}
 
  void mouseEvent(int event, int x, int y, int flags, void* userdata)
 {
@@ -263,7 +267,7 @@ void OUTLET_CV::depth_callback(const sensor_msgs::ImageConstPtr& msg){
       if(!cc->getRun()){
 		      Vec3b &color = cc->src_hsv.at<Vec3b>(Point(y,x));
         	cc->low_c[0] = color[0] -10; cc->low_c[1] = color[1] -10; cc->low_c[2] = color[2] -40;
-        	cc->high_c[0] = color[0] +10; cc->high_c[1] = color[1] +10; cc->high_c[2] = color[2] +20;
+        	cc->high_c[0] = color[0] +10; cc->high_c[1] = color[1] +10; cc->high_c[2] = color[2] +40;
         	// ROS_INFO_STREAM("The MIN color: %d, %d, %d", low_c[0],low_c[1],low_c[2]);
         	// ROS_INFO_STREAM("The MAX color: %d, %d, %d", high_c[0],high_c[1],high_c[2]);
         	printf("The MIN color: %d, %d, %d\n", cc->low_c[0],cc->low_c[1],cc->low_c[2]);
@@ -288,6 +292,28 @@ void OUTLET_CV::depth_callback(const sensor_msgs::ImageConstPtr& msg){
 
 }
 
+void draw_region_of_interest(int event, int x, int y, int flags, void* userdata)
+{
+     OUTLET_CV *cc = (OUTLET_CV*)userdata;
+    //  ros::Publisher* _pub = cc->pub;
+    //  _cc.pub = _cc.nh.advertise<std_msgs::String>(_cc.PUBLISH_TOPIC, 1000);
+     if(event == EVENT_LBUTTONMOVE){
+      cc->drawing =true;
+      cc->ix = x; cc->iy=y;
+     }else if(event == EVENT_MOUSEMOVE){
+      if(cc->drawing){
+        cv::rectangle(cc->src, (cc->ix,cc->iy) (x,y),(0,255,0),-1);
+      }else if(event == EVENT_LBUTTONUP){
+        cc->drawing = false;
+        cv::rectangle(cc->src, (cc->ix,cc->iy), (x,y), (0,255,255),2);
+        cc->cx = x; cc->cy = y;
+        cc->Drew = true;
+        cv::destroyAllWindows(); 
+      }
+     }
+
+
+}
 
 int main( int argc, char** argv )
 {
@@ -305,36 +331,25 @@ int main( int argc, char** argv )
    cc.pub = cc.nh.advertise<camera_pkg_msgs::Coordinate>(cc.PUBLISH_TOPIC, 1000);
    
    std_srvs::Empty _emp;
+   setMouseCallback("src", draw_region_of_interest, &cc);
+   cv::namedWindow(cc.SRC_WINDOW,WINDOW_AUTOSIZE);
+
    while(ros::ok()){
       // cout << cc.getRun() << endl;
       clock_gettime(CLOCK_MONOTONIC, &start); fstart=(double)start.tv_sec + ((double)start.tv_nsec/1000000000.0);
       if(!cc.src.empty()){
-        if(cc.getRun()){
-            cc.MaskThreshold(0,&cc);
-        }
-        setMouseCallback("src", mouseEvent, &cc);
-        clock_gettime(CLOCK_MONOTONIC, &stop); fstop=(double)stop.tv_sec + ((double)stop.tv_nsec/1000000000.0);
-        std::string fps= "FPS: " + std::to_string(1/(fstop-fstart));
-        std::string exp="";
-        if(cc.mode =="L" || cc.mode == "R"){
-            if(cc.getRun())
-                exp ="Get Coordinate";
-            else 
-                exp ="Color checker";
-        }
-        else if (cc.mode == "M"){
-            break;
-        }
-        putText(cc.src, //target image
-          fps, //text
-          Point(10, 30), //top-left position
-          FONT_HERSHEY_DUPLEX,
-          1.0,
-          Scalar(118, 185, 0), //font color
-          2);
-        putText(cc.src, exp, Point(10, 65), FONT_HERSHEY_DUPLEX,1.0,Scalar(0, 0, 255), 2);
-        imshow( "src", cc.src);
-        imshow("hsv", cc.src_hsv);
+          if (!cc.Drew){
+            imshow(cc.SRC_WINDOW, cc.src);
+          }else{
+            cv::rectangle(cc.src, (cc.ix,cc.iy), (cc.cx,cc.cy), (0,255,255),2);
+            //make the region of interest
+            cc.makeRegion(0, 0);
+            imshow("ROI", cc.ROI);
+            cv::namedWindow(cc.HSV_WINDOW,WINDOW_AUTOSIZE);
+            cv::setMouseCallback(cc.HSV_WINDOW, get_hsv);
+          }
+        
+
 	waitKey(3);
       }
       //loop_rate.sleep();
