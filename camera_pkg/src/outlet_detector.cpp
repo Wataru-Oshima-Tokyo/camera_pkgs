@@ -136,7 +136,7 @@ void OUTLET_CV::MaskThreshold(int, void*userdata){
     printf("got contours\n");
    contour = contours[getMaxAreaContourId(contours)];
    printf("got a contour\n");
-   cv::drawContours(mask, contour, 1, 255);
+  //  cv::drawContours(mask, contour, 1, 255);
    printf("drew the contour\n");
    cv::Moments M = cv::moments(mask); // get the center of gravity
    if (M.m00 >0){
