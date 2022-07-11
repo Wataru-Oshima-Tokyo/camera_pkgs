@@ -134,6 +134,7 @@ int getMaxAreaContourId(vector <vector<cv::Point>> contours) {
 
 void OUTLET_CV::get_circle(int, void*userdata){
   //expand the ROI to detect how off the MG400 is
+    std::vector<cv::Vec3f> circles;
     cv::HoughCircles(
          dst,                    // 8ビット，シングルチャンネル，グレースケールの入力画像
          circles,                // 検出された円を出力.配列の [ 0, 1 ] に円の中心座標. [2] に円の半径が格納される
