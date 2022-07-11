@@ -178,8 +178,8 @@ void OUTLET_CV::MaskThreshold(int, void*userdata){
 
 void OUTLET_CV::makeRegion(int, void*userdata){
    OUTLET_CV *cc = (OUTLET_CV*)userdata;
-   rep(i,0,h){
-    rep(j,0,w){
+   rep(i,0,w){
+    rep(j,0,h){
         if((j>=0 && j<=iy) || (i>=0 && i<ix) || (i>cx && i<w) ||(j>cy)){
           cv::Vec3b &color = ROI.at<cv::Vec3b>(cv::Point(j,i)); 
           color.val[0] = 0;
@@ -188,6 +188,7 @@ void OUTLET_CV::makeRegion(int, void*userdata){
         }
       }
     }
+    cvtColor(ROI, src_hsv, COLOR_BGR2HSV);
 }
 
 
@@ -244,7 +245,6 @@ void get_hsv(int event, int x, int y, int flags, void* userdata){
   OUTLET_CV *cc = (OUTLET_CV*)userdata;
   if (event == EVENT_LBUTTONDOWN )
      {
-      cvtColor(cc->ROI, cc->src_hsv, COLOR_BGR2HSV);
       Vec3b &color = cc->src_hsv.at<Vec3b>(Point(y,x));
       cc->low_c[0] = color[0] -10; cc->low_c[1] = color[1] -10; cc->low_c[2] = color[2] -40;
       cc->high_c[0] = color[0] +10; cc->high_c[1] = color[1] +10; cc->high_c[2] = color[2] +40;
