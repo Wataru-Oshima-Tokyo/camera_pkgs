@@ -91,7 +91,7 @@ class OUTLET_CV{
     bool Drew = false;
     bool drawing = false;
     bool Found =false;
-    int offset_x =0; int offset_y=0; int  offset_z=0;
+    double offset_x =0; double offset_y=0; double offset_z=0;
 private:
     bool RUN = false; 
     double detect_probability =0.0;
@@ -155,8 +155,8 @@ void OUTLET_CV::get_circle(int, void*userdata){
       // }
         try{
           cv::circle(dst, cv::Point( circles[0][0], circles[0][1] ), circles[0][2], cv::Scalar(0, 0, 255), 2);
-          offset_x = coordinate.x - circle[0][0];
-          offset_y = coordinate.y - circle[0][1];
+          offset_x = (double)coordinate.x - circles[0][0];
+          offset_y = (double)coordinate.y - circles[0][1];
           printf("Offset_x: %d, Offset_y: %d", offset_x, offset_y);
         } 
         catch (Exception& e)
@@ -171,7 +171,7 @@ void OUTLET_CV::get_circle(int, void*userdata){
 }
 
 void OUTLET_CV::mg400_callback(const std_msgs::Bool& msg){
-  if(!msg){
+  if(!msg.data){
     while(1){
        get_circle(0,0);
         // put the cmd_vel control below
