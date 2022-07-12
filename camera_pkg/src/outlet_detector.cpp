@@ -149,8 +149,6 @@ void OUTLET_CV::get_circle(int, void*userdata){
          150,                    // Canny() の大きいほうの閾値.勾配がこのパラメータを超えている場合はエッジとして判定
          70                      // Canny() の小さいほうの閾値.勾配がこのパラメータを下回っている場合は非エッジとして判定
          );
-
-<<<<<<< HEAD
       // for (auto circle : circles)
       // {
       //    cv::circle(dst, cv::Point( circle[0], circle[1] ), circle[2], cv::Scalar(0, 0, 255), 2);
@@ -166,14 +164,6 @@ void OUTLET_CV::get_circle(int, void*userdata){
             printf("A circle is not found\n");
         }
       
-
-=======
-      for (auto circle : circles)
-      {
-         cv::circle(ROI, cv::Point( circle[0], circle[1] ), circle[2], cv::Scalar(0, 0, 255), 2);
-      }
-      //cv::circle(ROI, cv::Point( circles[0][0], circles[0][1] ), circles[0][2], cv::Scalar(0, 0, 255), 2);
->>>>>>> d3807b098d52c792f4ca35c58459df5b78f3e535
       cv::namedWindow("dst", 1);
       imshow("dst", dst);
 
