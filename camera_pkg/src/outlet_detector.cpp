@@ -12,6 +12,7 @@
  #include <cv_bridge/cv_bridge.h>
  #include <sensor_msgs/image_encodings.h>
  #include "std_msgs/String.h"
+ #include "std_msgs/Bool.h"
  #include "std_srvs/Empty.h"
  #include <vector>
 //  #include <object/Coordinate.h>
@@ -68,11 +69,13 @@ class OUTLET_CV{
     virtual bool maskdetect_stop_service(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);
     virtual void image_callback(const sensor_msgs::ImageConstPtr&);
     virtual void depth_callback(const sensor_msgs::ImageConstPtr&);
+    virtual void mg400_callback(const std_msgs::Bool&);
     // Topics
     std::string IMAGE_TOPIC;
     std::string DEPTH_TOPIC;
     // const std::string DEPTH_TOPIC = "/camera/depth/color/image_raw";
     const std::string PUBLISH_TOPIC = "/outlet/coordinate";
+    const std::string MG400_TOPIC = "/mg400/working";
     const std::string PICKUP_SERVICE_START = "/pickup/start";
     const std::string PICKUP_SERVICE_STOP = "/pickup/stop";
     const std::string MASK_DETECT_SERVICE_START = "/maskdetect/start";
@@ -88,6 +91,7 @@ class OUTLET_CV{
     bool Drew = false;
     bool drawing = false;
     bool Found =false;
+    int offset_x =0; int offset_y=0; int  offset_z=0;
 private:
     bool RUN = false; 
     double detect_probability =0.0;
@@ -146,10 +150,21 @@ void OUTLET_CV::get_circle(int, void*userdata){
          100                      // Canny() の小さいほうの閾値.勾配がこのパラメータを下回っている場合は非エッジとして判定
          );
 
-      for (auto circle : circles)
-      {
-         cv::circle(dst, cv::Point( circle[0], circle[1] ), circle[2], cv::Scalar(0, 0, 255), 2);
-      }
+      // for (auto circle : circles)
+      // {
+      //    cv::circle(dst, cv::Point( circle[0], circle[1] ), circle[2], cv::Scalar(0, 0, 255), 2);
+      // }
+        try{
+          cv::circle(dst, cv::Point( circles[0][0], circles[0][1] ), circles[0][2], cv::Scalar(0, 0, 255), 2);
+          offset_x = coordinate.x - circle[0][0];
+          offset_y = coordinate.y - circle[0][1];
+          printf("Offset_x: %d, Offset_y: %d", offset_x, offset_y);
+        } 
+        catch (Exception& e)
+        {
+            printf("A circle is not found\n");
+        }
+      
 
       cv::namedWindow("dst", 1);
       imshow("dst", dst);
@@ -157,6 +172,15 @@ void OUTLET_CV::get_circle(int, void*userdata){
       cv::waitKey(3);
 }
 
+void OUTLET_CV::mg400_callback(const std_msgs::Bool& msg){
+  if(!msg){
+    while(1){
+       get_circle(0,0);
+        // put the cmd_vel control below
+    }
+   
+  }
+}
 
 void OUTLET_CV::MaskThreshold(int, void*userdata){
    OUTLET_CV *cc = (OUTLET_CV*)userdata;
