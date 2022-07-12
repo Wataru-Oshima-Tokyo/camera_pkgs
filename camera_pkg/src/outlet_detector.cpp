@@ -157,7 +157,7 @@ void OUTLET_CV::get_circle(int, void*userdata){
           cv::circle(dst, cv::Point( circles[0][0], circles[0][1] ), circles[0][2], cv::Scalar(0, 0, 255), 2);
           offset_x = (double)coordinate.x - circles[0][0];
           offset_y = (double)coordinate.y - circles[0][1];
-          printf("Offset_x: %d, Offset_y: %d", offset_x, offset_y);
+          printf("Offset_x: %f, Offset_y: %f", offset_x, offset_y);
         } 
         catch (Exception& e)
         {
