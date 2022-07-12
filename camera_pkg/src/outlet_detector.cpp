@@ -12,6 +12,7 @@
  #include <cv_bridge/cv_bridge.h>
  #include <sensor_msgs/image_encodings.h>
  #include "std_msgs/String.h"
+ #include "std_msgs/Bool.h"
  #include "std_srvs/Empty.h"
  #include <vector>
 //  #include <object/Coordinate.h>
@@ -68,11 +69,13 @@ class OUTLET_CV{
     virtual bool maskdetect_stop_service(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);
     virtual void image_callback(const sensor_msgs::ImageConstPtr&);
     virtual void depth_callback(const sensor_msgs::ImageConstPtr&);
+    virtual void mg400_callback(const std_msgs::Bool&);
     // Topics
     std::string IMAGE_TOPIC;
     std::string DEPTH_TOPIC;
     // const std::string DEPTH_TOPIC = "/camera/depth/color/image_raw";
     const std::string PUBLISH_TOPIC = "/outlet/coordinate";
+    const std::string MG400_TOPIC = "/mg400/working";
     const std::string PICKUP_SERVICE_START = "/pickup/start";
     const std::string PICKUP_SERVICE_STOP = "/pickup/stop";
     const std::string MASK_DETECT_SERVICE_START = "/maskdetect/start";
@@ -88,6 +91,7 @@ class OUTLET_CV{
     bool Drew = false;
     bool drawing = false;
     bool Found =false;
+    double offset_x =0; double offset_y=0; double offset_z=0;
 private:
     bool RUN = false; 
     double detect_probability =0.0;
@@ -134,27 +138,47 @@ int getMaxAreaContourId(vector <vector<cv::Point>> contours) {
 
 void OUTLET_CV::get_circle(int, void*userdata){
   //expand the ROI to detect how off the MG400 is
+    //GaussianBlur( dst, dst, Size(9, 9), 2, 2 );
+    std::vector<cv::Vec3f> circles;
     cv::HoughCircles(
          dst,                    // 8ビット，シングルチャンネル，グレースケールの入力画像
          circles,                // 検出された円を出力.配列の [ 0, 1 ] に円の中心座標. [2] に円の半径が格納される
          cv::HOUGH_GRADIENT,     // cv::HOUGH_GRADIENT メソッドのみ実装されている.
-         2,                      // 画像分解能に対する出力解像度の比率の逆数
+         1,                      // 画像分解能に対する出力解像度の比率の逆数
          30,                     // 検出される円の中心同士の最小距離
-         100,                    // Canny() の大きいほうの閾値.勾配がこのパラメータを超えている場合はエッジとして判定
-         50                      // Canny() の小さいほうの閾値.勾配がこのパラメータを下回っている場合は非エッジとして判定
+         150,                    // Canny() の大きいほうの閾値.勾配がこのパラメータを超えている場合はエッジとして判定
+         70                      // Canny() の小さいほうの閾値.勾配がこのパラメータを下回っている場合は非エッジとして判定
          );
-
-      for (auto circle : circles)
-      {
-         cv::circle(dst, cv::Point( circle[0], circle[1] ), circle[2], cv::Scalar(0, 0, 255), 2);
-      }
-
+      // for (auto circle : circles)
+      // {
+      //    cv::circle(dst, cv::Point( circle[0], circle[1] ), circle[2], cv::Scalar(0, 0, 255), 2);
+      // }
+        try{
+          cv::circle(dst, cv::Point( circles[0][0], circles[0][1] ), circles[0][2], cv::Scalar(0, 0, 255), 2);
+          offset_x = (double)coordinate.x - circles[0][0];
+          offset_y = (double)coordinate.y - circles[0][1];
+          printf("Offset_x: %f, Offset_y: %f", offset_x, offset_y);
+        } 
+        catch (Exception& e)
+        {
+            printf("A circle is not found\n");
+        }
+      
       cv::namedWindow("dst", 1);
       imshow("dst", dst);
 
       cv::waitKey(3);
 }
 
+void OUTLET_CV::mg400_callback(const std_msgs::Bool& msg){
+  if(!msg.data){
+    while(1){
+       get_circle(0,0);
+        // put the cmd_vel control below
+    }
+   
+  }
+}
 
 void OUTLET_CV::MaskThreshold(int, void*userdata){
    OUTLET_CV *cc = (OUTLET_CV*)userdata;
