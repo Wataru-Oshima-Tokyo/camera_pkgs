@@ -38,11 +38,14 @@ int main(int argc, char** argv)
   while (nh.ok()) {
     Mat frame;
     cam0.read(frame);
-    resize(frame, frame, cv::Size(), 320.0/frame.cols ,240.0/frame.rows);
-    imshow("320x240", frame);
-    sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", frame).toImageMsg();
-    pub.publish(msg);
-    cv::waitKey(3);
+    if(!frame.empty()){
+        resize(frame, frame, cv::Size(), 320.0/frame.cols ,240.0/frame.rows);
+        imshow("320x240", frame);
+        sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", frame).toImageMsg();
+        pub.publish(msg);
+        cv::waitKey(3);
+    }
+
     ros::spinOnce();
     loop_rate.sleep();
   }
