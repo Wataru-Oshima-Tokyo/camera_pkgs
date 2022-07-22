@@ -21,7 +21,7 @@ if __name__ == "__main__":
     rate = rospy.Rate(1)
     while not rospy.is_shutdown():
         meta, frame = cam.read()
-        frame = cv2.resize(frame, (w, h))
+        frame = cv2.resize(frame, (w/2, h/2))
         cv2.imshow("frame", frame)
         # I want to publish the Canny Edge Image and the original Image
         msg_frame = CvBridge().cv2_to_imgmsg(frame)
