@@ -10,7 +10,7 @@ import time
 if __name__ == "__main__":
     rospy.init_node('VideoPublisher', anonymous=True)
 
-    VideoRaw = rospy.Publisher('VideoRaw', Image, queue_size=10)
+    VideoRaw = rospy.Publisher('usb_cam/color/image', Image, queue_size=10)
 
     cam = cv2.VideoCapture(0)
     if cam.isOpened(): 
