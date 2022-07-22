@@ -17,7 +17,7 @@ int main(int argc, char** argv)
 
    if (!cam0.isOpened())
    {
-       exit(ROS_ERROR);
+       exit();
    }
 
   cam0.set(CAP_PROP_FRAME_WIDTH, IMG_WIDTH);
@@ -25,7 +25,7 @@ int main(int argc, char** argv)
   ros::init(argc, argv, "image_publisher");
   ros::NodeHandle nh;
   image_transport::ImageTransport it(nh);
-//   image_transport::Publisher pub = it.advertise("usb_camera/color/image", 1);
+  image_transport::Publisher pub = it.advertise("usb_camera/color/image", 1);
 //   cv::Mat image = cv::imread(argv[1], CV_LOAD_IMAGE_COLOR);
   
 //   sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", image).toImageMsg();
