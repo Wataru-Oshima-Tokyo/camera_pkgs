@@ -34,6 +34,7 @@ int main(int argc, char** argv)
   while (nh.ok()) {
     Mat frame;
     cam0.read(frame);
+    imshow("320x240", frame);
     sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", frame).toImageMsg();
     pub.publish(msg);
     cv::waitKey(3);
