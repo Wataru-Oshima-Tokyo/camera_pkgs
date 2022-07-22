@@ -24,7 +24,7 @@ if __name__ == "__main__":
         frame = cv2.resize(frame, (w, h))
         cv2.imshow("frame", frame)
         # I want to publish the Canny Edge Image and the original Image
-        msg_frame = CvBridge().cv2_to_imgmsg(frame)
+        # msg_frame = CvBridge().cv2_to_imgmsg(frame)
 
-        VideoRaw.publish(msg_frame, "RGB8")
+        # VideoRaw.publish(msg_frame, "RGB8")
         rate.sleep()
