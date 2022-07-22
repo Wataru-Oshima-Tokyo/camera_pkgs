@@ -37,7 +37,7 @@ class OUTLET_CV{
     Mat src, src_hsv, ROI, dst, mask;
     Mat depth;
     ros::Publisher pub;
-    ros::Subscriber image_sub, depth_sub, darknet_bbox_sub;
+    ros::Subscriber image_sub, depth_sub, mg400_sub;
     ros::NodeHandle nh;
     camera_pkg_msgs::Coordinate coordinate;
     ros::ServiceServer pickup_start, pickup_stop;
@@ -90,8 +90,9 @@ class OUTLET_CV{
     int w,h;
     bool Drew = false;
     bool drawing = false;
-    bool Found =false;
+    bool ADJUST=false;
     double offset_x =0; double offset_y=0; double offset_z=0;
+    double c_x,c_y;
 private:
     bool RUN = false; 
     double detect_probability =0.0;
@@ -149,21 +150,27 @@ void OUTLET_CV::get_circle(int, void*userdata){
          150,                    // Canny() の大きいほうの閾値.勾配がこのパラメータを超えている場合はエッジとして判定
          70                      // Canny() の小さいほうの閾値.勾配がこのパラメータを下回っている場合は非エッジとして判定
          );
-      // for (auto circle : circles)
-      // {
-      //    cv::circle(dst, cv::Point( circle[0], circle[1] ), circle[2], cv::Scalar(0, 0, 255), 2);
-      // }
-        try{
+      for (auto circle : circles)
+      {
+          cv::circle(dst, cv::Point( circle[0], circle[1] ), circle[2], cv::Scalar(0, 0, 255), 2);
+          offset_x = (double)coordinate.x - circle[0];
+          offset_y = (double)coordinate.y - circle[1];
+	  printf("\nCircle[0]: %lf, Circle[1]: %lf\n", circle[0], circle[1]);
+          printf("\nOffset_x: %lf, Offset_y: %lf\n", offset_x, offset_y);
+      }
+     /*   try{
           cv::circle(dst, cv::Point( circles[0][0], circles[0][1] ), circles[0][2], cv::Scalar(0, 0, 255), 2);
           offset_x = (double)coordinate.x - circles[0][0];
           offset_y = (double)coordinate.y - circles[0][1];
           printf("Offset_x: %f, Offset_y: %f", offset_x, offset_y);
         } 
-        catch (Exception& e)
+        catch (std::exception e)
         {
             printf("A circle is not found\n");
         }
-      
+      */
+      cv::circle(dst, cv::Point(c_x,c_y), 5, cv::Scalar(0, 0, 255),-1);
+
       cv::namedWindow("dst", 1);
       imshow("dst", dst);
 
@@ -171,12 +178,9 @@ void OUTLET_CV::get_circle(int, void*userdata){
 }
 
 void OUTLET_CV::mg400_callback(const std_msgs::Bool& msg){
-  if(!msg.data){
-    while(1){
-       get_circle(0,0);
+  if(!msg.data){ 
+       ADJUST=true;
         // put the cmd_vel control below
-    }
-   
   }
 }
 
@@ -194,13 +198,12 @@ void OUTLET_CV::MaskThreshold(int, void*userdata){
    cv::Moments M = cv::moments(mask); // get the center of gravity
    printf("got the contour\n");
    if (M.m00 >0){
-      Found =true;
-   		 int c_x = int(M.m10/M.m00); //重心のx座標
-   		 int c_y = int(M.m01/M.m00); //重心のy座標
+   		  cc->c_x = int(M.m10/M.m00); //重心のx座標
+   		  cc->c_y = int(M.m01/M.m00); //重心のy座標
       std::cout << "Momentum " <<c_x << " " << c_y <<std::endl;
       std::vector<double> z_array;
       double z=0.0;
-      cv::circle(cc->ROI, cv::Point(c_x,c_y), 5, cv::Scalar(0, 0, 255),-1);
+      cv::circle(cc->ROI, cv::Point(cc->c_x,cc->c_y), 5, cv::Scalar(0, 0, 255),-1);
       rep(i,0,5)
         rep(j,0,5){
           z = depth.at<uint16_t>((uint16_t)(c_y+j),(uint16_t)(c_x+i));
@@ -219,8 +222,6 @@ void OUTLET_CV::MaskThreshold(int, void*userdata){
         }
         cc->pub.publish(coordinate);
       
-   }else {
-      Found = false;
    }
     imshow( "mask", mask);
     waitKey(3);  
@@ -341,7 +342,7 @@ void draw_region_of_interest(int event, int x, int y, int flags, void* userdata)
         << cc->iy << " "
         << cc->cx << " "
         << cc->cy << std::endl;
-        // cv::destroyAllWindows(); 
+        cv::destroyAllWindows(); 
       }
      }else if(event == EVENT_MOUSEMOVE){
       if(cc->drawing){
@@ -366,7 +367,7 @@ int main( int argc, char** argv )
    cc.pickup_start = cc.nh.advertiseService(cc.PICKUP_SERVICE_START, &OUTLET_CV::maskdetect_start_service, &cc);
    cc.pickup_stop = cc.nh.advertiseService(cc.PICKUP_SERVICE_STOP, &OUTLET_CV::maskdetect_stop_service, &cc);
    cc.pub = cc.nh.advertise<camera_pkg_msgs::Coordinate>(cc.PUBLISH_TOPIC, 1000);
-   
+   cc.mg400_sub = cc.nh.subscribe(cc.MG400_TOPIC,1000, &OUTLET_CV::mg400_callback, &cc);   
    std_srvs::Empty _emp;
    
    cv::namedWindow(cc.SRC_WINDOW,WINDOW_AUTOSIZE);
@@ -383,9 +384,8 @@ int main( int argc, char** argv )
             cc.makeRegion(0, &cc);
             cv::namedWindow(cc.ROI_WINDOW,WINDOW_AUTOSIZE);
             cv::setMouseCallback(cc.ROI_WINDOW, get_hsv,&cc);
-            // if(cc.Found)
-            //   cc.MaskThreshold(0,&cc);
-            cc.get_circle(0, &cc);
+	    if (cc.ADJUST)
+            	cc.get_circle(0, &cc);
             imshow(cc.ROI_WINDOW, cc.ROI);
             // imshow("hsv", cc.src_hsv);
           }
