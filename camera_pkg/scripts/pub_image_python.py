@@ -16,7 +16,7 @@ if cam.isOpened():
     w  = int(cam.get(cv2.CAP_PROP_FRAME_WIDTH)) # float `width`
     h = int(cam.get(cv2.CAP_PROP_FRAME_HEIGHT))  # float `height`
     fps = cam.get(cv2.CAP_PROP_FPS)
-
+print(w,h,fps)
 while cam.isOpened():
     meta, frame = cam.read()
     frame = frame.resize(frame, (w, h))
