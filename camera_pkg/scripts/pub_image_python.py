@@ -19,7 +19,7 @@ if cam.isOpened():
 
 while cam.isOpened():
     meta, frame = cam.read()
-    frame = frame.resize(src, (w, h))
+    frame = frame.resize(frame, (w, h))
     # I want to publish the Canny Edge Image and the original Image
     msg_frame = CvBridge().cv2_to_imgmsg(frame)
 
