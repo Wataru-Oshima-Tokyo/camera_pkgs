@@ -167,6 +167,9 @@ target_link_libraries(ros_rgbd ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
 add_executable(ros_image src/ros_image.cpp)
 target_link_libraries(ros_image ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
 
+add_executable(pub_image src/pub_image.cpp)
+target_link_libraries(pub_image ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
+
 add_executable(yolo_outlet_detector src/yolo_outlet_detector.cpp)
 target_link_libraries(yolo_outlet_detector ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
 
