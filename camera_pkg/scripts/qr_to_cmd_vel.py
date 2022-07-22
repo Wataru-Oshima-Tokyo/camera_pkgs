@@ -35,6 +35,7 @@ class QR_TRACK:
         Pose Stamped info
         psoe.position.x is the horizontal position
         pose.position.z is the distance from robot 0.1 is 10cm
+        pose.orientation.z can be used for adjusting horizontal positiion
         """
         
         if msg.pose.position.x > 0.05:
@@ -55,6 +56,11 @@ class QR_TRACK:
             self.twt.linear.x =0
         # twt.angular.z = msg.pose.position.x
         # twt.angular.z = -msg.pose.orientation.z
+        if self.twt.linear.x ==0 and self.twt.angular.z ==0:
+            if msg.pose.orientaion.z >0.1:
+                self.twt.linear.y = -0.1
+            elif msg.pose.orientation.z <-0.1:
+                self.twt.linear.y = 0.1
         if self.RUN:
             self.cmd_pub.publish(self.twt)
 
