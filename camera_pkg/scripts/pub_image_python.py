@@ -26,6 +26,6 @@ if __name__ == "__main__":
         # I want to publish the Canny Edge Image and the original Image
         msg_frame = CvBridge().cv2_to_imgmsg(frame)
 
-        VideoRaw.publish(msg_frame, "RGB8")
+        VideoRaw.publish(msg_frame, "bgr8")
         cv2.waitKey(3)
         rate.sleep()
