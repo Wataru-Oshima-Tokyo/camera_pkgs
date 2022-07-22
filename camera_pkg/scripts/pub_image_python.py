@@ -17,7 +17,7 @@ if cam.isOpened():
     h = int(cam.get(cv2.CAP_PROP_FRAME_HEIGHT))  # float `height`
     fps = cam.get(cv2.CAP_PROP_FPS)
 print(w,h,fps)
-while cam.isOpened():
+while 1:
     meta, frame = cam.read()
     frame = cv2.resize(frame, (w, h))
     # I want to publish the Canny Edge Image and the original Image
