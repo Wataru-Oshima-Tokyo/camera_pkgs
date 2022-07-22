@@ -18,7 +18,7 @@ if __name__ == "__main__":
         h = int(cam.get(cv2.CAP_PROP_FRAME_HEIGHT))  # float `height`
         fps = cam.get(cv2.CAP_PROP_FPS)
     print(w,h,fps)
-    rate = rospy.Rate(1)
+    rate = rospy.Rate(0.5)
     bridge = CvBridge()
     while not rospy.is_shutdown():
         meta, frame = cam.read()
