@@ -18,11 +18,12 @@ if __name__ == "__main__":
         h = int(cam.get(cv2.CAP_PROP_FRAME_HEIGHT))  # float `height`
         fps = cam.get(cv2.CAP_PROP_FPS)
     print(w,h,fps)
-    meta, frame = cam.read()
-    frame = cv2.resize(frame, (w, h))
-    # I want to publish the Canny Edge Image and the original Image
-    msg_frame = CvBridge().cv2_to_imgmsg(frame)
+    rate = rospy.Rate(10)
+    while not rospy.is_shutdown():
+        meta, frame = cam.read()
+        frame = cv2.resize(frame, (w, h))
+        # I want to publish the Canny Edge Image and the original Image
+        msg_frame = CvBridge().cv2_to_imgmsg(frame)
 
-    VideoRaw.publish(msg_frame, "RGB8")
-
-    rospy.spin()
+        VideoRaw.publish(msg_frame, "RGB8")
+        rate.sleep()
