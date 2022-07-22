@@ -23,10 +23,10 @@ if __name__ == "__main__":
     while not rospy.is_shutdown():
         meta, frame = cam.read()
         frame = cv2.resize(frame, (w/2, h/2))
-        cv2.imshow("frame", frame)
+        # cv2.imshow("frame", frame)
         # I want to publish the Canny Edge Image and the original Image
         msg_frame =bridge.cv2_to_imgmsg(frame, encoding="passthrough")
 
         VideoRaw.publish(msg_frame)
-        cv2.waitKey(3)
+        # cv2.waitKey(3)
         rate.sleep()
