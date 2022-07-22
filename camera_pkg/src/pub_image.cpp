@@ -17,7 +17,7 @@ int main(int argc, char** argv)
 
    if (!cam0.isOpened())
    {
-       exit();
+       return 0;
    }
 
   cam0.set(CAP_PROP_FRAME_WIDTH, IMG_WIDTH);
