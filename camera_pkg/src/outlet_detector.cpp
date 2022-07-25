@@ -185,14 +185,14 @@ void OUTLET_CV::get_circle(int, void*userdata){
       }else{
         twist.linear.y = move_x;
       }
-      if((std::abs(offset_y)<0.5  || std::abs(offset_y)>20) || !Done_x || Done_y){
+      if((std::abs(offset_y)<0.5  || std::abs(offset_y)>20) &&(!Done_x || Done_y)){
         twist.linear.z = 0;
         Done_y = true;
       }else{
         twist.linear.z = move_y;
       }
       
-      if (!mg400_running && (fstop-fstart)>timer){
+      if (!mg400_running && (fstop-fstart)>timer && (!Done_x || !Done_y)){
         clock_gettime(CLOCK_MONOTONIC, &timer_start); fstart=(double)timer_start.tv_sec + ((double)timer_start.tv_nsec/1000000000.0);
         printf("\nOffset_x: %lf, Offset_y: %lf\n", offset_x, offset_y);
         printf("\nlinear.y: %lf, linear.z: %lf\n", twist.linear.y, twist.linear.z);
