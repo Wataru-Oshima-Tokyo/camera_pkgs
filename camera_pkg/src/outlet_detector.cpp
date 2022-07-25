@@ -185,7 +185,7 @@ void OUTLET_CV::get_circle(int, void*userdata){
       if(std::abs(offset_y)<0.5){
         twist.linear.z = 0;
       }else{
-        twist.linear.y = move_y;
+        twist.linear.z = move_y;
       }
       printf("\nlinear.y: %lf, linear.z: %lf\n", twist.linear.y, twist.linear.z);
       cmd_vel_pub.publish(twist);
