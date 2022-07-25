@@ -452,7 +452,6 @@ int main( int argc, char** argv )
       if(!cc.src.empty() && !cc.u_src.empty()){
           if(!cc.Drew){
               imshow(cc.SRC_WINDOW, cc.src);
-              cc.get_circle(0, &cc);
           }else{
             cv::rectangle(cc.ROI, cv::Point(cc.ix,cc.iy),  cv::Point(cc.cx,cc.cy), cv::Scalar(0,255,255), 2,4);
             //make the region of interest
