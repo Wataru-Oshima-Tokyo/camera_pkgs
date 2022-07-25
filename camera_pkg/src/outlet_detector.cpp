@@ -113,7 +113,7 @@ private:
     //set the kernel size 3
     const int kernel_size = 3;
     bool Done_x = false; bool Done_y = false;
-    bool mg400_runing = false;
+    bool mg400_running = false;
 };
 
 
@@ -218,9 +218,9 @@ void OUTLET_CV::get_circle(int, void*userdata){
 
 void OUTLET_CV::mg400_status_callback(const mg400_bringup::RobotStatus& msg){
   if(msg.robot_status == 7){
-    mg400_runing = true;
+    mg400_running = true;
   }else {
-    mg400_runing = false;
+    mg400_running = false;
   }
 }
 
