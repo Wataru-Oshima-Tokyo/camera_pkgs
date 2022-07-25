@@ -11,6 +11,7 @@
  #include <image_transport/image_transport.h>
  #include <cv_bridge/cv_bridge.h>
  #include <sensor_msgs/image_encodings.h>
+ #include <geometry_msgs/Twist.h>
  #include "std_msgs/String.h"
  #include "std_msgs/Bool.h"
  #include "std_srvs/Empty.h"
@@ -168,7 +169,7 @@ void OUTLET_CV::get_circle(int, void*userdata){
           printf("\nOffset_x: %lf, Offset_y: %lf\n", offset_x, offset_y);
           
       }
-      
+
       //比率ゲイン
       double Kp = 1.0;
       double Kv = 2.0;
