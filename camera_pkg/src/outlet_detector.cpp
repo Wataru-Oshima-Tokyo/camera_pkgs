@@ -450,7 +450,7 @@ int main( int argc, char** argv )
    ros::init(argc, argv, "mask_detector");
    OUTLET_CV cc;
    // Initialize the ROS Node "roscpp_example"
-   ros::Rate loop_rate(20);
+   ros::Rate loop_rate(10);
    
    cc.image_sub = cc.nh.subscribe(cc.IMAGE_TOPIC, 1000, &OUTLET_CV::image_callback, &cc);
    cc.usbcam_sub = cc.nh.subscribe(cc.USBCAM_TOPIC, 1000, &OUTLET_CV::usbcam_callback, &cc);
