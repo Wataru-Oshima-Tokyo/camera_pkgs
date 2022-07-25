@@ -176,8 +176,7 @@ void OUTLET_CV::get_circle(int, void*userdata){
       //PD control
       double move_x = Kp*offset_x - Kv*offset_x/1000;
       double move_y = Kp*offset_y - Kv*offset_y/1000;
-      twist.linear.z = move_y;
-      printf("\nlinear.y: %lf, linear.z: %lf\n", twist.linear.y, twist.linear.z);
+      
       if(std::abs(offset_x)<0.5){
         twist.linear.y = 0;
       }else{
@@ -188,6 +187,7 @@ void OUTLET_CV::get_circle(int, void*userdata){
       }else{
         twist.linear.y = move_y;
       }
+      printf("\nlinear.y: %lf, linear.z: %lf\n", twist.linear.y, twist.linear.z);
       cmd_vel_pub.publish(twist);
       
      /*   try{
