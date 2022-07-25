@@ -177,12 +177,12 @@ void OUTLET_CV::get_circle(int, void*userdata){
       double move_x = Kp*offset_x - Kv*offset_x/1000;
       double move_y = Kp*offset_y - Kv*offset_y/1000;
 
-      if(std::abs(offset_x)<0.5 || std::abs(offset_x)>20){
+      if(std::abs(offset_x)<1 || std::abs(offset_x)>20){
         twist.linear.y = 0;
       }else{
         twist.linear.y = move_x;
       }
-      if(std::abs(offset_y)<0.5  || std::abs(offset_y)>20){
+      if(std::abs(offset_y)<1  || std::abs(offset_y)>20){
         twist.linear.z = 0;
       }else{
         // twist.linear.z = move_y;
