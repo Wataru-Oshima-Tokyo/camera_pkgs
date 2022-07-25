@@ -181,28 +181,36 @@ void OUTLET_CV::get_circle(int, void*userdata){
       //PD control
       double move_x = Kp*offset_x - Kv*offset_x/1000;
       double move_y = Kp*offset_y - Kv*offset_y/1000;
-      if(std::abs(offset_x)<=0.5 || std::abs(offset_x)>20 || Done_x ){
-        twist.linear.y = 0;
-        if (offset_x_counter>3)
-          Done_x = true;
-        offset_x_counter++;
-      }else{
-        twist.linear.y = move_x;
-      }
-      if((std::abs(offset_y)<=0.5  || std::abs(offset_y)>20) ||  Done_y){
-        twist.linear.z = 0;
-        if (offset_y_counter>3)
-          Done_y = true;
-        offset_y_counter++;
-      }else{
-        twist.linear.z = move_y;
-      }
+      // if(Done_x ){
+      //   twist.linear.y = 0;
+      //   if (offset_x_counter>3)
+      //     Done_x = true;
+      //   offset_x_counter++;
+      // }else{
+        
+      // }
+      // if((std::abs(offset_y)<=0.5  || std::abs(offset_y)>20) ||  Done_y){
+      //   twist.linear.z = 0;
+      //   if (offset_y_counter>3)
+      //     Done_y = true;
+      //   offset_y_counter++;
+      // }else{
+      //   twist.linear.z = move_y;
+      // }
       
       if (!mg400_running && (fstop-fstart)>timer && (!Done_x || !Done_y)){
+        twist.linear.y = move_x;
+        twist.linear.z = move_y;
         clock_gettime(CLOCK_MONOTONIC, &timer_start); fstart=(double)timer_start.tv_sec + ((double)timer_start.tv_nsec/1000000000.0);
         printf("\nOffset_x: %lf, Offset_y: %lf\n", offset_x, offset_y);
         printf("\nlinear.y: %lf, linear.z: %lf\n", twist.linear.y, twist.linear.z);
         cmd_vel_pub.publish(twist);
+        if(std::abs(offset_x)<=0.5){
+             Done_x = true;
+        }
+        if(std::abs(offset_y)<=0.5){
+             Done_y = true;
+        }
       }
         clock_gettime(CLOCK_MONOTONIC, &timer_stop); fstop=(double)timer_stop.tv_sec + ((double)timer_stop.tv_nsec/1000000000.0);
 
