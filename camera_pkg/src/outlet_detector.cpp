@@ -185,11 +185,11 @@ void OUTLET_CV::get_circle(int, void*userdata){
       }else{
         twist.linear.y = move_x;
       }
-      if((std::abs(offset_y)<1  || std::abs(offset_y)>20) && !Done_y){
+      if((std::abs(offset_y)<0.5  || std::abs(offset_y)>20) || !Done_x || Done_y){
         twist.linear.z = 0;
         Done_y = true;
       }else{
-        // twist.linear.z = move_y;
+        twist.linear.z = move_y;
       }
       
       if (!mg400_running && (fstop-fstart)>timer){
