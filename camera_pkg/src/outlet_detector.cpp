@@ -188,6 +188,8 @@ void OUTLET_CV::get_circle(int, void*userdata){
       }else{
         twist.linear.y = move_y;
       }
+      cmd_vel_pub.publish(twist);
+      
      /*   try{
           cv::circle(dst, cv::Point( circles[0][0], circles[0][1] ), circles[0][2], cv::Scalar(0, 0, 255), 2);
           offset_x = (double)coordinate.x - circles[0][0];
