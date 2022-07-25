@@ -179,13 +179,13 @@ void OUTLET_CV::get_circle(int, void*userdata){
       //PD control
       double move_x = Kp*offset_x - Kv*offset_x/1000;
       double move_y = Kp*offset_y - Kv*offset_y/1000;
-      if(std::abs(offset_x)<=0.5 || std::abs(offset_x)>20 || Done_x ){
+      if(std::abs(offset_x)<0.5 || std::abs(offset_x)>20 || Done_x ){
         twist.linear.y = 0;
         Done_x = true;
       }else{
         twist.linear.y = move_x;
       }
-      if((std::abs(offset_y)<0.5  || std::abs(offset_y)>20) &&(!Done_x || Done_y)){
+      if((std::abs(offset_y)<0.5  || std::abs(offset_y)>20) ||  Done_y)){
         twist.linear.z = 0;
         Done_y = true;
       }else{
