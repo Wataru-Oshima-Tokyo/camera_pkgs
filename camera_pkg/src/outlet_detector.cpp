@@ -171,7 +171,7 @@ void OUTLET_CV::get_circle(int, void*userdata){
       }
 
       //比率ゲイン
-      double Kp = 0.5;
+      double Kp = 0.2;
       double Kv = 0.0;
       //PD control
       double move_x = Kp*offset_x - Kv*offset_x/1000;
