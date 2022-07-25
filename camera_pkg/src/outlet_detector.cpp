@@ -152,15 +152,15 @@ void OUTLET_CV::get_circle(int, void*userdata){
          cv::HOUGH_GRADIENT,     // cv::HOUGH_GRADIENT メソッドのみ実装されている.
          1,                      // 画像分解能に対する出力解像度の比率の逆数
          30,                     // 検出される円の中心同士の最小距離
-         150,                    // Canny() の大きいほうの閾値.勾配がこのパラメータを超えている場合はエッジとして判定
-         70                      // Canny() の小さいほうの閾値.勾配がこのパラメータを下回っている場合は非エッジとして判定
+         100,                    // Canny() の大きいほうの閾値.勾配がこのパラメータを超えている場合はエッジとして判定
+         30                      // Canny() の小さいほうの閾値.勾配がこのパラメータを下回っている場合は非エッジとして判定
          );
       for (auto circle : circles)
       {
           cv::circle(u_dst, cv::Point( circle[0], circle[1] ), circle[2], cv::Scalar(0, 0, 255), 2);
-          offset_x = (double)coordinate.x - circle[0];
-          offset_y = (double)coordinate.y - circle[1];
-	  printf("\nCircle[0]: %lf, Circle[1]: %lf\n", circle[0], circle[1]);
+          offset_x = (double)u_w/2 - circle[0];
+          offset_y = (double)u_h/2 - circle[1];
+	        printf("\nCircle[0]: %lf, Circle[1]: %lf\n", circle[0], circle[1]);
           printf("\nOffset_x: %lf, Offset_y: %lf\n", offset_x, offset_y);
       }
      /*   try{
@@ -413,6 +413,7 @@ int main( int argc, char** argv )
       if(!cc.src.empty()){
           if(!cc.Drew){
               imshow(cc.SRC_WINDOW, cc.src);
+              cc.get_circle(0, &cc);
           }else{
             cv::rectangle(cc.ROI, cv::Point(cc.ix,cc.iy),  cv::Point(cc.cx,cc.cy), cv::Scalar(0,255,255), 2,4);
             //make the region of interest
