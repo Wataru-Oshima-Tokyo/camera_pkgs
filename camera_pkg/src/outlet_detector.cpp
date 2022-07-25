@@ -410,7 +410,7 @@ int main( int argc, char** argv )
    while(ros::ok()){
       // cout << cc.getRun() << endl;
       clock_gettime(CLOCK_MONOTONIC, &start); fstart=(double)start.tv_sec + ((double)start.tv_nsec/1000000000.0);
-      if(!cc.src.empty()){
+      if(!cc.src.empty() && !cc.u_src.empty()){
           if(!cc.Drew){
               imshow(cc.SRC_WINDOW, cc.src);
               cc.get_circle(0, &cc);
