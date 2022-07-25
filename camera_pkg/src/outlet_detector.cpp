@@ -213,7 +213,13 @@ void OUTLET_CV::get_circle(int, void*userdata){
         }
       }
         clock_gettime(CLOCK_MONOTONIC, &timer_stop); fstop=(double)timer_stop.tv_sec + ((double)timer_stop.tv_nsec/1000000000.0);
-
+      if(!mg400_running && Done_x && Done_y){
+        coordinate.t ="F";
+        coordinate.x = 10;
+        coordinate.y = 10;
+        coordinate.z = 10;
+        pub.publish(coordinate);
+      }
         
       
      /*   try{
