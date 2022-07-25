@@ -172,13 +172,22 @@ void OUTLET_CV::get_circle(int, void*userdata){
 
       //比率ゲイン
       double Kp = 1.2;
-      double Kv = 20.0;
+      double Kv = 25.0;
       //PD control
       double move_x = Kp*offset_x - Kv*offset_x/1000;
       double move_y = Kp*offset_y - Kv*offset_y/1000;
-      twist.linear.y = move_x;
       twist.linear.z = move_y;
       printf("\nlinear.y: %lf, linear.z: %lf\n", twist.linear.y, twist.linear.z);
+      if(std::abs(offset_x)<0.5){
+        twist.linear.y = 0;
+      }else{
+        twist.linear.y = move_x;
+      }
+      if(std::abs(offset_y)<0.5){
+        twist.linear.z = 0;
+      }else{
+        twist.linear.y = move_y;
+      }
      /*   try{
           cv::circle(dst, cv::Point( circles[0][0], circles[0][1] ), circles[0][2], cv::Scalar(0, 0, 255), 2);
           offset_x = (double)coordinate.x - circles[0][0];
