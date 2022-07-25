@@ -171,12 +171,13 @@ void OUTLET_CV::get_circle(int, void*userdata){
       }
 
       //比率ゲイン
-      double Kp = 1.2;
-      double Kv = 25.0;
+      double Kp = 0.5;
+      double Kv = 0.0;
       //PD control
-      double move_x = -(Kp*offset_x - Kv*offset_x/1000);
+      double move_x = Kp*offset_x - Kv*offset_x/1000);
       double move_y = Kp*offset_y - Kv*offset_y/1000;
-      
+      // double move_x = -(Kp*offset_x - Kv*offset_x/1000);
+      // double move_y = Kp*offset_y - Kv*offset_y/1000;
       if(std::abs(offset_x)<0.5){
         twist.linear.y = 0;
       }else{
