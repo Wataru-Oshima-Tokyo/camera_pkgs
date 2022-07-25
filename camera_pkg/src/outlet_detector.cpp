@@ -35,7 +35,6 @@ double fstart, fstop;
 class OUTLET_CV{
   public:
     //variables
-
     Mat src, src_hsv, ROI, dst, mask; //for the first camera
     Mat u_src, u_dst, u_ROI; // for the second camera
     Mat depth; //for the depth cammera
@@ -171,9 +170,7 @@ void OUTLET_CV::get_circle(int, void*userdata){
           cv::circle(u_dst, cv::Point( circle[0], circle[1] ), circle[2], cv::Scalar(0, 0, 255), 2);
           offset_x = (double)fixed_x - circle[0];
           offset_y = (double)fixed_y - circle[1];
-	        printf("\nCircle[0]: %lf, Circle[1]: %lf\n", circle[0], circle[1]);
-          printf("\nOffset_x: %lf, Offset_y: %lf\n", offset_x, offset_y);
-          
+          printf("\nCircle[0]: %lf, Circle[1]: %lf\n", circle[0], circle[1]);
       }
 
       //比率ゲイン
@@ -197,6 +194,7 @@ void OUTLET_CV::get_circle(int, void*userdata){
       
       if (!mg400_running && (fstop-fstart)>timer){
         clock_gettime(CLOCK_MONOTONIC, &timer_start); fstart=(double)timer_start.tv_sec + ((double)timer_start.tv_nsec/1000000000.0);
+        printf("\nOffset_x: %lf, Offset_y: %lf\n", offset_x, offset_y);
         printf("\nlinear.y: %lf, linear.z: %lf\n", twist.linear.y, twist.linear.z);
         cmd_vel_pub.publish(twist);
       }
