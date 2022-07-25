@@ -34,10 +34,11 @@ double fstart, fstop;
 class OUTLET_CV{
   public:
     //variables
-    Mat src, src_hsv, ROI, dst, mask;
-    Mat depth;
+    Mat src, src_hsv, ROI, dst, mask; //for the first camera
+    Mat u_src, u_dst, u_ROI; // for the second camera
+    Mat depth; //for the depth cammera
     ros::Publisher pub;
-    ros::Subscriber image_sub, depth_sub, mg400_sub;
+    ros::Subscriber image_sub, depth_sub, mg400_sub, usbcam_sub;
     ros::NodeHandle nh;
     camera_pkg_msgs::Coordinate coordinate;
     ros::ServiceServer pickup_start, pickup_stop;
@@ -70,9 +71,11 @@ class OUTLET_CV{
     virtual void image_callback(const sensor_msgs::ImageConstPtr&);
     virtual void depth_callback(const sensor_msgs::ImageConstPtr&);
     virtual void mg400_callback(const std_msgs::Bool&);
+    virtual void usbcam_callback(const sensor_msgs::ImageConstPtr&);
     // Topics
     std::string IMAGE_TOPIC;
     std::string DEPTH_TOPIC;
+    std::string USBCAM_TOPIC;
     // const std::string DEPTH_TOPIC = "/camera/depth/color/image_raw";
     const std::string PUBLISH_TOPIC = "/outlet/coordinate";
     const std::string MG400_TOPIC = "/mg400/working";
@@ -87,7 +90,8 @@ class OUTLET_CV{
     void setRun(bool run);
     const int max_lowThreshold = 100;
     const std::string window_name = "Edge Map";
-    int w,h;
+    int w,h; //heihgt and width for the first cam
+    int u_w, u_h; //height and width for the second cam
     bool Drew = false;
     bool drawing = false;
     bool ADJUST=false;
@@ -110,6 +114,7 @@ OUTLET_CV::OUTLET_CV(){
   ros::NodeHandle private_nh("~");
   private_nh.param("image_topic", IMAGE_TOPIC, std::string("/camera/color/image_raw"));
   private_nh.param("depth_topic", DEPTH_TOPIC, std::string("/camera/aligned_depth_to_color/image_raw"));
+  private_nh.param("usbcam_topic", USBCAM_TOPIC, std::string("/usb_cam/color/image"));
   lowThreshold = 6;
 };
 
@@ -142,7 +147,7 @@ void OUTLET_CV::get_circle(int, void*userdata){
     //GaussianBlur( dst, dst, Size(9, 9), 2, 2 );
     std::vector<cv::Vec3f> circles;
     cv::HoughCircles(
-         dst,                    // 8ビット，シングルチャンネル，グレースケールの入力画像
+         u_dst,                    // 8ビット，シングルチャンネル，グレースケールの入力画像
          circles,                // 検出された円を出力.配列の [ 0, 1 ] に円の中心座標. [2] に円の半径が格納される
          cv::HOUGH_GRADIENT,     // cv::HOUGH_GRADIENT メソッドのみ実装されている.
          1,                      // 画像分解能に対する出力解像度の比率の逆数
@@ -152,7 +157,7 @@ void OUTLET_CV::get_circle(int, void*userdata){
          );
       for (auto circle : circles)
       {
-          cv::circle(dst, cv::Point( circle[0], circle[1] ), circle[2], cv::Scalar(0, 0, 255), 2);
+          cv::circle(u_dst, cv::Point( circle[0], circle[1] ), circle[2], cv::Scalar(0, 0, 255), 2);
           offset_x = (double)coordinate.x - circle[0];
           offset_y = (double)coordinate.y - circle[1];
 	  printf("\nCircle[0]: %lf, Circle[1]: %lf\n", circle[0], circle[1]);
@@ -169,10 +174,10 @@ void OUTLET_CV::get_circle(int, void*userdata){
             printf("A circle is not found\n");
         }
       */
-      cv::circle(dst, cv::Point(c_x,c_y), 5, cv::Scalar(0, 0, 255),-1);
+      // cv::circle(u_dst, cv::Point(c_x,c_y), 5, cv::Scalar(0, 0, 255),-1);
 
       cv::namedWindow("dst", 1);
-      imshow("dst", dst);
+      imshow("dst", u_dst);
 
       cv::waitKey(3);
 }
@@ -306,6 +311,35 @@ void OUTLET_CV::depth_callback(const sensor_msgs::ImageConstPtr& msg){
 
  }
 
+  void OUTLET_CV::usbcam_callback(const sensor_msgs::ImageConstPtr& msg){
+    std_msgs::Header msg_header = msg->header;
+    std::string frame_id = msg_header.frame_id.c_str();
+    // ROS_INFO_STREAM("New Image from " << frame_id);
+
+    cv_bridge::CvImagePtr cv_ptr;
+    try
+    {
+        cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
+    }
+    catch (cv_bridge::Exception& e)
+    {
+        ROS_ERROR("cv_bridge exception: %s", e.what());
+        return;
+    }
+
+    u_src = cv_ptr->image;
+    u_ROI =u_src;
+    cvtColor(u_src, u_dst, COLOR_BGR2GRAY);
+    u_w = u_src.size().width;
+    u_h = u_src.size().height;
+    cv::line(u_dst, cv::Point(0, u_h/2), cv::Point(u_w,u_h/2), cv::Scalar(0,255,255),2,4);
+    cv::line(u_dst, cv::Point(0, u_w/2), cv::Point(u_h,u_w/2), cv::Scalar(0,255,255),2,4);
+
+    // namedWindow(window_name, WINDOW_AUTOSIZE );
+    // CannyThreshold(0, 0);
+
+ }
+
 void get_hsv(int event, int x, int y, int flags, void* userdata){
   OUTLET_CV *cc = (OUTLET_CV*)userdata;
   if (event == EVENT_LBUTTONDOWN )
@@ -362,6 +396,7 @@ int main( int argc, char** argv )
    ros::Rate loop_rate(20);
    
    cc.image_sub = cc.nh.subscribe(cc.IMAGE_TOPIC, 1000, &OUTLET_CV::image_callback, &cc);
+   cc.usbcam_sub = cc.nh.subscribe(cc.USBCAM_TOPIC, 1000, &OUTLET_CV::usbcam_callback, &cc);
    cc.depth_sub = cc.nh.subscribe(cc.DEPTH_TOPIC, 1000, &OUTLET_CV::depth_callback, &cc);
 //    cc.darknet_bbox_sub = cc.nh.subscribe(cc.BBOX_TOPIC, 1000, &OUTLET_CV::bbox_callback, &cc);
    cc.pickup_start = cc.nh.advertiseService(cc.PICKUP_SERVICE_START, &OUTLET_CV::maskdetect_start_service, &cc);
