@@ -113,7 +113,7 @@ private:
     const int kernel_size = 3;
     bool Done_x = false; bool Done_y = false;
     bool mg400_running = false;
-    int timer = 1;
+    int timer = 2;
 };
 
 
