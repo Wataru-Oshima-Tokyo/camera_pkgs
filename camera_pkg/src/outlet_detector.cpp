@@ -174,7 +174,7 @@ void OUTLET_CV::get_circle(int, void*userdata){
       double Kp = 0.5;
       double Kv = 0.0;
       //PD control
-      double move_x = Kp*offset_x - Kv*offset_x/1000);
+      double move_x = Kp*offset_x - Kv*offset_x/1000;
       double move_y = Kp*offset_y - Kv*offset_y/1000;
       // double move_x = -(Kp*offset_x - Kv*offset_x/1000);
       // double move_y = Kp*offset_y - Kv*offset_y/1000;
