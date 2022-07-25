@@ -152,8 +152,8 @@ void OUTLET_CV::get_circle(int, void*userdata){
          cv::HOUGH_GRADIENT,     // cv::HOUGH_GRADIENT メソッドのみ実装されている.
          1,                      // 画像分解能に対する出力解像度の比率の逆数
          30,                     // 検出される円の中心同士の最小距離
-         100,                    // Canny() の大きいほうの閾値.勾配がこのパラメータを超えている場合はエッジとして判定
-         40                      // Canny() の小さいほうの閾値.勾配がこのパラメータを下回っている場合は非エッジとして判定
+         60,                    // Canny() の大きいほうの閾値.勾配がこのパラメータを超えている場合はエッジとして判定
+         30                      // Canny() の小さいほうの閾値.勾配がこのパラメータを下回っている場合は非エッジとして判定
          );
       for (auto circle : circles)
       {
@@ -333,7 +333,7 @@ void OUTLET_CV::depth_callback(const sensor_msgs::ImageConstPtr& msg){
     u_h = u_src.size().height;
     rep(i,0,u_w){
       rep(j,0,u_h){
-          if((j>=0 && j<=u_h/2-100) || (i>=0 && i<u_w/2-100) || (i>u_w+100 && i<u_w) ||(j>u_h)){
+          if((j>=0 && j<=u_h/2-50) || (i>=0 && i<u_w/2-50) || (i>u_w/2+50 && i<u_w) ||(j>u_h/2+50)){
             cv::Vec3b &color = u_ROI.at<cv::Vec3b>(j,i); 
             color.val[0] = 0;
             color.val[1] = 0;
