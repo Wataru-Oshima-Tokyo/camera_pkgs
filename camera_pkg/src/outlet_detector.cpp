@@ -113,7 +113,7 @@ private:
     const int kernel_size = 3;
     bool Done_x = false; bool Done_y = false;
     bool mg400_running = false;
-    int timer = 2;
+    int timer = 1.5;
 };
 
 
@@ -170,7 +170,7 @@ void OUTLET_CV::get_circle(int, void*userdata){
           cv::circle(u_dst, cv::Point( circle[0], circle[1] ), circle[2], cv::Scalar(0, 0, 255), 2);
           offset_x = (double)fixed_x - circle[0];
           offset_y = (double)fixed_y - circle[1];
-          printf("\nCircle[0]: %lf, Circle[1]: %lf\n", circle[0], circle[1]);
+          // printf("\nCircle[0]: %lf, Circle[1]: %lf\n", circle[0], circle[1]);
       }
 
       //比率ゲイン
