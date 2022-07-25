@@ -37,7 +37,7 @@ class OUTLET_CV{
     Mat src, src_hsv, ROI, dst, mask; //for the first camera
     Mat u_src, u_dst, u_ROI; // for the second camera
     Mat depth; //for the depth cammera
-    ros::Publisher pub;
+    ros::Publisher pub, cmd_vel_pub;
     ros::Subscriber image_sub, depth_sub, mg400_sub, usbcam_sub;
     ros::NodeHandle nh;
     camera_pkg_msgs::Coordinate coordinate;
@@ -78,6 +78,7 @@ class OUTLET_CV{
     std::string USBCAM_TOPIC;
     // const std::string DEPTH_TOPIC = "/camera/depth/color/image_raw";
     const std::string PUBLISH_TOPIC = "/outlet/coordinate";
+    const std::string MG400_CMD_VEL_TOPIC = "/MG400/cmd_vel";
     const std::string MG400_TOPIC = "/mg400/working";
     const std::string PICKUP_SERVICE_START = "/pickup/start";
     const std::string PICKUP_SERVICE_STOP = "/pickup/stop";
@@ -96,6 +97,7 @@ class OUTLET_CV{
     bool drawing = false;
     bool ADJUST=false;
     double offset_x =0; double offset_y=0; double offset_z=0;
+    double fixed_x = 161.0; double fixed_y = 88.0;
     double c_x,c_y;
 private:
     bool RUN = false; 
@@ -145,6 +147,7 @@ int getMaxAreaContourId(vector <vector<cv::Point>> contours) {
 void OUTLET_CV::get_circle(int, void*userdata){
   //expand the ROI to detect how off the MG400 is
     //GaussianBlur( dst, dst, Size(9, 9), 2, 2 );
+    geometry_msgs::Twist twist;
     std::vector<cv::Vec3f> circles;
     cv::HoughCircles(
          u_dst,                    // 8ビット，シングルチャンネル，グレースケールの入力画像
@@ -155,14 +158,26 @@ void OUTLET_CV::get_circle(int, void*userdata){
          60,                    // Canny() の大きいほうの閾値.勾配がこのパラメータを超えている場合はエッジとして判定
          30                      // Canny() の小さいほうの閾値.勾配がこのパラメータを下回っている場合は非エッジとして判定
          );
+
       for (auto circle : circles)
       {
           cv::circle(u_dst, cv::Point( circle[0], circle[1] ), circle[2], cv::Scalar(0, 0, 255), 2);
-          offset_x = (double)u_w/2 - circle[0];
-          offset_y = (double)u_h/2 - circle[1];
+          offset_x = (double)fixed_x - circle[0];
+          offset_y = (double)fixed_y - circle[1];
 	        printf("\nCircle[0]: %lf, Circle[1]: %lf\n", circle[0], circle[1]);
           printf("\nOffset_x: %lf, Offset_y: %lf\n", offset_x, offset_y);
+          
       }
+      
+      //比率ゲイン
+      double Kp = 1.0;
+      double Kv = 2.0;
+      //PD control
+      double move_x = Kp*offset_x - Kv*offset_x/1000;
+      double move_y = Kp*offset_y - Kv*offset_y/1000;
+      twist.linear.y = offset_x;
+      twist.linear.z = offset_y;
+      printf("\nlinear.y: %lf, linear.z: %lf\n", twist.linear.y, twist.linear.z);
      /*   try{
           cv::circle(dst, cv::Point( circles[0][0], circles[0][1] ), circles[0][2], cv::Scalar(0, 0, 255), 2);
           offset_x = (double)coordinate.x - circles[0][0];
@@ -413,6 +428,7 @@ int main( int argc, char** argv )
    cc.pickup_start = cc.nh.advertiseService(cc.PICKUP_SERVICE_START, &OUTLET_CV::maskdetect_start_service, &cc);
    cc.pickup_stop = cc.nh.advertiseService(cc.PICKUP_SERVICE_STOP, &OUTLET_CV::maskdetect_stop_service, &cc);
    cc.pub = cc.nh.advertise<camera_pkg_msgs::Coordinate>(cc.PUBLISH_TOPIC, 1000);
+   cmd_vel_pub = cc.nh.advertise<geometry_msgs::Twist>(cc.MG400_CMD_VEL_TOPIC,1000)
    cc.mg400_sub = cc.nh.subscribe(cc.MG400_TOPIC,1000, &OUTLET_CV::mg400_callback, &cc);   
    std_srvs::Empty _emp;
    
