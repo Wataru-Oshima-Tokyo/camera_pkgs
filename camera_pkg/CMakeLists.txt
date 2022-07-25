@@ -17,6 +17,7 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   camera_pkg_msgs
   darknet_ros_msgs
+  mg400_bringup
 )
 
 find_package(OpenCV 4  REQUIRED)
