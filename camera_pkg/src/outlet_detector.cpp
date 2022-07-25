@@ -333,7 +333,7 @@ void OUTLET_CV::depth_callback(const sensor_msgs::ImageConstPtr& msg){
     u_w = u_src.size().width;
     u_h = u_src.size().height;
     cv::line(u_dst, cv::Point(0, u_h/2), cv::Point(u_w,u_h/2), cv::Scalar(0,255,255),2,4);
-    cv::line(u_dst, cv::Point(0, u_w/2), cv::Point(u_h,u_w/2), cv::Scalar(0,255,255),2,4);
+    cv::line(u_dst, cv::Point(u_w/2, 0), cv::Point(u_w/2,u_h), cv::Scalar(0,255,255),2,4);
 
     // namedWindow(window_name, WINDOW_AUTOSIZE );
     // CannyThreshold(0, 0);
