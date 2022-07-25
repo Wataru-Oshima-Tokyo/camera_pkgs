@@ -109,6 +109,7 @@ private:
     const int ratio = 3;
     //set the kernel size 3
     const int kernel_size = 3;
+    bool Done_x = false; bool Done_y = false;
 };
 
 
@@ -176,14 +177,15 @@ void OUTLET_CV::get_circle(int, void*userdata){
       //PD control
       double move_x = Kp*offset_x - Kv*offset_x/1000;
       double move_y = Kp*offset_y - Kv*offset_y/1000;
-
-      if(std::abs(offset_x)<1 || std::abs(offset_x)>20){
+      if((std::abs(offset_x)<1 || std::abs(offset_x)>20) && !Done_x ){
         twist.linear.y = 0;
+        Done_x = true;
       }else{
         twist.linear.y = move_x;
       }
-      if(std::abs(offset_y)<1  || std::abs(offset_y)>20){
+      if((std::abs(offset_y)<1  || std::abs(offset_y)>20) && !Done_y){
         twist.linear.z = 0;
+        Done_y = true;
       }else{
         // twist.linear.z = move_y;
       }
