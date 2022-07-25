@@ -12,6 +12,7 @@
  #include <cv_bridge/cv_bridge.h>
  #include <sensor_msgs/image_encodings.h>
  #include <geometry_msgs/Twist.h>
+ #include <"mg400_bringup/RobotStatus.h>
  #include "std_msgs/String.h"
  #include "std_msgs/Bool.h"
  #include "std_srvs/Empty.h"
@@ -39,7 +40,7 @@ class OUTLET_CV{
     Mat u_src, u_dst, u_ROI; // for the second camera
     Mat depth; //for the depth cammera
     ros::Publisher pub, cmd_vel_pub;
-    ros::Subscriber image_sub, depth_sub, mg400_sub, usbcam_sub;
+    ros::Subscriber image_sub, depth_sub, mg400_sub, usbcam_sub, mg400_status;
     ros::NodeHandle nh;
     camera_pkg_msgs::Coordinate coordinate;
     ros::ServiceServer pickup_start, pickup_stop;
@@ -70,6 +71,7 @@ class OUTLET_CV{
     virtual bool maskdetect_start_service(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);
     virtual bool maskdetect_stop_service(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);
     virtual void image_callback(const sensor_msgs::ImageConstPtr&);
+    virtual void mg400_status_callback(const mg400_bringup::RobotStatus&);
     virtual void depth_callback(const sensor_msgs::ImageConstPtr&);
     virtual void mg400_callback(const std_msgs::Bool&);
     virtual void usbcam_callback(const sensor_msgs::ImageConstPtr&);
@@ -80,6 +82,7 @@ class OUTLET_CV{
     // const std::string DEPTH_TOPIC = "/camera/depth/color/image_raw";
     const std::string PUBLISH_TOPIC = "/outlet/coordinate";
     const std::string MG400_CMD_VEL_TOPIC = "/MG400/cmd_vel";
+    const std::string MG400STATUS_TOPIC ="/mg400_bringup/msg/RobotStatus";
     const std::string MG400_TOPIC = "/mg400/working";
     const std::string PICKUP_SERVICE_START = "/pickup/start";
     const std::string PICKUP_SERVICE_STOP = "/pickup/stop";
@@ -110,6 +113,7 @@ private:
     //set the kernel size 3
     const int kernel_size = 3;
     bool Done_x = false; bool Done_y = false;
+    bool mg400_runing = false;
 };
 
 
@@ -190,7 +194,8 @@ void OUTLET_CV::get_circle(int, void*userdata){
         // twist.linear.z = move_y;
       }
       printf("\nlinear.y: %lf, linear.z: %lf\n", twist.linear.y, twist.linear.z);
-      cmd_vel_pub.publish(twist);
+      if (!mg400_running)
+        cmd_vel_pub.publish(twist);
       
      /*   try{
           cv::circle(dst, cv::Point( circles[0][0], circles[0][1] ), circles[0][2], cv::Scalar(0, 0, 255), 2);
@@ -210,6 +215,15 @@ void OUTLET_CV::get_circle(int, void*userdata){
 
       cv::waitKey(3);
 }
+
+void OUTLET_CV::mg400_status_callback(const mg400_bringup::RobotStatus& msg){
+  if(msg.robot_status == 7){
+    mg400_runing = true;
+  }else {
+    mg400_runing = false;
+  }
+}
+
 
 void OUTLET_CV::mg400_callback(const std_msgs::Bool& msg){
   if(!msg.data){ 
@@ -438,6 +452,7 @@ int main( int argc, char** argv )
    cc.image_sub = cc.nh.subscribe(cc.IMAGE_TOPIC, 1000, &OUTLET_CV::image_callback, &cc);
    cc.usbcam_sub = cc.nh.subscribe(cc.USBCAM_TOPIC, 1000, &OUTLET_CV::usbcam_callback, &cc);
    cc.depth_sub = cc.nh.subscribe(cc.DEPTH_TOPIC, 1000, &OUTLET_CV::depth_callback, &cc);
+   cc.mg400_status = cc.nh.Subscribe(cc.MG400STATUS_TOPIC,1000 &OUTLET_CV::mg400_status_callback, &cc);
 //    cc.darknet_bbox_sub = cc.nh.subscribe(cc.BBOX_TOPIC, 1000, &OUTLET_CV::bbox_callback, &cc);
    cc.pickup_start = cc.nh.advertiseService(cc.PICKUP_SERVICE_START, &OUTLET_CV::maskdetect_start_service, &cc);
    cc.pickup_stop = cc.nh.advertiseService(cc.PICKUP_SERVICE_STOP, &OUTLET_CV::maskdetect_stop_service, &cc);
