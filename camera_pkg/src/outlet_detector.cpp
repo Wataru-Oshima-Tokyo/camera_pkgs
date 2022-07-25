@@ -100,7 +100,7 @@ class OUTLET_CV{
     bool drawing = false;
     bool ADJUST=false;
     double offset_x =0; double offset_y=0; double offset_z=0;
-    double fixed_x = 161.0; double fixed_y = 88.0;
+    double fixed_x = 161.0; double fixed_y = 89.0;
     double c_x,c_y;
 private:
     bool RUN = false; 
