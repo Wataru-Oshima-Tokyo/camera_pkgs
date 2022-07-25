@@ -114,6 +114,8 @@ private:
     bool Done_x = false; bool Done_y = false;
     bool mg400_running = false;
     int timer = 1.5;
+    int offset_x_counter =0;
+    int offset_y_counter =0;
 };
 
 
@@ -179,15 +181,19 @@ void OUTLET_CV::get_circle(int, void*userdata){
       //PD control
       double move_x = Kp*offset_x - Kv*offset_x/1000;
       double move_y = Kp*offset_y - Kv*offset_y/1000;
-      if(std::abs(offset_x)<0.5 || std::abs(offset_x)>20 || Done_x ){
+      if(std::abs(offset_x)<=0.5 || std::abs(offset_x)>20 || Done_x ){
         twist.linear.y = 0;
-        Done_x = true;
+        if (offset_x_counter>3)
+          Done_x = true;
+        offset_x_counter++;
       }else{
         twist.linear.y = move_x;
       }
-      if((std::abs(offset_y)<0.5  || std::abs(offset_y)>20) ||  Done_y){
+      if((std::abs(offset_y)<=0.5  || std::abs(offset_y)>20) ||  Done_y){
         twist.linear.z = 0;
-        Done_y = true;
+        if (offset_y_counter>3)
+          Done_y = true;
+        offset_y_counter++;
       }else{
         twist.linear.z = move_y;
       }
