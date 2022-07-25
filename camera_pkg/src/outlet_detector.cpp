@@ -29,13 +29,13 @@
  using namespace std;
  using namespace cv;
 
-
-struct timespec start, stop;
+struct timespec timer_start, timer_stop;
 double fstart, fstop;
 
 class OUTLET_CV{
   public:
     //variables
+
     Mat src, src_hsv, ROI, dst, mask; //for the first camera
     Mat u_src, u_dst, u_ROI; // for the second camera
     Mat depth; //for the depth cammera
@@ -114,6 +114,7 @@ private:
     const int kernel_size = 3;
     bool Done_x = false; bool Done_y = false;
     bool mg400_running = false;
+    int timer = 1;
 };
 
 
@@ -194,10 +195,13 @@ void OUTLET_CV::get_circle(int, void*userdata){
         // twist.linear.z = move_y;
       }
       
-      if (!mg400_running){
+      if (!mg400_running && (fstop-fstart)>timer){
+        clock_gettime(CLOCK_MONOTONIC, &timer_start); fstart=(double)timer_start.tv_sec + ((double)timer_start.tv_nsec/1000000000.0);
         printf("\nlinear.y: %lf, linear.z: %lf\n", twist.linear.y, twist.linear.z);
         cmd_vel_pub.publish(twist);
       }
+        clock_gettime(CLOCK_MONOTONIC, &timer_stop); fstop=(double)timer_stop.tv_sec + ((double)timer_stop.tv_nsec/1000000000.0);
+
         
       
      /*   try{
@@ -450,7 +454,7 @@ int main( int argc, char** argv )
    ros::init(argc, argv, "mask_detector");
    OUTLET_CV cc;
    // Initialize the ROS Node "roscpp_example"
-   ros::Rate loop_rate(10);
+   ros::Rate loop_rate(30);
    
    cc.image_sub = cc.nh.subscribe(cc.IMAGE_TOPIC, 1000, &OUTLET_CV::image_callback, &cc);
    cc.usbcam_sub = cc.nh.subscribe(cc.USBCAM_TOPIC, 1000, &OUTLET_CV::usbcam_callback, &cc);
@@ -466,9 +470,10 @@ int main( int argc, char** argv )
    
    cv::namedWindow(cc.SRC_WINDOW,WINDOW_AUTOSIZE);
    setMouseCallback(cc.SRC_WINDOW, draw_region_of_interest, &cc);
+   clock_gettime(CLOCK_MONOTONIC, &timer_start); fstart=(double)timer_start.tv_sec + ((double)timer_start.tv_nsec/1000000000.0);
+   clock_gettime(CLOCK_MONOTONIC, &timer_stop); fstop=(double)timer_stop.tv_sec + ((double)timer_stop.tv_nsec/1000000000.0);
    while(ros::ok()){
       // cout << cc.getRun() << endl;
-      clock_gettime(CLOCK_MONOTONIC, &start); fstart=(double)start.tv_sec + ((double)start.tv_nsec/1000000000.0);
       if(!cc.src.empty() && !cc.u_src.empty()){
           if(!cc.Drew){
               imshow(cc.SRC_WINDOW, cc.src);
