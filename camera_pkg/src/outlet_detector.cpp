@@ -176,8 +176,8 @@ void OUTLET_CV::get_circle(int, void*userdata){
       //PD control
       double move_x = Kp*offset_x - Kv*offset_x/1000;
       double move_y = Kp*offset_y - Kv*offset_y/1000;
-      twist.linear.y = offset_x;
-      twist.linear.z = offset_y;
+      twist.linear.y = &move_x;
+      twist.linear.z = &move_y;
       printf("\nlinear.y: %lf, linear.z: %lf\n", twist.linear.y, twist.linear.z);
      /*   try{
           cv::circle(dst, cv::Point( circles[0][0], circles[0][1] ), circles[0][2], cv::Scalar(0, 0, 255), 2);
