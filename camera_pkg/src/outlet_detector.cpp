@@ -193,9 +193,12 @@ void OUTLET_CV::get_circle(int, void*userdata){
       }else{
         // twist.linear.z = move_y;
       }
-      printf("\nlinear.y: %lf, linear.z: %lf\n", twist.linear.y, twist.linear.z);
-      if (!mg400_running)
+      
+      if (!mg400_running){
+        printf("\nlinear.y: %lf, linear.z: %lf\n", twist.linear.y, twist.linear.z);
         cmd_vel_pub.publish(twist);
+      }
+        
       
      /*   try{
           cv::circle(dst, cv::Point( circles[0][0], circles[0][1] ), circles[0][2], cv::Scalar(0, 0, 255), 2);
@@ -456,8 +459,8 @@ int main( int argc, char** argv )
 //    cc.darknet_bbox_sub = cc.nh.subscribe(cc.BBOX_TOPIC, 1000, &OUTLET_CV::bbox_callback, &cc);
    cc.pickup_start = cc.nh.advertiseService(cc.PICKUP_SERVICE_START, &OUTLET_CV::maskdetect_start_service, &cc);
    cc.pickup_stop = cc.nh.advertiseService(cc.PICKUP_SERVICE_STOP, &OUTLET_CV::maskdetect_stop_service, &cc);
-   cc.pub = cc.nh.advertise<camera_pkg_msgs::Coordinate>(cc.PUBLISH_TOPIC, 1000);
-   cc.cmd_vel_pub = cc.nh.advertise<geometry_msgs::Twist>(cc.MG400_CMD_VEL_TOPIC,1000);
+   cc.pub = cc.nh.advertise<camera_pkg_msgs::Coordinate>(cc.PUBLISH_TOPIC, 100);
+   cc.cmd_vel_pub = cc.nh.advertise<geometry_msgs::Twist>(cc.MG400_CMD_VEL_TOPIC,100);
    cc.mg400_sub = cc.nh.subscribe(cc.MG400_TOPIC,1000, &OUTLET_CV::mg400_callback, &cc);   
    std_srvs::Empty _emp;
    
@@ -482,8 +485,8 @@ int main( int argc, char** argv )
           }
       waitKey(3);      
       }
-      loop_rate.sleep();
       ros::spinOnce();
+      loop_rate.sleep();
    }
   destroyAllWindows();
   return 0;
