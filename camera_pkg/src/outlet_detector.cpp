@@ -329,9 +329,20 @@ void OUTLET_CV::depth_callback(const sensor_msgs::ImageConstPtr& msg){
 
     u_src = cv_ptr->image;
     u_ROI =u_src;
-    cvtColor(u_src, u_dst, COLOR_BGR2GRAY);
     u_w = u_src.size().width;
     u_h = u_src.size().height;
+    rep(i,0,u_w){
+      rep(j,0,u_h){
+          if((j>=0 && j<=u_h/2-100) || (i>=0 && i<u_x/2-100) || (i>u_x+100 && i<u_w) ||(j>u_h)){
+            cv::Vec3b &color = ROI.at<cv::Vec3b>(j,i); 
+            color.val[0] = 0;
+            color.val[1] = 0;
+            color.val[2] = 0;
+          }
+        }
+    }
+    cvtColor(u_src, u_dst, COLOR_BGR2GRAY);
+
     // cv::line(u_dst, cv::Point(0, u_h/2), cv::Point(u_w,u_h/2), cv::Scalar(0,255,255),2,4);
     // cv::line(u_dst, cv::Point(u_w/2, 0), cv::Point(u_w/2,u_h), cv::Scalar(0,255,255),2,4);
 
