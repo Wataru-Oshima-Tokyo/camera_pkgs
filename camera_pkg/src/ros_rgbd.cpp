@@ -342,9 +342,9 @@ int main( int argc, char** argv )
         }else if (cc.mode == "M"){
             status ="z_calibration";
         }
-        if(cc.mode != "L" && cc.calibration){
+        if(cc.calibration){
           putText(cc.src, status, Point(10, 30), FONT_HERSHEY_DUPLEX,1.0,Scalar(0, 0, 255), 2);
-          putText(cc.src, explain, Point(10, 65), FONT_HERSHEY_DUPLEX,0.7, Scalar(118, 185, 0), 1);
+          putText(cc.src, explain, Point(10, 55), FONT_HERSHEY_DUPLEX,0.7, Scalar(118, 185, 0), 1);
         }else{
             putText(cc.src, fps, Point(10, 30), FONT_HERSHEY_DUPLEX, 1.0,Scalar(118, 185, 0), 2);
             putText(cc.src, status, Point(10, 55), FONT_HERSHEY_DUPLEX, 0.7,Scalar(0, 0, 255), 2);
