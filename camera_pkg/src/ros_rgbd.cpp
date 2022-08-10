@@ -334,7 +334,7 @@ int main( int argc, char** argv )
         clock_gettime(CLOCK_MONOTONIC, &stop); fstop=(double)stop.tv_sec + ((double)stop.tv_nsec/1000000000.0);
         std::string fps= "FPS: " + std::to_string(1/(fstop-fstart));
         
-        std::string explain ="Left clip for robot coordinate: right for image coordinate: center for finishing calibrtion";
+        std::string explain ="Left:robot coordinate Right:image coordinate Center:finishing calibrtion";
         std::string cmd_exp="L:Move R: xy_calibration M: z_calibration";
         if(cc.mode =="L"){
             if(!cc.calibration)
@@ -349,8 +349,8 @@ int main( int argc, char** argv )
           putText(cc.src, explain, Point(10, 55), FONT_HERSHEY_DUPLEX,0.7, Scalar(118, 185, 0), 1);
         }else{
             putText(cc.src, fps, Point(10, 30), FONT_HERSHEY_DUPLEX, 1.0,Scalar(118, 185, 0), 2);
-            putText(cc.src, cc.status, Point(10, 55), FONT_HERSHEY_DUPLEX, 0.7,Scalar(0, 0, 255), 1);
-            putText(cc.src, cmd_exp, Point(10, 70), FONT_HERSHEY_DUPLEX,0.7,Scalar(0, 255, 255), 2);
+            putText(cc.src, cc.status, Point(10, 65), FONT_HERSHEY_DUPLEX, 0.7,Scalar(0, 0, 255), 1);
+            putText(cc.src, cmd_exp, Point(10, 85), FONT_HERSHEY_DUPLEX,0.7,Scalar(0, 255, 255), 2);
         }
         
         
