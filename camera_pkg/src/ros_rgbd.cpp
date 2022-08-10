@@ -73,6 +73,7 @@ class CAMERA_CV{
     bool getRun(); 
     const int max_lowThreshold = 100;
     const std::string window_name = "Edge Map";
+    std::string status ="";
 private:
     bool RUN = false;
     bool start_call = true;
@@ -332,15 +333,16 @@ int main( int argc, char** argv )
         setMouseCallback("src", mouseEvent, &cc);
         clock_gettime(CLOCK_MONOTONIC, &stop); fstop=(double)stop.tv_sec + ((double)stop.tv_nsec/1000000000.0);
         std::string fps= "FPS: " + std::to_string(1/(fstop-fstart));
-        std::string status ="";
+        
         std::string explain ="Left clip for robot coordinate: right for image coordinate: center for finishing calibrtion";
         std::string cmd_exp="L:Move R: xy_calibration M: z_calibration";
         if(cc.mode =="L"){
-           status ="Executing";
+            if(!cc.calibration)
+              cc.status ="Executing";
         }else if (cc.mode == "R"){
-            status ="xy_calibration";
+            cc.status ="xy_calibration";
         }else if (cc.mode == "M"){
-            status ="z_calibration";
+            cc.status ="z_calibration";
         }
         if(cc.calibration){
           putText(cc.src, status, Point(10, 30), FONT_HERSHEY_DUPLEX,1.0,Scalar(0, 0, 255), 2);
