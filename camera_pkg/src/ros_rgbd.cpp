@@ -66,6 +66,7 @@ class CAMERA_CV{
     const std::string IMSHOW_SERVICE_STOP = "/imshow/stop";
     const std::string CALIB_SERVICE_START = "/calibration/start";
     const std::string CALIB_SERVICE_STOP = "/calibration/stop";
+    std::string mode="L";
     CAMERA_CV();
     ~CAMERA_CV();
     bool getRun(); 
@@ -249,7 +250,6 @@ void mouseEvent(int event, int x, int y, int flags, void* userdata)
     //  _cc.pub = _cc.nh.advertise<std_msgs::String>(_cc.PUBLISH_TOPIC, 1000);
      camera_pkg_msgs::Coordinate coordinate;
     //  Mat* _depth = &depth;
-     std::string temp="";
      std::vector<double> z_array;
      double z=0.0;
      // below process needs to be done because the z-value of realsense is not stable
@@ -262,21 +262,8 @@ void mouseEvent(int event, int x, int y, int flags, void* userdata)
       z = z_array[z_array.size()-1]; //get the median value 
      if  ( event == EVENT_LBUTTONDOWN )
      {
-//           //I got the erro for getting the belwo one I guess because this function is dervied from the 
-//           // z = cc->depth.at<u_int16_t>(x,y);
-// 	  if(!cc.getRun()){
-// 		  camera_pkg::Coordinate tempv;
-// 		  tempv = cc->MaskThreshold(x,y);
-// 		  if(tempv.t =="e"){
-// 			x=tempv.x;
-// 			y=tempv.y;
-// 			cout << "Left button of the mouse is clicked - position (" << x << ", " << y << ", " << z << ")" << endl;
-// 			temp = "L";
-// 			z =1;
-// 		  }
-// 	  }else{
 	  	cout << "Left button of the mouse is clicked - position (" << x << ", " << y << ", " << z << ")" << endl;
-		temp = "L";
+		  mode = "L";
 // 		z = cc->depth.at<u_int16_t>(x,y);
 // 	  }
          
@@ -284,14 +271,14 @@ void mouseEvent(int event, int x, int y, int flags, void* userdata)
      else if  ( event == EVENT_RBUTTONDOWN )
      {
           cout << "Right button of the mouse is clicked - position (" << x << ", " << y << ", " << z << ")" << endl;
-          temp = "R";
+          mode = "R";
      }
      else if  ( event == EVENT_MBUTTONDOWN )
      {
           cout << "Middle button of the mouse is clicked - position (" << x << ", " << y << ", " << z << ")" << endl;
-          temp = "M";
+          mode = "M";
      }
-     if(!temp.empty()){
+     if(!mode.empty()){
        if(z>0 && z <1200){
           coordinate.t = temp;
           coordinate.x = x;
@@ -334,13 +321,29 @@ int main( int argc, char** argv )
         setMouseCallback("src", mouseEvent, &cc);
         clock_gettime(CLOCK_MONOTONIC, &stop); fstop=(double)stop.tv_sec + ((double)stop.tv_nsec/1000000000.0);
         std::string fps= "FPS: " + std::to_string(1/(fstop-fstart));
-        putText(cc.src, //target image
-          fps, //text
-          Point(10, 30), //top-left position
-          FONT_HERSHEY_DUPLEX,
-          1.0,
-          Scalar(118, 185, 0), //font color
-          2);
+        std::string status ="";
+        std::string explain ="Left clip for robot coordinate: right for image coordinate";
+        std::string cmd_exp="L:start/stop R: xy_calibration M: z_calibration";
+        if(cc.mode =="L"){
+            if(cc.RUN)
+                status ="Executing";
+            else 
+                status ="Pausing...";
+        }else if (cc.mode == "R"){
+            status ="xy_calibration";
+        }else if (cc.mode == "M"){
+            status ="z_calibration";
+        }
+        if(cc.mode != "L"){
+          putText(cc.src, status, Point(10, 30), FONT_HERSHEY_DUPLEX,1.0,Scalar(0, 0, 255), 2);
+          putText(cc.src, explain, Point(10, 65), FONT_HERSHEY_DUPLEX,1.0,Scalar(0, 0, 255), 2);
+        }else{
+            putText(cc.src, fps, Point(10, 30), FONT_HERSHEY_DUPLEX,1.0,Scalar(118, 185, 0), 2);
+            putText(cc.src, status, Point(10, 65), FONT_HERSHEY_DUPLEX,1.0,Scalar(0, 0, 255), 2);
+        }
+        
+        
+
       
         imshow( "src", cc.src);
         waitKey(3);
