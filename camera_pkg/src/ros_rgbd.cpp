@@ -349,7 +349,7 @@ int main( int argc, char** argv )
           putText(cc.src, explain, Point(10, 55), FONT_HERSHEY_DUPLEX,0.7, Scalar(118, 185, 0), 1);
         }else{
             putText(cc.src, fps, Point(10, 30), FONT_HERSHEY_DUPLEX, 1.0,Scalar(118, 185, 0), 2);
-            putText(cc.src, status, Point(10, 55), FONT_HERSHEY_DUPLEX, 0.7,Scalar(0, 0, 255), 2);
+            putText(cc.src, status, Point(10, 55), FONT_HERSHEY_DUPLEX, 0.7,Scalar(0, 0, 255), 1);
             putText(cc.src, cmd_exp, Point(10, 70), FONT_HERSHEY_DUPLEX,0.7,Scalar(0, 255, 255), 2);
         }
         
