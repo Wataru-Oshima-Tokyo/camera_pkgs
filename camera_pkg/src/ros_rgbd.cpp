@@ -42,6 +42,7 @@ class CAMERA_CV{
     // int high_c[3] ={37, 143, 201};
     int low_c[3] = {0, 0, 0};
     int high_c[3] = {0, 0, 0};
+    bool calibration = false;
     const int max_c[3] = {179, 255, 255};
     std::string HSV[3] = {"H","S","V"};
     // int _MIN_DH =15, _MIN_DS = 60, _MIN_DV = 60;
@@ -264,7 +265,7 @@ void mouseEvent(int event, int x, int y, int flags, void* userdata)
      if  ( event == EVENT_LBUTTONDOWN )
      {
 	  	cout << "Left button of the mouse is clicked - position (" << x << ", " << y << ", " << z << ")" << endl;
-		  cc->mode = "L";
+      cc->mode = "L";
       clicked = true;
 // 		z = cc->depth.at<u_int16_t>(x,y);
 // 	  }
@@ -275,12 +276,17 @@ void mouseEvent(int event, int x, int y, int flags, void* userdata)
           cout << "Right button of the mouse is clicked - position (" << x << ", " << y << ", " << z << ")" << endl;
           cc->mode = "R";
           clicked = true;
+          cc->calibration = true;
      }
      else if  ( event == EVENT_MBUTTONDOWN )
      {
           cout << "Middle button of the mouse is clicked - position (" << x << ", " << y << ", " << z << ")" << endl;
           cc->mode = "M";
           clicked = true;
+          if (cc->calibration)
+            cc->calibration = false;
+          else
+            cc->calibration = true;
      }
      if(clicked){
        if(z>0 && z <1200){
@@ -289,6 +295,7 @@ void mouseEvent(int event, int x, int y, int flags, void* userdata)
           coordinate.y = y;
           coordinate.z = z;
           cc->pub.publish(coordinate);
+
        }else{
          cout << "z value is not valid please try again." << endl;
        }
@@ -326,8 +333,8 @@ int main( int argc, char** argv )
         clock_gettime(CLOCK_MONOTONIC, &stop); fstop=(double)stop.tv_sec + ((double)stop.tv_nsec/1000000000.0);
         std::string fps= "FPS: " + std::to_string(1/(fstop-fstart));
         std::string status ="";
-        std::string explain ="Left clip for robot coordinate: right for image coordinate";
-        std::string cmd_exp="L:start/stop R: xy_calibration M: z_calibration";
+        std::string explain ="Left clip for robot coordinate: right for image coordinate: center for finishing calibrtion";
+        std::string cmd_exp="L:Move R: xy_calibration M: z_calibration";
         if(cc.mode =="L"){
            status ="Executing";
         }else if (cc.mode == "R"){
@@ -335,12 +342,13 @@ int main( int argc, char** argv )
         }else if (cc.mode == "M"){
             status ="z_calibration";
         }
-        if(cc.mode != "L"){
+        if(cc.mode != "L" && !cc.calibration){
           putText(cc.src, status, Point(10, 30), FONT_HERSHEY_DUPLEX,1.0,Scalar(0, 0, 255), 2);
-          putText(cc.src, explain, Point(10, 65), FONT_HERSHEY_DUPLEX,0.5, Scalar(118, 185, 0), 1);
+          putText(cc.src, explain, Point(10, 65), FONT_HERSHEY_DUPLEX,0.7, Scalar(118, 185, 0), 1);
         }else{
             putText(cc.src, fps, Point(10, 30), FONT_HERSHEY_DUPLEX, 1.0,Scalar(118, 185, 0), 2);
-            putText(cc.src, status, Point(10, 65), FONT_HERSHEY_DUPLEX,1.0,Scalar(0, 0, 255), 2);
+            putText(cc.src, status, Point(10, 65), FONT_HERSHEY_DUPLEX, 0.7,Scalar(0, 0, 255), 2);
+            putText(cc.src, cmd_exp, Point(10, 80), FONT_HERSHEY_DUPLEX,0.7,Scalar(0, 0, 255), 2);
         }
         
         
