@@ -263,7 +263,7 @@ void mouseEvent(int event, int x, int y, int flags, void* userdata)
      if  ( event == EVENT_LBUTTONDOWN )
      {
 	  	cout << "Left button of the mouse is clicked - position (" << x << ", " << y << ", " << z << ")" << endl;
-		  mode = "L";
+		  cc->mode = "L";
 // 		z = cc->depth.at<u_int16_t>(x,y);
 // 	  }
          
@@ -271,16 +271,16 @@ void mouseEvent(int event, int x, int y, int flags, void* userdata)
      else if  ( event == EVENT_RBUTTONDOWN )
      {
           cout << "Right button of the mouse is clicked - position (" << x << ", " << y << ", " << z << ")" << endl;
-          mode = "R";
+          cc->mode = "R";
      }
      else if  ( event == EVENT_MBUTTONDOWN )
      {
           cout << "Middle button of the mouse is clicked - position (" << x << ", " << y << ", " << z << ")" << endl;
-          mode = "M";
+          cc->mode = "M";
      }
-     if(!mode.empty()){
+     if(!cc->mode.empty()){
        if(z>0 && z <1200){
-          coordinate.t = temp;
+          coordinate.t = cc->mode;
           coordinate.x = x;
           coordinate.y = y;
           coordinate.z = z;
@@ -325,10 +325,7 @@ int main( int argc, char** argv )
         std::string explain ="Left clip for robot coordinate: right for image coordinate";
         std::string cmd_exp="L:start/stop R: xy_calibration M: z_calibration";
         if(cc.mode =="L"){
-            if(cc.RUN)
-                status ="Executing";
-            else 
-                status ="Pausing...";
+           status ="Executing";
         }else if (cc.mode == "R"){
             status ="xy_calibration";
         }else if (cc.mode == "M"){
