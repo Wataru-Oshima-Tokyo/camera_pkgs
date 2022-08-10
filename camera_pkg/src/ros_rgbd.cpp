@@ -260,10 +260,12 @@ void mouseEvent(int event, int x, int y, int flags, void* userdata)
         }
       std::sort(z_array.begin(), z_array.end());
       z = z_array[z_array.size()-1]; //get the median value 
+      bool clicked= false
      if  ( event == EVENT_LBUTTONDOWN )
      {
 	  	cout << "Left button of the mouse is clicked - position (" << x << ", " << y << ", " << z << ")" << endl;
 		  cc->mode = "L";
+      clicked = true;
 // 		z = cc->depth.at<u_int16_t>(x,y);
 // 	  }
          
@@ -272,13 +274,15 @@ void mouseEvent(int event, int x, int y, int flags, void* userdata)
      {
           cout << "Right button of the mouse is clicked - position (" << x << ", " << y << ", " << z << ")" << endl;
           cc->mode = "R";
+          clicked = true;
      }
      else if  ( event == EVENT_MBUTTONDOWN )
      {
           cout << "Middle button of the mouse is clicked - position (" << x << ", " << y << ", " << z << ")" << endl;
           cc->mode = "M";
+          clicked = true;
      }
-     if(!cc->mode.empty()){
+     if(clicked){
        if(z>0 && z <1200){
           coordinate.t = cc->mode;
           coordinate.x = x;
@@ -333,9 +337,9 @@ int main( int argc, char** argv )
         }
         if(cc.mode != "L"){
           putText(cc.src, status, Point(10, 30), FONT_HERSHEY_DUPLEX,1.0,Scalar(0, 0, 255), 2);
-          putText(cc.src, explain, Point(10, 65), FONT_HERSHEY_DUPLEX,1.0,Scalar(0, 0, 255), 2);
+          putText(cc.src, explain, Point(10, 65), FONT_HERSHEY_DUPLEX,0.5, Scalar(118, 185, 0), 1);
         }else{
-            putText(cc.src, fps, Point(10, 30), FONT_HERSHEY_DUPLEX,1.0,Scalar(118, 185, 0), 2);
+            putText(cc.src, fps, Point(10, 30), FONT_HERSHEY_DUPLEX, 1.0,Scalar(118, 185, 0), 2);
             putText(cc.src, status, Point(10, 65), FONT_HERSHEY_DUPLEX,1.0,Scalar(0, 0, 255), 2);
         }
         
