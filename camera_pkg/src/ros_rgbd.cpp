@@ -260,7 +260,7 @@ void mouseEvent(int event, int x, int y, int flags, void* userdata)
         }
       std::sort(z_array.begin(), z_array.end());
       z = z_array[z_array.size()-1]; //get the median value 
-      bool clicked= false
+      bool clicked= false;
      if  ( event == EVENT_LBUTTONDOWN )
      {
 	  	cout << "Left button of the mouse is clicked - position (" << x << ", " << y << ", " << z << ")" << endl;
