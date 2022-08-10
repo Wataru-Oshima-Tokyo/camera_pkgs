@@ -42,6 +42,7 @@ class CAMERA_CV{
     // int high_c[3] ={37, 143, 201};
     int low_c[3] = {0, 0, 0};
     int high_c[3] = {0, 0, 0};
+    bool calibration = false;
     const int max_c[3] = {179, 255, 255};
     std::string HSV[3] = {"H","S","V"};
     // int _MIN_DH =15, _MIN_DS = 60, _MIN_DV = 60;
@@ -66,11 +67,13 @@ class CAMERA_CV{
     const std::string IMSHOW_SERVICE_STOP = "/imshow/stop";
     const std::string CALIB_SERVICE_START = "/calibration/start";
     const std::string CALIB_SERVICE_STOP = "/calibration/stop";
+    std::string mode="L";
     CAMERA_CV();
     ~CAMERA_CV();
     bool getRun(); 
     const int max_lowThreshold = 100;
     const std::string window_name = "Edge Map";
+    std::string status ="";
 private:
     bool RUN = false;
     bool start_call = true;
@@ -249,7 +252,6 @@ void mouseEvent(int event, int x, int y, int flags, void* userdata)
     //  _cc.pub = _cc.nh.advertise<std_msgs::String>(_cc.PUBLISH_TOPIC, 1000);
      camera_pkg_msgs::Coordinate coordinate;
     //  Mat* _depth = &depth;
-     std::string temp="";
      std::vector<double> z_array;
      double z=0.0;
      // below process needs to be done because the z-value of realsense is not stable
@@ -260,23 +262,12 @@ void mouseEvent(int event, int x, int y, int flags, void* userdata)
         }
       std::sort(z_array.begin(), z_array.end());
       z = z_array[z_array.size()-1]; //get the median value 
+      bool clicked= false;
      if  ( event == EVENT_LBUTTONDOWN )
      {
-//           //I got the erro for getting the belwo one I guess because this function is dervied from the 
-//           // z = cc->depth.at<u_int16_t>(x,y);
-// 	  if(!cc.getRun()){
-// 		  camera_pkg::Coordinate tempv;
-// 		  tempv = cc->MaskThreshold(x,y);
-// 		  if(tempv.t =="e"){
-// 			x=tempv.x;
-// 			y=tempv.y;
-// 			cout << "Left button of the mouse is clicked - position (" << x << ", " << y << ", " << z << ")" << endl;
-// 			temp = "L";
-// 			z =1;
-// 		  }
-// 	  }else{
 	  	cout << "Left button of the mouse is clicked - position (" << x << ", " << y << ", " << z << ")" << endl;
-		temp = "L";
+      cc->mode = "L";
+      clicked = true;
 // 		z = cc->depth.at<u_int16_t>(x,y);
 // 	  }
          
@@ -284,20 +275,28 @@ void mouseEvent(int event, int x, int y, int flags, void* userdata)
      else if  ( event == EVENT_RBUTTONDOWN )
      {
           cout << "Right button of the mouse is clicked - position (" << x << ", " << y << ", " << z << ")" << endl;
-          temp = "R";
+          cc->mode = "R";
+          clicked = true;
+          cc->calibration = true;
      }
      else if  ( event == EVENT_MBUTTONDOWN )
      {
           cout << "Middle button of the mouse is clicked - position (" << x << ", " << y << ", " << z << ")" << endl;
-          temp = "M";
+          cc->mode = "M";
+          clicked = true;
+          if (cc->calibration)
+            cc->calibration = false;
+          else
+            cc->calibration = true;
      }
-     if(!temp.empty()){
+     if(clicked){
        if(z>0 && z <1200){
-          coordinate.t = temp;
+          coordinate.t = cc->mode;
           coordinate.x = x;
           coordinate.y = y;
           coordinate.z = z;
           cc->pub.publish(coordinate);
+
        }else{
          cout << "z value is not valid please try again." << endl;
        }
@@ -334,13 +333,28 @@ int main( int argc, char** argv )
         setMouseCallback("src", mouseEvent, &cc);
         clock_gettime(CLOCK_MONOTONIC, &stop); fstop=(double)stop.tv_sec + ((double)stop.tv_nsec/1000000000.0);
         std::string fps= "FPS: " + std::to_string(1/(fstop-fstart));
-        putText(cc.src, //target image
-          fps, //text
-          Point(10, 30), //top-left position
-          FONT_HERSHEY_DUPLEX,
-          1.0,
-          Scalar(118, 185, 0), //font color
-          2);
+        
+        std::string explain ="Left:robot coordinate Right:image coordinate Center:finishing calibrtion";
+        std::string cmd_exp="L:Move R: xy_calibration M: z_calibration";
+        if(cc.mode =="L"){
+            if(!cc.calibration)
+              cc.status ="Executing";
+        }else if (cc.mode == "R"){
+            cc.status ="xy_calibration";
+        }else if (cc.mode == "M"){
+            cc.status ="z_calibration";
+        }
+        if(cc.calibration){
+          putText(cc.src, cc.status, Point(10, 30), FONT_HERSHEY_DUPLEX,1.0,Scalar(0, 0, 255), 2);
+          putText(cc.src, explain, Point(10, 55), FONT_HERSHEY_DUPLEX,0.7, Scalar(118, 185, 0), 1);
+        }else{
+            putText(cc.src, fps, Point(10, 30), FONT_HERSHEY_DUPLEX, 1.0,Scalar(118, 185, 0), 2);
+            putText(cc.src, cc.status, Point(10, 65), FONT_HERSHEY_DUPLEX, 0.7,Scalar(0, 0, 255), 1);
+            putText(cc.src, cmd_exp, Point(10, 85), FONT_HERSHEY_DUPLEX,0.7,Scalar(0, 255, 255), 2);
+        }
+        
+        
+
       
         imshow( "src", cc.src);
         waitKey(3);
