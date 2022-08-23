@@ -6,7 +6,6 @@
  #include <opencv2/highgui/highgui.hpp>
  #include <opencv2/core/core.hpp>
  #include <opencv2/videoio.hpp>
- #include <opencv2/aruco.hpp>
  #include <opencv2/aruco_detector.hpp>
 
  // Include CvBridge, Image Transport, Image msg
