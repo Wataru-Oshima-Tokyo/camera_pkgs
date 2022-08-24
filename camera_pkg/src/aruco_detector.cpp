@@ -83,7 +83,7 @@ class Image{
  int main(int argc, char* argv[]){
     ros::init(argc, argv, "roscpp_example");
     Image img;
-    if(!img.src,empty()){
+    if(!img.src.empty()){
         img.aruco_marker_detector();
     }
     ros::spin();
