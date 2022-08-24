@@ -14,77 +14,78 @@
  #include <sensor_msgs/image_encodings.h>
 
 using namespace cv;
+
+
+class Image{
+   public:
+
+	 Image(){
+        ros::NodeHandle private_nh("~");
+        private_nh.param("image_topic", IMAGE_TOPIC, std::string("/color/usbcam"));
+        ros::NodeHandle nh;
+        ros::Subscriber image = nh.subscribe(IMAGE_TOPIC, 1000, image_callback);
+     };
+	 ~Image(){};
+
+    void image_callback(const sensor_msgs::ImageConstPtr& msg){
+        clock_gettime(CLOCK_MONOTONIC, &start); fstart=(double)start.tv_sec + ((double)start.tv_nsec/1000000000.0);
+        std_msgs::Header msg_header = msg->header;
+        std::string frame_id = msg_header.frame_id.c_str();
+
+        cv_bridge::CvImagePtr cv_ptr;
+        try
+        {
+            cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
+        }
+        catch (cv_bridge::Exception& e)
+        {
+            ROS_ERROR("cv_bridge exception: %s", e.what());
+            return;
+        }
+
+        src = cv_ptr->image;
+        dst.create(src.size(), src.type());
+        cvtColor(src, src_hsv, COLOR_BGR2HSV);
+
+        clock_gettime(CLOCK_MONOTONIC, &stop); fstop=(double)stop.tv_sec + ((double)stop.tv_nsec/1000000000.0);
+        std::string fps= "FPS: " + std::to_string(1/(fstop-fstart));
+
+        putText(src, fps,Point(10, 30), FONT_HERSHEY_DUPLEX,1.0,Scalar(118, 185, 0), 2);
+        cv::imshow("src", src);
+        cv::waitKey(3);
+    }
+
+    void aruco_marker_detector(){
+        Mat imageCopy;
+        std::vector<int> ids;
+        std::vector<std::vector<cv::Point2f> > corners;
+        aruco::detectMarkers(src, dictionary, corners, ids);
+        // if at least one marker detected
+        if (ids.size() > 0)
+            cv::aruco::drawDetectedMarkers(imageCopy, corners, ids);
+        imshow("out", imageCopy);
+        waitKey(3);
+    }
+
+
     struct timespec start, stop;
     double fstart, fstop;
     std::string IMAGE_TOPIC;
     Mat src, src_hsv, dst;
-
-class Image{
-   public:
-	 Image();
-	 ~Image();
+    Ptr<aruco::Dictionary> dicitonary = aruco::getPredefinedDicionary(aruco::DICT_4X4_50);
 };
 
-Image::Image(){
-   ros::NodeHandle private_nh("~");
-   private_nh.param("image_topic", IMAGE_TOPIC, std::string("/color/usbcam"));
-}
-
-Image::~Image(){}
 
 
-void arco_marker_detector(){
 
-}
 
-void image_callback(const sensor_msgs::ImageConstPtr& msg){
-    clock_gettime(CLOCK_MONOTONIC, &start); fstart=(double)start.tv_sec + ((double)start.tv_nsec/1000000000.0);
-    std_msgs::Header msg_header = msg->header;
-    std::string frame_id = msg_header.frame_id.c_str();
-    // ROS_INFO_STREAM("New Image from " << frame_id);
-
-    cv_bridge::CvImagePtr cv_ptr;
-    try
-    {
-        cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
-    }
-    catch (cv_bridge::Exception& e)
-    {
-        ROS_ERROR("cv_bridge exception: %s", e.what());
-        return;
-    }
-
-    src = cv_ptr->image;
-    dst.create(src.size(), src.type());
-    //cvtColor(src, src_gray, COLOR_BGR2GRAY);
-    cvtColor(src, src_hsv, COLOR_BGR2HSV);
-    
-    // namedWindow(window_name, WINDOW_AUTOSIZE );
-    // CannyThreshold(0, 0);
-
-      clock_gettime(CLOCK_MONOTONIC, &stop); fstop=(double)stop.tv_sec + ((double)stop.tv_nsec/1000000000.0);
-      std::string fps= "FPS: " + std::to_string(1/(fstop-fstart));
-
-      putText(src, //target image
-          fps, //text
-          Point(10, 30), //top-left position
-          FONT_HERSHEY_DUPLEX,
-          1.0,
-          Scalar(118, 185, 0), //font color
-          2);
-      cv::imshow("src", src);
-      cv::waitKey(3);
- }
 
  int main(int argc, char* argv[]){
-
     ros::init(argc, argv, "roscpp_example");
     Image img;
-    ros::NodeHandle nh;
-    ros::Subscriber image;
-    image = nh.subscribe(IMAGE_TOPIC, 1000, image_callback);
-
-
+    if(!mg.src,empty()){
+        img.aruco_marker_detector();
+    }
     ros::spin();
     destroyAllWindows();
     return 0;
