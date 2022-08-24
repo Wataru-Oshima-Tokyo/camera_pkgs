@@ -399,6 +399,7 @@ void OUTLET_CV::depth_callback(const sensor_msgs::ImageConstPtr& msg){
     u_ROI =u_src;
     u_w = u_src.size().width;
     u_h = u_src.size().height;
+    //if aruco is used, the ROI should be removed.
     rep(i,0,u_w){
       rep(j,0,u_h){
           if((j>=0 && j<=u_h/2-70) || (i>=0 && i<u_w/2-50) || (i>u_w/2+50 && i<u_w) ||(j>u_h/2+30)){
