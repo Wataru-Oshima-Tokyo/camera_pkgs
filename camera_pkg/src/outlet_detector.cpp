@@ -100,7 +100,7 @@ class OUTLET_CV{
     bool drawing = false;
     bool ADJUST=false;
     double offset_x =0; double offset_y=0; double offset_z=0;
-    double fixed_x = 161.0; double fixed_y = 88.0;
+    double fixed_x = 161.0; double fixed_y = 0;//88.0;
     double c_x,c_y;
 private:
     bool RUN = false; 
@@ -176,12 +176,12 @@ void OUTLET_CV::get_circle(int, void*userdata){
       }
 
       //比率ゲイン
-      double Kp_x = 0.05;
-      double Kp_y = 0.01;
+      double Kp = 0.05;
+      // double Kp_y = 0.01;
       double Kv = 0.0;
       //PD control
-      double move_x = Kp_x*offset_x - Kv*offset_x/1000;
-      double move_y = Kp_y*offset_y - Kv*offset_y/1000;
+      double move_x = Kp*offset_x - Kv*offset_x/1000;
+      double move_y = Kp*offset_y - Kv*offset_y/1000;
       // if(Done_x ){
       //   twist.linear.y = 0;
       //   if (offset_x_counter>3)
@@ -207,7 +207,7 @@ void OUTLET_CV::get_circle(int, void*userdata){
         // printf("\nlinear.y: %lf, linear.z: %lf\n", twist.linear.y, twist.linear.z);
         ROS_INFO("\nOffset_x: %lf, Offset_y: %lf\n", offset_x, offset_y);
         ROS_INFO("\nlinear.y: %lf, linear.z: %lf\n", twist.linear.y, twist.linear.z);
-        cmd_vel_pub.publish(twist);
+        // cmd_vel_pub.publish(twist);
         if(std::abs(offset_x)<=0.5){
              Done_x = true;
         }
