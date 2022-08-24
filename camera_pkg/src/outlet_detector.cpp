@@ -204,7 +204,7 @@ void OUTLET_CV::get_circle(int, void*userdata){
         clock_gettime(CLOCK_MONOTONIC, &timer_start); fstart=(double)timer_start.tv_sec + ((double)timer_start.tv_nsec/1000000000.0);
         printf("\nOffset_x: %lf, Offset_y: %lf\n", offset_x, offset_y);
         printf("\nlinear.y: %lf, linear.z: %lf\n", twist.linear.y, twist.linear.z);
-        cmd_vel_pub.publish(twist);
+        // cmd_vel_pub.publish(twist);
         if(std::abs(offset_x)<=0.5){
              Done_x = true;
         }
@@ -218,7 +218,7 @@ void OUTLET_CV::get_circle(int, void*userdata){
         coordinate.x = 10;
         coordinate.y = 10;
         coordinate.z = 10;
-        pub.publish(coordinate);
+        // pub.publish(coordinate);
       }
         
       
