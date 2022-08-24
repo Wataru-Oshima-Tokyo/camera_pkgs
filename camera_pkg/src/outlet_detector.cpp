@@ -177,6 +177,7 @@ void OUTLET_CV::get_circle(int, void*userdata){
           offset_y = (double)fixed_y - circle[1];
           // printf("\nCircle[0]: %lf, Circle[1]: %lf\n", circle[0], circle[1]);
           circle_detected = true;
+          ROS_INFO("Circles are detected");
       }
 
       //比率ゲイン
