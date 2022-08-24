@@ -100,7 +100,7 @@ class OUTLET_CV{
     bool drawing = false;
     bool ADJUST=false;
     double offset_x =0; double offset_y=0; double offset_z=0;
-    double fixed_x = 161.0; double fixed_y = 0;//88.0;
+    double fixed_x = 161.0; double fixed_y = 203;//88.0;
     double c_x,c_y;
 private:
     bool RUN = false; 
@@ -125,6 +125,8 @@ OUTLET_CV::OUTLET_CV(){
   private_nh.param("image_topic", IMAGE_TOPIC, std::string("/camera/color/image_raw"));
   private_nh.param("depth_topic", DEPTH_TOPIC, std::string("/camera/aligned_depth_to_color/image_raw"));
   private_nh.param("usbcam_topic", USBCAM_TOPIC, std::string("/usb_cam/color/image"));
+  private_nh.param("offset_fixed_x", fixed_x, 161);
+  private_nh.param("offset_fixed_y", fixed_y, 203);
   lowThreshold = 6;
 };
 
