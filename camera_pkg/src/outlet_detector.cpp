@@ -126,7 +126,7 @@ OUTLET_CV::OUTLET_CV(){
   private_nh.param("depth_topic", DEPTH_TOPIC, std::string("/camera/aligned_depth_to_color/image_raw"));
   private_nh.param("usbcam_topic", USBCAM_TOPIC, std::string("/usb_cam/color/image"));
   private_nh.param("offset_fixed_x", fixed_x, 161.0);
-  private_nh.param("offset_fixed_y", fixed_y, 203.0);
+  private_nh.param("offset_fixed_y", fixed_y, 200.0);
   lowThreshold = 6;
 };
 
@@ -213,7 +213,7 @@ void OUTLET_CV::get_circle(int, void*userdata){
         if(std::abs(offset_x)<=0.5){
              Done_x = true;
         }
-        if( (offset_y >=-91) && (offset_y <= -90)){
+        if(std::abs(offset_y)<=0.5){
              Done_y = true;
         }
       }
