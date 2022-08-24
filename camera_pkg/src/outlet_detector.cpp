@@ -200,7 +200,7 @@ void OUTLET_CV::get_circle(int, void*userdata){
       
       if (!mg400_running && (fstop-fstart)>timer && (!Done_x || !Done_y)){
         twist.linear.y = move_x;
-        twist.linear.z = 0;//move_y;
+        twist.linear.z = move_y;
         clock_gettime(CLOCK_MONOTONIC, &timer_start); fstart=(double)timer_start.tv_sec + ((double)timer_start.tv_nsec/1000000000.0);
         // printf("\nOffset_x: %lf, Offset_y: %lf\n", offset_x, offset_y);
         // printf("\nlinear.y: %lf, linear.z: %lf\n", twist.linear.y, twist.linear.z);
@@ -210,7 +210,7 @@ void OUTLET_CV::get_circle(int, void*userdata){
         if(std::abs(offset_x)<=0.5){
              Done_x = true;
         }
-        if(std::abs(offset_y)<=0.5){
+        if( (offset_y >=-90) && (offset_y <= -89)){
              Done_y = true;
         }
       }
@@ -405,7 +405,7 @@ void OUTLET_CV::depth_callback(const sensor_msgs::ImageConstPtr& msg){
     rep(i,0,u_w){
       rep(j,0,u_h){
           // if((j>=0 && j<=u_h/2-70) || (i>=0 && i<u_w/2-50) || (i>u_w/2+50 && i<u_w) ||(j>u_h/2+30)){
-          if((j>=0 && j<=u_h/2) || (i>=0 && i<u_w/2-50) || (i>u_w/2+50 && i<u_w) ||(j>u_h/2+100)){
+          if((j>=0 && j<=u_h/2+50) || (i>=0 && i<u_w/2-50) || (i>u_w/2+50 && i<u_w) ||(j>u_h/2+150)){
             cv::Vec3b &color = u_ROI.at<cv::Vec3b>(j,i); 
             color.val[0] = 0;
             color.val[1] = 0;
