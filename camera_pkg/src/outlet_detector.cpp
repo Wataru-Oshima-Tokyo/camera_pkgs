@@ -176,11 +176,12 @@ void OUTLET_CV::get_circle(int, void*userdata){
       }
 
       //比率ゲイン
-      double Kp = 0.05;
+      double Kp_x = 0.05;
+      double Kp_y = 0.01;
       double Kv = 0.0;
       //PD control
-      double move_x = Kp*offset_x - Kv*offset_x/1000;
-      double move_y = Kp*offset_y - Kv*offset_y/1000;
+      double move_x = Kp_x*offset_x - Kv*offset_x/1000;
+      double move_y = Kp_y*offset_y - Kv*offset_y/1000;
       // if(Done_x ){
       //   twist.linear.y = 0;
       //   if (offset_x_counter>3)
@@ -210,7 +211,7 @@ void OUTLET_CV::get_circle(int, void*userdata){
         if(std::abs(offset_x)<=0.5){
              Done_x = true;
         }
-        if( (offset_y >=-90) && (offset_y <= -89)){
+        if( (offset_y >=-91) && (offset_y <= -90)){
              Done_y = true;
         }
       }
