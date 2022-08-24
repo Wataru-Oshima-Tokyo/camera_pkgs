@@ -209,7 +209,7 @@ void OUTLET_CV::get_circle(int, void*userdata){
         // printf("\nlinear.y: %lf, linear.z: %lf\n", twist.linear.y, twist.linear.z);
         ROS_INFO("\nOffset_x: %lf, Offset_y: %lf\n", offset_x, offset_y);
         ROS_INFO("\nlinear.y: %lf, linear.z: %lf\n", twist.linear.y, twist.linear.z);
-        // cmd_vel_pub.publish(twist);
+        cmd_vel_pub.publish(twist);
         if(std::abs(offset_x)<=0.5){
              Done_x = true;
         }
