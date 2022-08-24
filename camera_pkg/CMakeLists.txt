@@ -168,8 +168,8 @@ target_link_libraries(ros_rgbd ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
 add_executable(ros_image src/ros_image.cpp)
 target_link_libraries(ros_image ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
 
-# add_executable(arco_detector src/arco_detector.cpp)
-# target_link_libraries(arco_detector ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
+add_executable(aruco_detector src/aruco_detector.cpp)
+target_link_libraries(aruco_detector ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
 
 add_executable(pub_image src/pub_image.cpp)
 target_link_libraries(pub_image ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
