@@ -116,6 +116,7 @@ private:
     int timer = 1.5;
     int offset_x_counter =0;
     int offset_y_counter =0;
+    bool circle_detected = false;
 };
 
 
@@ -175,6 +176,7 @@ void OUTLET_CV::get_circle(int, void*userdata){
           offset_x = (double)fixed_x - circle[0];
           offset_y = (double)fixed_y - circle[1];
           // printf("\nCircle[0]: %lf, Circle[1]: %lf\n", circle[0], circle[1]);
+          circle_detected = true;
       }
 
       //比率ゲイン
@@ -218,7 +220,7 @@ void OUTLET_CV::get_circle(int, void*userdata){
         }
       }
       clock_gettime(CLOCK_MONOTONIC, &timer_stop); fstop=(double)timer_stop.tv_sec + ((double)timer_stop.tv_nsec/1000000000.0);
-      if(!mg400_running && Done_x && Done_y && (fstop-fstart)>timer){
+      if(!mg400_running && Done_x && Done_y && (fstop-fstart)>timer && circle_detected){
         coordinate.t ="F";
         coordinate.x = 10;
         coordinate.y = 10;
