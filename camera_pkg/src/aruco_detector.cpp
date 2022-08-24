@@ -72,7 +72,7 @@ class Image{
     double fstart, fstop;
     std::string IMAGE_TOPIC;
     Mat src, src_hsv, dst;
-    Ptr<aruco::Dictionary> dicitonary = aruco::getPredefinedDicionary(aruco::DICT_4X4_50);
+    Ptr<aruco::Dictionary> dictionary = aruco::getPredefinedDictionary(aruco::DICT_4X4_50);
 };
 
 
@@ -83,7 +83,7 @@ class Image{
  int main(int argc, char* argv[]){
     ros::init(argc, argv, "roscpp_example");
     Image img;
-    if(!mg.src,empty()){
+    if(!img.src,empty()){
         img.aruco_marker_detector();
     }
     ros::spin();
