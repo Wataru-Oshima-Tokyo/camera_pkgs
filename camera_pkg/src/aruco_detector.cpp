@@ -21,10 +21,11 @@ class Image{
    Image(){
         ros::NodeHandle private_nh("~");
         private_nh.param("image_topic", IMAGE_TOPIC, std::string("/usb_cam/image_raw"));  
+        private_nh.param("video_path", VIDEO_PATH, std::string("")); 
      };
 	 ~Image(){};
     ros::NodeHandle nh;
-    ros::Subscriber image = nh.subscribe("/usb_cam/image_raw", 1000, &Image::image_callback, this);
+    ros::Subscriber image = nh.subscribe("/usb_cam/image_raw-", 1000, &Image::image_callback, this);
 
 
 
@@ -57,20 +58,33 @@ class Image{
     }
 
     void aruco_marker_detector(){
-        Mat imageCopy;
-        std::vector<int> ids;
-        std::vector<std::vector<cv::Point2f> > corners;
-        aruco::detectMarkers(src, dictionary, corners, ids);
-        // if at least one marker detected
-        if (ids.size() > 0)
-            cv::aruco::drawDetectedMarkers(imageCopy, corners, ids);
-        imshow("out", imageCopy);
-        waitKey(3);
+        VideoCapture cap(VIDEO_PATH);
+        if(!cap.isOpened()){
+            cout << "Error opening video stream or file" << endl;
+            return -1;
+        }
+        while(1){
+            Mat frame;
+            cap >> frame;
+            Mat imageCopy;
+            std::vector<int> ids;
+            std::vector<std::vector<cv::Point2f> > corners;
+            aruco::detectMarkers(frame, dictionary, corners, ids);
+            // if at least one marker detected
+            if (ids.size() > 0)
+                cv::aruco::drawDetectedMarkers(imageCopy, corners, ids);
+            imshow("original", imageCopy);
+            imshow("out", imageCopy);
+            waitKey(3);
+        }
+        
+
     }
 
     struct timespec start, stop;
     double fstart, fstop;
     std::string IMAGE_TOPIC;
+    std::string VIDEO_PATH;
     Mat src, src_hsv, dst;
     Ptr<aruco::Dictionary> dictionary = aruco::getPredefinedDictionary(aruco::DICT_4X4_50);
 };
@@ -83,9 +97,10 @@ class Image{
  int main(int argc, char* argv[]){
     ros::init(argc, argv, "roscpp_example");
     Image img;
-    if(!img.src.empty()){
-        img.aruco_marker_detector();
-    }
+    // if(!img.src.empty()){
+    //     img.aruco_marker_detector();
+    // }
+    img.aruco_marker_detector();
     ros::spin();
     destroyAllWindows();
     return 0;

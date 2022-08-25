@@ -1,6 +1,6 @@
 <launch>
   <arg name="image_topic" default="/usb_cam/image_raw"/>  
-  
+  <arg name="video_path" default="$(find camera_pkg)/videos/ar_marker.mp4"/>  
   <node name="usb_cam" pkg="usb_cam" type="usb_cam_node" output="screen" >
     <param name="video_device" value="/dev/video0" />
     <param name="image_width" value="640" />
@@ -15,5 +15,6 @@
   </node> -->
   <node name="aruco_detector" pkg="camera_pkg" type="aruco_detector" respawn="false" output="screen">
     <param name="image_topic" value="$(arg image_topic)" />
+    <param name="video_path" value="$(arg video_path)" />
   </node>
 </launch>
