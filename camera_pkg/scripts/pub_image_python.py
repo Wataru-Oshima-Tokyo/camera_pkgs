@@ -12,7 +12,8 @@ if __name__ == "__main__":
 
     VideoRaw = rospy.Publisher('usb_cam/color/image', Image, queue_size=10)
 
-    cam = cv2.VideoCapture(3)
+    cam = cv2.VideoCapture(0)
+    #cam = cv2.VideoCapture('/dev/usbcam')
     if cam.isOpened(): 
         w  = int(cam.get(cv2.CAP_PROP_FRAME_WIDTH)) # float `width`
         h = int(cam.get(cv2.CAP_PROP_FRAME_HEIGHT))  # float `height`
