@@ -25,7 +25,7 @@ class Image{
      };
 	 ~Image(){};
     ros::NodeHandle nh;
-    ros::Subscriber image = nh.subscribe("/usb_cam/image_raw-", 1000, &Image::image_callback, this);
+    ros::Subscriber image = nh.subscribe("/usb_cam/image_raw", 1000, &Image::image_callback, this);
 
 
 
