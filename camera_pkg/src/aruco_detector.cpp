@@ -98,8 +98,10 @@ class Image{
     // if(!img.src.empty()){
         
     // }
-    img.aruco_marker_detector();
-    ros::spin();
+    while(ros::ok()){
+        img.aruco_marker_detector();
+        ros::spinOnce();
+    }
     destroyAllWindows();
     return 0;
  }
