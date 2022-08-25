@@ -23,7 +23,7 @@ class Image{
                 private_nh.param("image_topic", IMAGE_TOPIC, std::string("/usb_cam/image_raw"));  
                 private_nh.param("calibration_path", CALIBRATION, std::string(""));            
                 cv::FileStorage fs(CALIBRATION, cv::FileStorage::READ);  
-                std::cout << CALIBRATION << std::endl;  
+                std::cout << "calibration path: " <<  CALIBRATION << std::endl;  
                 fs["camera_matrix"] >> camera_matrix;
                 fs["distortion_coefficients"] >> dist_coeffs;
                 std::cout << "camera_matrix\n" << camera_matrix << std::endl;
