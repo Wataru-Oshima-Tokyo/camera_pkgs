@@ -21,8 +21,12 @@ class Image{
         Image(){
                 ros::NodeHandle private_nh("~");
                 private_nh.param("image_topic", IMAGE_TOPIC, std::string("/usb_cam/image_raw"));  
-                private_nh.param("calibration_path", CALIBRATION, std::string("")); 
-                cv::FileStorage fs(CALIBRATION, cv::FileStorage::READ);
+                private_nh.param("calibration_path", CALIBRATION, std::string(""));            
+                cv::FileStorage fs(CALIBRATION, cv::FileStorage::READ);    
+                fs["camera_matrix"] >> camera_matrix;
+                fs["distortion_coefficients"] >> dist_coeffs;
+                std::cout << "camera_matrix\n" << camera_matrix << std::endl;
+                std::cout << "\ndist coeffs\n" << dist_coeffs << std::endl;
             };
 	//  ~Image(){};
     
@@ -69,10 +73,43 @@ class Image{
         std::vector<std::vector<cv::Point2f> > corners;
         aruco::detectMarkers(src, dictionary, corners, ids);
         // if at least one marker detected
-        if (ids.size() > 0){
-            printf("detected\n");
-            aruco::drawDetectedMarkers(imageCopy, corners, ids);
-        }
+        // if (ids.size() > 0){
+        //     printf("detected\n");
+        //     aruco::drawDetectedMarkers(imageCopy, corners, ids);
+        // }
+        std::vector<cv::Vec3d> rvecs, tvecs;
+        cv::aruco::estimatePoseSingleMarkers(corners, 0.05, camera_matrix, dist_coeffs, rvecs, tvecs);
+        for(int i=0; i < ids.size(); i++)
+        {
+            cv::aruco::drawAxis(imageCopy, camera_matrix, dist_coeffs,
+                    rvecs[i], tvecs[i], 0.1);
+
+            // This section is going to print the data for all the detected
+            // markers. If you have more than a single marker, it is
+            // recommended to change the below section so that either you
+            // only print the data for a specific marker, or you print the
+            // data for each marker separately.
+            vector_to_marker.str(std::string());
+            vector_to_marker << std::setprecision(4)
+                                << "x: " << std::setw(8) << tvecs[0](0);
+            cv::putText(imageCopy, vector_to_marker.str(),
+                        cv::Point(10, 30), cv::FONT_HERSHEY_SIMPLEX, 0.6,
+                        cv::Scalar(0, 252, 124), 1, CV_AVX);
+
+            vector_to_marker.str(std::string());
+            vector_to_marker << std::setprecision(4)
+                                << "y: " << std::setw(8) << tvecs[0](1);
+            cv::putText(imageCopy, vector_to_marker.str(),
+                        cv::Point(10, 50), cv::FONT_HERSHEY_SIMPLEX, 0.6,
+                        cv::Scalar(0, 252, 124), 1, CV_AVX);
+
+            vector_to_marker.str(std::string());
+            vector_to_marker << std::setprecision(4)
+                                << "z: " << std::setw(8) << tvecs[0](2);
+            cv::putText(imageCopy, vector_to_marker.str(),
+                        cv::Point(10, 70), cv::FONT_HERSHEY_SIMPLEX, 0.6,
+                        cv::Scalar(0, 252, 124), 1, CV_AVX);
+        }        
         imshow("original", src);
         if(!imageCopy.empty())
             imshow("out", imageCopy);
