@@ -22,9 +22,9 @@ class Image{
         ros::NodeHandle private_nh("~");
         private_nh.param("image_topic", IMAGE_TOPIC, std::string("/usb_cam/image_raw"));  
      };
-	//  ~Image(){};
+	 ~Image(){};
     ros::NodeHandle nh;
-    ros::Subscriber image = nh.subscribe(IMAGE_TOPIC, 1000, &Image::image_callback, this);
+    ros::Subscriber image = nh.subscribe("/usb_cam/image_raw", 1000, &Image::image_callback, this);
 
 
 
