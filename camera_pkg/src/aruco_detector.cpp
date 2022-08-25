@@ -98,7 +98,7 @@ class Image{
     ros::init(argc, argv, "roscpp_example");
     Image img;
     ros::NodeHandle nh;
-    ros::Subscriber image = nh.subscribe("/usb_cam/image_raw", 1000, &Image::image_callback, &img);
+    ros::Subscriber image = nh.subscribe(img.IMAGE_TOPIC, 1000, &Image::image_callback, &img);
     while(ros::ok()){
         if(!img.src.empty())
             img.aruco_marker_detector();
