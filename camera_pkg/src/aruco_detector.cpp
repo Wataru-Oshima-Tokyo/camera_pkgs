@@ -65,10 +65,10 @@ class Image{
         Mat imageCopy;
         std::vector<int> ids;
         std::vector<std::vector<cv::Point2f> > corners;
-        aruco::detectMarkers(src, dictionary, corners, ids);
-        // if at least one marker detected
-        if (ids.size() > 0)
-            cv::aruco::drawDetectedMarkers(imageCopy, corners, ids);
+        // aruco::detectMarkers(src, dictionary, corners, ids);
+        // // if at least one marker detected
+        // if (ids.size() > 0)
+        //     cv::aruco::drawDetectedMarkers(imageCopy, corners, ids);
         // imshow("original", src);
         // imshow("out", imageCopy);
         // waitKey(3);
