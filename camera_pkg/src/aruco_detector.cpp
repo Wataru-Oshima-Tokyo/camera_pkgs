@@ -81,8 +81,7 @@ class Image{
         cv::aruco::estimatePoseSingleMarkers(corners, 0.05, camera_matrix, dist_coeffs, rvecs, tvecs);
         for(int i=0; i < ids.size(); i++)
         {
-            cv::aruco::drawAxis(imageCopy, camera_matrix, dist_coeffs,
-                    rvecs[i], tvecs[i], 0.1);
+            cv::drawFrameAxes(imageCopy, camera_matrix, dist_coeffs, rvecs[i], tvecs[i], 0.1);
 
             // This section is going to print the data for all the detected
             // markers. If you have more than a single marker, it is
@@ -124,6 +123,7 @@ class Image{
     std::string IMAGE_TOPIC;
     std::string CALIBRATION;
     Mat src, src_hsv, dst, camera_matrix, dist_coeffs;
+    std::ostringstream vector_to_marker
     Ptr<aruco::Dictionary> dictionary = aruco::getPredefinedDictionary(aruco::DICT_4X4_50);
 };
 
