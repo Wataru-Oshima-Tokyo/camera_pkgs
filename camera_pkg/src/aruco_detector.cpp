@@ -22,7 +22,7 @@ class Image{
                 ros::NodeHandle private_nh("~");
                 private_nh.param("image_topic", IMAGE_TOPIC, std::string("/usb_cam/image_raw"));  
                 private_nh.param("calibration_path", CALIBRATION, std::string("")); 
-                printf("%s", CALIBRATION);
+                cv::FileStorage fs(CALIBRATION, cv::FileStorage::READ);
             };
 	//  ~Image(){};
     
@@ -86,7 +86,7 @@ class Image{
     double fstart, fstop;
     std::string IMAGE_TOPIC;
     std::string CALIBRATION;
-    Mat src, src_hsv, dst;
+    Mat src, src_hsv, dst, camera_matrix, dist_coeffs;
     Ptr<aruco::Dictionary> dictionary = aruco::getPredefinedDictionary(aruco::DICT_4X4_50);
 };
 
