@@ -59,8 +59,8 @@ class Image{
 
     void aruco_marker_detector(){
         std::string video_path = "/home/jetson-nano/catkin_ws/src/camera_pkgs/camera_pkg/videos/ar_marker.mp4";
-        VideoCapture cap(video_path);
-        printf("%s\n", video_path);
+        VideoCapture cap("/home/jetson-nano/catkin_ws/src/camera_pkgs/camera_pkg/videos/ar_marker.mp4");
+        printf("%s\n", "/home/jetson-nano/catkin_ws/src/camera_pkgs/camera_pkg/videos/ar_marker.mp4"));
         ROS_INFO("%s", video_path);
         if(!cap.isOpened()){
             std::cout << "Error opening video stream or file" << std::endl;
