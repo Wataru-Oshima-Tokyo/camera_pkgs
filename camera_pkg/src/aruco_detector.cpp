@@ -123,7 +123,7 @@ class Image{
     std::string IMAGE_TOPIC;
     std::string CALIBRATION;
     Mat src, src_hsv, dst, camera_matrix, dist_coeffs;
-    std::ostringstream vector_to_marker
+    std::ostringstream vector_to_marker;
     Ptr<aruco::Dictionary> dictionary = aruco::getPredefinedDictionary(aruco::DICT_4X4_50);
 };
 
