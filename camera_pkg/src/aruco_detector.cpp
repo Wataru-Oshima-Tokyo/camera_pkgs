@@ -17,17 +17,18 @@ using namespace cv;
 
 
 class Image{
-   public:
-    ros::NodeHandle nh;
-    ros::Subscriber image = nh.subscribe(IMAGE_TOPIC, 1000, &Image::image_callback, this);
-
-	 Image(){
+   public:	 
+   Image(){
         ros::NodeHandle private_nh("~");
         private_nh.param("image_topic", IMAGE_TOPIC, std::string("/usb_cam/image_raw"));
         
         
      };
 	 ~Image(){};
+    ros::NodeHandle nh;
+    ros::Subscriber image = nh.subscribe(IMAGE_TOPIC, 1000, &Image::image_callback, this);
+
+
 
     void image_callback(const sensor_msgs::ImageConstPtr& msg){
         clock_gettime(CLOCK_MONOTONIC, &start); fstart=(double)start.tv_sec + ((double)start.tv_nsec/1000000000.0);
