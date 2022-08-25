@@ -53,36 +53,31 @@ class Image{
         std::string fps= "FPS: " + std::to_string(1/(fstop-fstart));
 
         putText(src, fps,Point(10, 30), FONT_HERSHEY_DUPLEX,1.0,Scalar(118, 185, 0), 2);
-        cv::imshow("src", src);
-        cv::waitKey(3);
+        // cv::imshow("src", src);
+        // cv::waitKey(3);
     }
 
     void aruco_marker_detector(){
-        std::string video_path = "/home/jetson-nano/catkin_ws/src/camera_pkgs/camera_pkg/videos/ar_marker.mp4";
-        VideoCapture cap(video_path);
-        printf("%s\n", video_path);
-        ROS_INFO_STREAM("video path " << video_path);
-        if(!cap.isOpened()){
-            std::cout << "Error opening video stream or file" << std::endl;
+        if(initial){
+            ROS_INFO_STREAM("start detecting");
+            initial = false;
         }
-        while(1){
-            Mat frame;
-            cap >> frame;
-            Mat imageCopy;
-            std::vector<int> ids;
-            std::vector<std::vector<cv::Point2f> > corners;
-            aruco::detectMarkers(frame, dictionary, corners, ids);
-            // if at least one marker detected
-            if (ids.size() > 0)
-                cv::aruco::drawDetectedMarkers(imageCopy, corners, ids);
-            imshow("original", imageCopy);
-            imshow("out", imageCopy);
-            waitKey(3);
-        }
+            
+        Mat imageCopy;
+        std::vector<int> ids;
+        std::vector<std::vector<cv::Point2f> > corners;
+        aruco::detectMarkers(src, dictionary, corners, ids);
+        // if at least one marker detected
+        if (ids.size() > 0)
+            cv::aruco::drawDetectedMarkers(imageCopy, corners, ids);
+        imshow("original", src);
+        imshow("out", imageCopy);
+        waitKey(3);
         
 
     }
 
+    bool initial = true;
     struct timespec start, stop;
     double fstart, fstop;
     std::string IMAGE_TOPIC;
