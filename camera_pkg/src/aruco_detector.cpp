@@ -23,7 +23,7 @@ class Image{
         private_nh.param("image_topic", IMAGE_TOPIC, std::string("/usb_cam/image_raw"));  
         private_nh.param("video_path", VIDEO_PATH, std::string("")); 
      };
-	 ~Image(){};
+	//  ~Image(){};
     
 
 
@@ -53,6 +53,7 @@ class Image{
 
         putText(src, fps,Point(10, 30), FONT_HERSHEY_DUPLEX,1.0,Scalar(118, 185, 0), 2);
         cv::imshow("src", src);
+        aruco_marker_detector();
         cv::waitKey(3);
     }
 
