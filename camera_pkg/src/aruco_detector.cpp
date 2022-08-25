@@ -18,12 +18,14 @@ using namespace cv;
 
 class Image{
    public:
+    ros::NodeHandle nh;
+    ros::Subscriber image = nh.subscribe(IMAGE_TOPIC, 1000, &Image::image_callback, this);
 
 	 Image(){
         ros::NodeHandle private_nh("~");
         private_nh.param("image_topic", IMAGE_TOPIC, std::string("/usb_cam/image_raw"));
-        ros::NodeHandle nh;
-        ros::Subscriber image = nh.subscribe(IMAGE_TOPIC, 1000, &Image::image_callback, this);
+        
+        
      };
 	 ~Image(){};
 
@@ -66,7 +68,6 @@ class Image{
         imshow("out", imageCopy);
         waitKey(3);
     }
-
 
     struct timespec start, stop;
     double fstart, fstop;
