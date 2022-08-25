@@ -59,6 +59,7 @@ class Image{
 
     void aruco_marker_detector(){
         VideoCapture cap(VIDEO_PATH);
+        ROSINFO("%s", VIDEO_PATH)
         if(!cap.isOpened()){
             std::cout << "Error opening video stream or file" << std::endl;
         }
