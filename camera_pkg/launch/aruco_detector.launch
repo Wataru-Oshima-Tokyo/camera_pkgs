@@ -13,7 +13,7 @@
     <remap from="image" to="/usb_cam/image_raw"/>
     <param name="autosize" value="true" />
   </node> -->
-  <node name="aruco_detector" pkg="camera_pkg" type="aruco_detector" spawn="false" output="screen">
+  <node name="aruco_detector" pkg="camera_pkg" type="aruco_detector" respawn="false" output="screen">
     <param name="image_topic" value="$(arg image_topic)" />
   </node>
 </launch>
