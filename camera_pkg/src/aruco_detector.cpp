@@ -1,6 +1,6 @@
 
-  #include <ros/ros.h>
-
+#include <ros/ros.h>
+#include <iostream>
  // Include opencv2
  #include <opencv2/imgproc/imgproc.hpp>
  #include <opencv2/highgui/highgui.hpp>
@@ -60,8 +60,7 @@ class Image{
     void aruco_marker_detector(){
         VideoCapture cap(VIDEO_PATH);
         if(!cap.isOpened()){
-            cout << "Error opening video stream or file" << endl;
-            return -1;
+            std::cout << "Error opening video stream or file" << std::endl;
         }
         while(1){
             Mat frame;
