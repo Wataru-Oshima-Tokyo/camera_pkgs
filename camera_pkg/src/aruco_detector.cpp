@@ -70,8 +70,8 @@ class Image{
         // if at least one marker detected
         if (ids.size() > 0)
             cv::aruco::drawDetectedMarkers(imageCopy, corners, ids);
-        imshow("original", src);
-        imshow("out", imageCopy);
+        // imshow("original", src);
+        // imshow("out", imageCopy);
         waitKey(3);
         
 
