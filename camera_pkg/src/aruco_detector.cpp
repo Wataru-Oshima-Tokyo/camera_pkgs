@@ -24,8 +24,7 @@ class Image{
         private_nh.param("video_path", VIDEO_PATH, std::string("")); 
      };
 	 ~Image(){};
-    ros::NodeHandle nh;
-    ros::Subscriber image = nh.subscribe("/usb_cam/image_raw", 1000, &Image::image_callback, this);
+    
 
 
 
@@ -94,6 +93,8 @@ class Image{
  int main(int argc, char* argv[]){
     ros::init(argc, argv, "roscpp_example");
     Image img;
+    ros::NodeHandle nh;
+    ros::Subscriber image = nh.subscribe("/usb_cam/image_raw", 1000, &Image::image_callback, &img);
     if(!img.src.empty()){
         img.aruco_marker_detector();
     }
