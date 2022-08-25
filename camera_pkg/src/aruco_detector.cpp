@@ -53,8 +53,8 @@ class Image{
         std::string fps= "FPS: " + std::to_string(1/(fstop-fstart));
 
         putText(src, fps,Point(10, 30), FONT_HERSHEY_DUPLEX,1.0,Scalar(118, 185, 0), 2);
-        // cv::imshow("src", src);
-        // cv::waitKey(3);
+        cv::imshow("src", src);
+        cv::waitKey(3);
     }
 
     void aruco_marker_detector(){
