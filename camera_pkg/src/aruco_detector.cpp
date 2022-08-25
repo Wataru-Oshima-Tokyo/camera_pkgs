@@ -61,7 +61,7 @@ class Image{
             
         //     initial = false;
         // }
-        ROS_INFO_STREAM("start detecting");  
+        printf("start detecting\n");  
         Mat imageCopy;
         std::vector<int> ids;
         std::vector<std::vector<cv::Point2f> > corners;
