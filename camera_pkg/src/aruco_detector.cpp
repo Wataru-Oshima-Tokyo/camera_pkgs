@@ -69,11 +69,9 @@ class Image{
         aruco::detectMarkers(src, dictionary, corners, ids);
         // if at least one marker detected
         if (ids.size() > 0){
-            ROS_INFO_STREAM("detected");
+            printf("detected\n");
             aruco::drawDetectedMarkers(imageCopy, corners, ids);
         }
-            
-
         imshow("original", src);
         if(!imageCopy.empty())
             imshow("out", imageCopy);
@@ -101,9 +99,6 @@ class Image{
     Image img;
     ros::NodeHandle nh;
     ros::Subscriber image = nh.subscribe("/usb_cam/image_raw", 1000, &Image::image_callback, &img);
-    // if(!img.src.empty()){
-        
-    // }
     while(ros::ok()){
         if(!img.src.empty())
             img.aruco_marker_detector();
