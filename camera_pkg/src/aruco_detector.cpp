@@ -61,7 +61,7 @@ class Image{
         std::string video_path = "/home/jetson-nano/catkin_ws/src/camera_pkgs/camera_pkg/videos/ar_marker.mp4";
         VideoCapture cap(video_path);
         printf("%s\n", video_path);
-        ROS_INFO("%s", video_path);
+        ROS_INFO_STREAM("video path " << video_path);
         if(!cap.isOpened()){
             std::cout << "Error opening video stream or file" << std::endl;
         }
