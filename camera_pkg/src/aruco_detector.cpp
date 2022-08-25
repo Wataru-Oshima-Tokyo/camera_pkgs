@@ -53,7 +53,6 @@ class Image{
 
         putText(src, fps,Point(10, 30), FONT_HERSHEY_DUPLEX,1.0,Scalar(118, 185, 0), 2);
         cv::imshow("src", src);
-        aruco_marker_detector();
         cv::waitKey(3);
     }
 
@@ -72,7 +71,7 @@ class Image{
             cv::aruco::drawDetectedMarkers(imageCopy, corners, ids);
         // imshow("original", src);
         // imshow("out", imageCopy);
-        waitKey(3);
+        // waitKey(3);
         
 
     }
@@ -96,9 +95,10 @@ class Image{
     Image img;
     ros::NodeHandle nh;
     ros::Subscriber image = nh.subscribe("/usb_cam/image_raw", 1000, &Image::image_callback, &img);
-    if(!img.src.empty()){
-        img.aruco_marker_detector();
-    }
+    // if(!img.src.empty()){
+        
+    // }
+    img.aruco_marker_detector();
     ros::spin();
     destroyAllWindows();
     return 0;
