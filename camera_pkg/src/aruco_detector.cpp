@@ -58,11 +58,11 @@ class Image{
     }
 
     void aruco_marker_detector(){
-        if(initial){
-            ROS_INFO_STREAM("start detecting");
-            initial = false;
-        }
+        // if(initial){
             
+        //     initial = false;
+        // }
+        ROS_INFO_STREAM("start detecting");  
         Mat imageCopy;
         std::vector<int> ids;
         std::vector<std::vector<cv::Point2f> > corners;
