@@ -343,9 +343,11 @@ void OUTLET_CV::depth_callback(const sensor_msgs::ImageConstPtr& msg){
 
 void OUTLET_CV::aruco_marker_detector(){         
     Mat imageCopy;
-    src.copyTo(imageCopy);
-    aruco::detectMarkers(src, dictionary, corners, ids);
-    
+    u_src.copyTo(imageCopy);
+    if(initial)
+        aruco::detectMarkers(src, dictionary, corners, ids);
+    else
+        aruco::detectMarkers(u_src, dictionary, corners, ids);
     // if at least one marker detected
     if (ids.size() > 0){
         printf("detected\n");
@@ -372,13 +374,16 @@ void OUTLET_CV::aruco_marker_detector(){
                 coordinate.z = 0;
             }
             pub.publish(coordinate);
+            // I should put actionlib here 
+            initial = false;
         }
-        initial = false;
+        
     }
-    std::vector<cv::Vec3d> rvecs, tvecs;
-    cv::aruco::estimatePoseSingleMarkers(corners, 0.05, camera_matrix, dist_coeffs, rvecs, tvecs);
-    for(int i=0; i < ids.size(); i++)
-    {
+    if(!initial){
+        std::vector<cv::Vec3d> rvecs, tvecs;
+        cv::aruco::estimatePoseSingleMarkers(corners, 0.05, camera_matrix, dist_coeffs, rvecs, tvecs);
+        for(int i=0; i < ids.size(); i++)
+        {
         cv::drawFrameAxes(imageCopy, camera_matrix, dist_coeffs, rvecs[i], tvecs[i], 0.1);
 
         // This section is going to print the data for all the detected
@@ -406,12 +411,12 @@ void OUTLET_CV::aruco_marker_detector(){
         cv::putText(imageCopy, vector_to_marker.str(),
                     cv::Point(10, 70), cv::FONT_HERSHEY_SIMPLEX, 0.6,
                     cv::Scalar(0, 252, 124), 1, CV_AVX);
-    }        
-    imshow("original", src);
-    if(!imageCopy.empty())
-        imshow("out", imageCopy);
-    waitKey(3);
-    
+        }        
+        imshow("original", u_src);
+        if(!imageCopy.empty())
+            imshow("out", imageCopy);
+        waitKey(3);
+    }
 
 }
 
@@ -443,6 +448,7 @@ int main( int argc, char** argv )
         if(cc.getRun()){
             cc.aruco_marker_detector();
         }
+      imshow("src", cc.src);
       waitKey(3);      
       }
       ros::spinOnce();
