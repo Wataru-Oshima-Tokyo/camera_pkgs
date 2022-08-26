@@ -412,7 +412,7 @@ void OUTLET_CV::aruco_marker_detector(){
                     cv::Point(10, 70), cv::FONT_HERSHEY_SIMPLEX, 0.6,
                     cv::Scalar(0, 252, 124), 1, CV_AVX);
         }        
-        cv::namedWindow("out", cv::WINDOW_NORMAL)
+        cv::namedWindow("out", cv::WINDOW_NORMAL);
         cv::resizeWindow("out", 640,480);
         imshow("out", imageCopy);
         waitKey(3);
