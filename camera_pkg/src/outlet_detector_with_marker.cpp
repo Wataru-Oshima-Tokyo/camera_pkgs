@@ -334,7 +334,6 @@ void OUTLET_CV::depth_callback(const sensor_msgs::ImageConstPtr& msg){
     }
 
     u_src = cv_ptr->image;
-    u_ROI =u_src;
     u_w = u_src.size().width;
     u_h = u_src.size().height;
 
@@ -361,16 +360,16 @@ void OUTLET_CV::aruco_marker_detector(){
             }
             std::sort(z_array.begin(), z_array.end());
             z = z_array[z_array.size()/2-1]; 
-            z = cc->depth.at<uint16_t>((uint16_t)(c_y),(uint16_t)(c_x));
-            cc->coordinate.t = "L";
-            cc->coordinate.x = c_x;
-            cc->coordinate.y = c_y;
-            if(cc->coordinate.x !=0 && cc->coordinate.y!=0){
-                cc->coordinate.z = z;
+            z = depth.at<uint16_t>((uint16_t)(c_y),(uint16_t)(c_x));
+            coordinate.t = "L";
+            coordinate.x = c_x;
+            coordinate.y = c_y;
+            if(coordinate.x !=0 && coordinate.y!=0){
+                coordinate.z = z;
             }else{
-                cc->coordinate.z =0;
+                coordinate.z = 0;
             }
-            cc->pub.publish(coordinate);
+            pub.publish(coordinate);
         }
         initial = false;
     }
