@@ -123,6 +123,8 @@ OUTLET_CV::OUTLET_CV(){
     private_nh.param("usbcam_topic", USBCAM_TOPIC, std::string("/usb_cam/color/image"));
     private_nh.param("offset_fixed_x", fixed_x, 161.0);
     private_nh.param("offset_fixed_y", fixed_y, 200.0);
+    private_nh.param("calibration_path", CALIBRATION, std::string(""));
+    std::cout << "calibration path: " <<  CALIBRATION << std::endl; 
     cv::FileStorage fs;
     fs.open(CALIBRATION, cv::FileStorage::READ); 
     if (!fs.isOpened())
