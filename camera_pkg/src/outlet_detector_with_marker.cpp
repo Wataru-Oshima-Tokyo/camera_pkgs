@@ -38,6 +38,9 @@ class OUTLET_CV{
     Mat src, dst; //for the first camera
     Mat u_src, u_dst ; // for the second camera
     Mat depth; //for the depth cammera
+    Mat camera_matrix, dist_coeffs;
+    std::ostringstream vector_to_marker;
+    Ptr<aruco::Dictionary> dictionary = aruco::getPredefinedDictionary(aruco::DICT_4X4_50);
     ros::Publisher pub, cmd_vel_pub;
     ros::Subscriber image_sub, depth_sub, mg400_sub, usbcam_sub, mg400_status;
     ros::NodeHandle nh;
@@ -96,11 +99,10 @@ class OUTLET_CV{
     double fixed_x,fixed_y;//88.0;
     double c_x,c_y;
 private:
+    bool initial = true;    
     bool RUN = false; 
     double detect_probability =0.0;
     bool detected=false;
-    bool start_call = true;
-    bool stop_call = false;
     const int ratio = 3;
     //set the kernel size 3
     const int kernel_size = 3;
@@ -109,19 +111,28 @@ private:
     int timer = 1.5;
     int offset_x_counter =0;
     int offset_y_counter =0;
-    bool circle_detected = false;
+    std::string CALIBRATION;
 };
 
 
 OUTLET_CV::OUTLET_CV(){
   
-  ros::NodeHandle private_nh("~");
-  private_nh.param("image_topic", IMAGE_TOPIC, std::string("/camera/color/image_raw"));
-  private_nh.param("depth_topic", DEPTH_TOPIC, std::string("/camera/aligned_depth_to_color/image_raw"));
-  private_nh.param("usbcam_topic", USBCAM_TOPIC, std::string("/usb_cam/color/image"));
-  private_nh.param("offset_fixed_x", fixed_x, 161.0);
-  private_nh.param("offset_fixed_y", fixed_y, 200.0);
-  lowThreshold = 6;
+    ros::NodeHandle private_nh("~");
+    private_nh.param("image_topic", IMAGE_TOPIC, std::string("/camera/color/image_raw"));
+    private_nh.param("depth_topic", DEPTH_TOPIC, std::string("/camera/aligned_depth_to_color/image_raw"));
+    private_nh.param("usbcam_topic", USBCAM_TOPIC, std::string("/usb_cam/color/image"));
+    private_nh.param("offset_fixed_x", fixed_x, 161.0);
+    private_nh.param("offset_fixed_y", fixed_y, 200.0);
+    cv::FileStorage fs;
+    fs.open(CALIBRATION, cv::FileStorage::READ); 
+    if (!fs.isOpened())
+    {
+        std::cout << "Failed to open " << CALIBRATION << std::endl;
+    }
+    fs["camera_matrix"] >> camera_matrix;
+    fs["distortion_coefficients"] >> dist_coeffs;
+    std::cout << "camera_matrix\n" << camera_matrix << std::endl;
+    std::cout << "\ndist coeffs\n" << dist_coeffs << std::endl;
 };
 
 OUTLET_CV::~OUTLET_CV(){};
