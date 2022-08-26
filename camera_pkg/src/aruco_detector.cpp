@@ -84,7 +84,7 @@ class Image{
         if (ids.size() > 0){
             printf("detected\n");
             aruco::drawDetectedMarkers(imageCopy, corners, ids);
-            std::cout << "top left: " << corners[0].x << ", " << corners[0].y<< std::endl;
+            std::cout << "top left: " << corners[0][0].x << ", " << corners[0][0].y<< std::endl;
         }
         std::vector<cv::Vec3d> rvecs, tvecs;
         cv::aruco::estimatePoseSingleMarkers(corners, 0.05, camera_matrix, dist_coeffs, rvecs, tvecs);
