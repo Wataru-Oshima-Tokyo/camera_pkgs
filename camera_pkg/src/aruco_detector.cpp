@@ -25,10 +25,15 @@ class Image{
                 std::cout << "calibration path: " <<  CALIBRATION << std::endl;            
                 cv::FileStorage fs;
                 fs.open(CALIBRATION, cv::FileStorage::READ); 
+                if (!fs.isOpened())
+                {
+                    std::cout << "Failed to open " << CALIBRATION << std::endl;
+                }
                 fs["camera_matrix"] >> camera_matrix;
                 fs["distortion_coefficients"] >> dist_coeffs;
                 std::cout << "camera_matrix\n" << camera_matrix << std::endl;
                 std::cout << "\ndist coeffs\n" << dist_coeffs << std::endl;
+                fs.release();
             };
 	//  ~Image(){};
     
@@ -74,11 +79,13 @@ class Image{
         std::vector<int> ids;
         std::vector<std::vector<cv::Point2f> > corners;
         aruco::detectMarkers(src, dictionary, corners, ids);
+        
         // if at least one marker detected
-        // if (ids.size() > 0){
-        //     printf("detected\n");
-        //     aruco::drawDetectedMarkers(imageCopy, corners, ids);
-        // }
+        if (ids.size() > 0){
+            printf("detected\n");
+            aruco::drawDetectedMarkers(imageCopy, corners, ids);
+            std::cout << "top left: " << corners[0][x] << ", " << corners[0][y] << std::endl;
+        }
         std::vector<cv::Vec3d> rvecs, tvecs;
         cv::aruco::estimatePoseSingleMarkers(corners, 0.05, camera_matrix, dist_coeffs, rvecs, tvecs);
         for(int i=0; i < ids.size(); i++)
