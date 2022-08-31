@@ -6,6 +6,7 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/aruco.hpp>
+#include <opencv2/calib3d.hpp>
 
  // Include CvBridge, Image Transport, Image msg
  #include <image_transport/image_transport.h>
@@ -20,6 +21,7 @@
 //  #include <object/Coordinate.h>
  #include <camera_pkg_msgs/Coordinate.h>
  #include <map>
+ #include <math.h>
 
 // #include <camera_pkg/Camera_CV.h>
  #define IMG_HEIGHT (240)
@@ -70,6 +72,7 @@ class OUTLET_CV{
     virtual void mg400_callback(const std_msgs::Bool&);
     virtual void usbcam_callback(const sensor_msgs::ImageConstPtr&);
     virtual void aruco_marker_detector();
+    virtual void adjustArm(double &x, double &y, double &z);
     // Topics
     std::string IMAGE_TOPIC;
     std::string DEPTH_TOPIC;
@@ -96,22 +99,27 @@ class OUTLET_CV{
     bool drawing = false;
     bool ADJUST=false;
     double offset_x =0; double offset_y=0; double offset_z=0;
-    double fixed_x,fixed_y;//88.0;
+    double fixed_x,fixed_y, fixed_z;
     double c_x,c_y;
+    bool initial = true;  
+    double Kp;
 private:
-    bool initial = true;    
     bool RUN = false; 
     double detect_probability =0.0;
     bool detected=false;
     const int ratio = 3;
     //set the kernel size 3
     const int kernel_size = 3;
-    bool Done_x = false; bool Done_y = false;
+    bool Done_x = false; bool Done_y = false; bool Done_z = false; bool Done_r= false;
     bool mg400_running = false;
     int timer = 1.5;
     int offset_x_counter =0;
     int offset_y_counter =0;
+    int _counter =0;
+    double angle=0;
+    double threshold_x, threshold_y, threshold_z;
     std::string CALIBRATION;
+    std::vector<double> rvecs_array;
 };
 
 
@@ -121,8 +129,10 @@ OUTLET_CV::OUTLET_CV(){
     private_nh.param("image_topic", IMAGE_TOPIC, std::string("/camera/color/image_raw"));
     private_nh.param("depth_topic", DEPTH_TOPIC, std::string("/camera/aligned_depth_to_color/image_raw"));
     private_nh.param("usbcam_topic", USBCAM_TOPIC, std::string("/usb_cam/color/image"));
-    private_nh.param("offset_fixed_x", fixed_x, 161.0);
-    private_nh.param("offset_fixed_y", fixed_y, 200.0);
+    private_nh.param("offset_fixed_x", fixed_x, -0.075);
+    private_nh.param("offset_fixed_y", fixed_y, -0.04);
+    private_nh.param("offset_fixed_z", fixed_z, 0.37);
+    private_nh.param("Kp", Kp, 30.0);
     private_nh.param("calibration_path", CALIBRATION, std::string(""));
     std::cout << "calibration path: " <<  CALIBRATION << std::endl; 
     cv::FileStorage fs;
@@ -149,99 +159,77 @@ void OUTLET_CV::setRun(bool run){
 
 
 
-// void OUTLET_CV::get_circle(int, void*userdata){
-//   //expand the ROI to detect how off the MG400 is
-//     //GaussianBlur( dst, dst, Size(9, 9), 2, 2 );
-//     geometry_msgs::Twist twist;
-//     std::vector<cv::Vec3f> circles;
-//     cv::HoughCircles(
-//          u_dst,                    // 8ビット，シングルチャンネル，グレースケールの入力画像
-//          circles,                // 検出された円を出力.配列の [ 0, 1 ] に円の中心座標. [2] に円の半径が格納される
-//          cv::HOUGH_GRADIENT,     // cv::HOUGH_GRADIENT メソッドのみ実装されている.
-//          1,                      // 画像分解能に対する出力解像度の比率の逆数
-//          30,                     // 検出される円の中心同士の最小距離
-//          60,                    // Canny() の大きいほうの閾値.勾配がこのパラメータを超えている場合はエッジとして判定
-//          30                      // Canny() の小さいほうの閾値.勾配がこのパラメータを下回っている場合は非エッジとして判定
-//          );
+void OUTLET_CV::adjustArm(double &x, double &y, double &z){
+  //expand the ROI to detect how off the MG400 is
+    //GaussianBlur( dst, dst, Size(9, 9), 2, 2 );
+    geometry_msgs::Twist twist;
+    offset_x = (double)fixed_x - x;
+    offset_y = (double)fixed_y - y;
+    offset_z = (double)fixed_z - z;
+    //比率ゲイン
+    // double Kp_y = 0.01;
+    double Kv = 0.0;
+    double _Kp = Kp;
+    if (Done_r){
+        threshold_x = 0.004;
+        threshold_y = 0.002;
+        threshold_z = 0.01;
+      }else{
+        _Kp *= 3;
+        threshold_x =0.01;
+        threshold_y = 0.01;
+        threshold_z = 0.1;
+    }
+    //PD control
+    double move_x = _Kp*offset_x - Kv*offset_x/1000;
+    double move_y = _Kp*offset_y - Kv*offset_y/1000;
+    double move_z = (_Kp*0.5)*offset_z - Kv*offset_z/1000;
 
-//       for (auto circle : circles)
-//       {
-//           cv::circle(u_dst, cv::Point( circle[0], circle[1] ), circle[2], cv::Scalar(0, 0, 255), 2);
-//           offset_x = (double)fixed_x - circle[0];
-//           offset_y = (double)fixed_y - circle[1];
-//           // printf("\nCircle[0]: %lf, Circle[1]: %lf\n", circle[0], circle[1]);
-//           circle_detected = true;
-//           ROS_INFO("Circles are detected");
-//       }
-
-//       //比率ゲイン
-//       double Kp = 0.05;
-//       // double Kp_y = 0.01;
-//       double Kv = 0.0;
-//       //PD control
-//       double move_x = Kp*offset_x - Kv*offset_x/1000;
-//       double move_y = Kp*offset_y - Kv*offset_y/1000;
-//       // if(Done_x ){
-//       //   twist.linear.y = 0;
-//       //   if (offset_x_counter>3)
-//       //     Done_x = true;
-//       //   offset_x_counter++;
-//       // }else{
-        
-//       // }
-//       // if((std::abs(offset_y)<=0.5  || std::abs(offset_y)>20) ||  Done_y){
-//       //   twist.linear.z = 0;
-//       //   if (offset_y_counter>3)
-//       //     Done_y = true;
-//       //   offset_y_counter++;
-//       // }else{
-//       //   twist.linear.z = move_y;
-//       // }
+    if (!mg400_running && (fstop-fstart)>timer && (!Done_x || !Done_y)){
+      if(!Done_z)
+        twist.linear.x = -move_z; // depth
+      twist.linear.y = move_x; // horizontal 
+      twist.linear.z = move_y; // vertical
       
-//       if (!mg400_running && (fstop-fstart)>timer && (!Done_x || !Done_y)){
-//         twist.linear.y = move_x;
-//         twist.linear.z = move_y;
-//         clock_gettime(CLOCK_MONOTONIC, &timer_start); fstart=(double)timer_start.tv_sec + ((double)timer_start.tv_nsec/1000000000.0);
-//         // printf("\nOffset_x: %lf, Offset_y: %lf\n", offset_x, offset_y);
-//         // printf("\nlinear.y: %lf, linear.z: %lf\n", twist.linear.y, twist.linear.z);
-//         ROS_INFO("\nOffset_x: %lf, Offset_y: %lf\n", offset_x, offset_y);
-//         ROS_INFO("\nlinear.y: %lf, linear.z: %lf\n", twist.linear.y, twist.linear.z);
-//         cmd_vel_pub.publish(twist);
-//         if(std::abs(offset_x)<=0.5){
-//              Done_x = true;
-//         }
-//         if(std::abs(offset_y)<=0.5){
-//              Done_y = true;
-//         }
-//       }
-//       clock_gettime(CLOCK_MONOTONIC, &timer_stop); fstop=(double)timer_stop.tv_sec + ((double)timer_stop.tv_nsec/1000000000.0);
-//       if(!mg400_running && Done_x && Done_y && (fstop-fstart)>timer && circle_detected){
-//         coordinate.t ="F";
-//         coordinate.x = 10;
-//         coordinate.y = 10;
-//         coordinate.z = 10;
-//         pub.publish(coordinate);
-//       }
-        
-      
-//      /*   try{
-//           cv::circle(dst, cv::Point( circles[0][0], circles[0][1] ), circles[0][2], cv::Scalar(0, 0, 255), 2);
-//           offset_x = (double)coordinate.x - circles[0][0];
-//           offset_y = (double)coordinate.y - circles[0][1];
-//           printf("Offset_x: %f, Offset_y: %f", offset_x, offset_y);
-//         } 
-//         catch (std::exception e)
-//         {
-//             printf("A circle is not found\n");
-//         }
-//       */
-//       // cv::circle(u_dst, cv::Point(c_x,c_y), 5, cv::Scalar(0, 0, 255),-1);
+      clock_gettime(CLOCK_MONOTONIC, &timer_start); fstart=(double)timer_start.tv_sec + ((double)timer_start.tv_nsec/1000000000.0);
+      // printf("\nOffset_x: %lf, Offset_y: %lf\n", offset_x, offset_y);
+      // printf("\nlinear.y: %lf, linear.z: %lf\n", twist.linear.y, twist.linear.z);
+      ROS_INFO("\nOffset_x: %lf, Offset_y: %lf, Offset_z: %lf\n", offset_x, offset_y, offset_z);
+      ROS_INFO("\nlinear.x: %lf, linear.y: %lf, linear.z: %lf\n", twist.linear.x, twist.linear.y, twist.linear.z);
+      cmd_vel_pub.publish(twist);
 
-//       cv::namedWindow("dst", 1);
-//       imshow("dst", u_dst);
+      if(std::abs(offset_z)<=threshold_z){
+            Done_z = true;
+      }
+      if(Done_z){
+        if(std::abs(offset_x)<=threshold_x){
+            Done_x = true;
+        }
+        if(std::abs(offset_y)<=threshold_y){
+            Done_y = true;
+        }
+      }
 
-//       cv::waitKey(3);
-// }
+    }
+    clock_gettime(CLOCK_MONOTONIC, &timer_stop); fstop=(double)timer_stop.tv_sec + ((double)timer_stop.tv_nsec/1000000000.0);
+    if(!mg400_running && Done_x && Done_y && (fstop-fstart)>timer && Done_r){
+      coordinate.t ="F";
+      coordinate.x = 10;
+      coordinate.y = 10;
+      coordinate.z = 10;
+      pub.publish(coordinate);
+    }else if(!mg400_running && Done_x && Done_y && (fstop-fstart)>timer && !Done_r ){
+      coordinate.t ="D";
+      coordinate.r = angle;
+      pub.publish(coordinate);
+      Done_r = true;
+      Done_x = false;
+      Done_y = false;
+      Done_z = false;
+      clock_gettime(CLOCK_MONOTONIC, &timer_start); fstart=(double)timer_start.tv_sec + ((double)timer_start.tv_nsec/1000000000.0);
+    }
+    
+}
 
 void OUTLET_CV::mg400_status_callback(const mg400_bringup::RobotStatus& msg){
   if(msg.robot_status == 7){
@@ -339,21 +327,22 @@ void OUTLET_CV::depth_callback(const sensor_msgs::ImageConstPtr& msg){
     u_w = u_src.size().width;
     u_h = u_src.size().height;
 
-    }
+}
 
-void OUTLET_CV::aruco_marker_detector(){         
-    Mat imageCopy;
-    u_src.copyTo(imageCopy);
+void OUTLET_CV::aruco_marker_detector(){          
     if(initial)
         aruco::detectMarkers(src, dictionary, corners, ids);
     else
         aruco::detectMarkers(u_src, dictionary, corners, ids);
     // if at least one marker detected
     if (ids.size() > 0){
-        printf("detected\n");
-        aruco::drawDetectedMarkers(imageCopy, corners, ids);
+        // printf("detected\n");
+        aruco::drawDetectedMarkers(src, corners, ids);
         c_x = (corners[0][0].x + corners[0][1].x)/2;
         c_y = (corners[0][0].y + corners[0][3].y)/2;
+        std::vector<cv::Vec3d> rvecs, tvecs;
+        cv::Mat rot_mat;
+        cv::aruco::estimatePoseSingleMarkers(corners, 0.05, camera_matrix, dist_coeffs, rvecs, tvecs);
         if(initial){
             std::vector<double> z_array;
             double z=0.0;
@@ -373,49 +362,59 @@ void OUTLET_CV::aruco_marker_detector(){
             }else{
                 coordinate.z = 0;
             }
+            coordinate.r = 0;
             pub.publish(coordinate);
-            // I should put actionlib here 
             initial = false;
-        }
+            destroyAllWindows();
+        }else{
+            for(int i=0; i < ids.size(); i++)
+            {
+              cv::drawFrameAxes(u_src, camera_matrix, dist_coeffs, rvecs[0], tvecs[0], 0.1);
+              if (_counter>100){
+                std::sort(rvecs_array.begin(), rvecs_array.end());
+                angle = std::abs(rvecs_array[rvecs_array.size()/2-1]*180/M_PI);
+                std::cout << "angle: " <<std::abs(angle)
+                  <<std::endl;
+                _counter = -1;
+                break;
+              }else if (_counter>=0){
+                rvecs_array.push_back(rvecs[0](2));
+                _counter++;
+                break;
+              }
+
+
+            // This section is going to print the data for all the detected
+            // markers. If you have more than a single marker, it is
+            // recommended to change the below section so that either you
+            // only print the data for a specific marker, or you print the
+            // data for each marker separately.
+            vector_to_marker.str(std::string());
+            vector_to_marker << std::setprecision(4)
+                                << "x: " << std::setw(8) << tvecs[0](0);
+            cv::putText(u_src, vector_to_marker.str(),
+                        cv::Point(10, 30), cv::FONT_HERSHEY_SIMPLEX, 0.6,
+                        cv::Scalar(0, 252, 124), 1, CV_AVX);
+
+            vector_to_marker.str(std::string());
+            vector_to_marker << std::setprecision(4)
+                                << "y: " << std::setw(8) << tvecs[0](1);
+            cv::putText(u_src, vector_to_marker.str(),
+                        cv::Point(10, 50), cv::FONT_HERSHEY_SIMPLEX, 0.6,
+                        cv::Scalar(0, 252, 124), 1, CV_AVX);
+
+            vector_to_marker.str(std::string());
+            vector_to_marker << std::setprecision(4)
+                                << "z: " << std::setw(8) << tvecs[0](2);
+            cv::putText(u_src, vector_to_marker.str(),
+                        cv::Point(10, 70), cv::FONT_HERSHEY_SIMPLEX, 0.6,
+                        cv::Scalar(0, 252, 124), 1, CV_AVX);
+
+            if(!mg400_running)
+              adjustArm(tvecs[0](0), tvecs[0](1), tvecs[0](2));
+            }  
+            }
         
-    }
-    if(!initial){
-        std::vector<cv::Vec3d> rvecs, tvecs;
-        cv::aruco::estimatePoseSingleMarkers(corners, 0.05, camera_matrix, dist_coeffs, rvecs, tvecs);
-        for(int i=0; i < ids.size(); i++)
-        {
-        cv::drawFrameAxes(imageCopy, camera_matrix, dist_coeffs, rvecs[i], tvecs[i], 0.1);
-
-        // This section is going to print the data for all the detected
-        // markers. If you have more than a single marker, it is
-        // recommended to change the below section so that either you
-        // only print the data for a specific marker, or you print the
-        // data for each marker separately.
-        vector_to_marker.str(std::string());
-        vector_to_marker << std::setprecision(4)
-                            << "x: " << std::setw(8) << tvecs[0](0);
-        cv::putText(imageCopy, vector_to_marker.str(),
-                    cv::Point(10, 30), cv::FONT_HERSHEY_SIMPLEX, 0.6,
-                    cv::Scalar(0, 252, 124), 1, CV_AVX);
-
-        vector_to_marker.str(std::string());
-        vector_to_marker << std::setprecision(4)
-                            << "y: " << std::setw(8) << tvecs[0](1);
-        cv::putText(imageCopy, vector_to_marker.str(),
-                    cv::Point(10, 50), cv::FONT_HERSHEY_SIMPLEX, 0.6,
-                    cv::Scalar(0, 252, 124), 1, CV_AVX);
-
-        vector_to_marker.str(std::string());
-        vector_to_marker << std::setprecision(4)
-                            << "z: " << std::setw(8) << tvecs[0](2);
-        cv::putText(imageCopy, vector_to_marker.str(),
-                    cv::Point(10, 70), cv::FONT_HERSHEY_SIMPLEX, 0.6,
-                    cv::Scalar(0, 252, 124), 1, CV_AVX);
-        }        
-        cv::namedWindow("out", cv::WINDOW_NORMAL);
-        cv::resizeWindow("out", 640,480);
-        imshow("out", imageCopy);
-        waitKey(3);
     }
 
 }
@@ -442,13 +441,18 @@ int main( int argc, char** argv )
    std_srvs::Empty _emp;
    clock_gettime(CLOCK_MONOTONIC, &timer_start); fstart=(double)timer_start.tv_sec + ((double)timer_start.tv_nsec/1000000000.0);
    clock_gettime(CLOCK_MONOTONIC, &timer_stop); fstop=(double)timer_stop.tv_sec + ((double)timer_stop.tv_nsec/1000000000.0);
+//    cv::namedWindow("out", cv::WINDOW_NORMAL);
+//    cv::resizeWindow("out", 640,480);
    while(ros::ok()){
       // cout << cc.getRun() << endl;
       if(!cc.src.empty() && !cc.u_src.empty()){
         if(cc.getRun()){
             cc.aruco_marker_detector();
         }
-      imshow("src", cc.src);
+      if(cc.initial)
+        imshow("src", cc.src);
+      else
+        imshow("out", cc.u_src);
       waitKey(3);      
       }
       ros::spinOnce();
