@@ -14,12 +14,4 @@ distortion_coefficients: !!opencv-matrix
    cols: 5
    dt: d
    data: [0.2063336961399207, -0.4711558030734478, 0.01739325806724904, -0.009836413713785255, 0]
-rectification_matrix:
-  rows: 3
-  cols: 3
-  data: [1, 0, 0, 0, 1, 0, 0, 0, 1]
-projection_matrix:
-  rows: 3
-  cols: 4
-  data: [605.0826416015625, 0, 284.0563508120431, 0, 0, 607.5223388671875, 278.6661522531867, 0, 0, 0, 1, 0]
 avg_reprojection_error: 1.2025225757564226e+00
