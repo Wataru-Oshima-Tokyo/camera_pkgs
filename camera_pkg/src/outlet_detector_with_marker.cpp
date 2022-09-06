@@ -100,6 +100,7 @@ class OUTLET_CV{
     double fixed_x,fixed_y, fixed_z;
     double c_x,c_y;
     bool initial = true;  
+    bool final = false;
     double Kp;
 private:
     bool RUN = false; 
@@ -211,11 +212,15 @@ void OUTLET_CV::adjustArm(double &x, double &y, double &z, double &ang){
     }
     clock_gettime(CLOCK_MONOTONIC, &timer_stop); fstop=(double)timer_stop.tv_sec + ((double)timer_stop.tv_nsec/1000000000.0);
     if(!mg400_running && Done_x && Done_y && (fstop-fstart)>timer && Done_r){
-      coordinate.t ="F";
-      coordinate.x = 10;
-      coordinate.y = 10;
-      coordinate.z = 10;
-      pub.publish(coordinate);
+      if (!final){
+        coordinate.t ="F";
+        coordinate.x = 10;
+        coordinate.y = 10;
+        coordinate.z = 10;
+        pub.publish(coordinate);
+        final =true;
+      }
+    clock_gettime(CLOCK_MONOTONIC, &timer_start); fstart=(double)timer_start.tv_sec + ((double)timer_start.tv_nsec/1000000000.0);
     }else if(!mg400_running && Done_x && Done_y && (fstop-fstart)>timer && !Done_r ){
       coordinate.t ="D";
       coordinate.r = angle;
@@ -265,7 +270,7 @@ bool OUTLET_CV::arucodetect_start_service(std_srvs::Empty::Request& req, std_srv
     Done_x = false;
     Done_y = false;
     Done_z = false;
-   coordinate.t ="I";
+   coordinate.t = "I";
    coordinate.x = 10;
    coordinate.y = 10;
    coordinate.z = 10;
@@ -273,11 +278,12 @@ bool OUTLET_CV::arucodetect_start_service(std_srvs::Empty::Request& req, std_srv
    clock_gettime(CLOCK_MONOTONIC, &timer_start); fstart=(double)timer_start.tv_sec + ((double)timer_start.tv_nsec/1000000000.0);
    clock_gettime(CLOCK_MONOTONIC, &timer_stop); fstop=(double)timer_stop.tv_sec + ((double)timer_stop.tv_nsec/1000000000.0);
    ros::Rate _rate(10);
-   while((fstop-fstart)<timer && !mg400_running){
+   while((fstop-fstart)<5 && !mg400_running){
       _rate.sleep();
       clock_gettime(CLOCK_MONOTONIC, &timer_stop); fstop=(double)timer_stop.tv_sec + ((double)timer_stop.tv_nsec/1000000000.0);
    }
    initial=true;
+   final = false;
    _counter=0;
    rvecs_array.clear();
    return RUN;
