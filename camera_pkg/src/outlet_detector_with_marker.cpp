@@ -219,6 +219,7 @@ void OUTLET_CV::adjustArm(double &x, double &y, double &z, double &ang){
         coordinate.z = 10;
         pub.publish(coordinate);
         final =true;
+        destroyAllWindows();
       }
     clock_gettime(CLOCK_MONOTONIC, &timer_start); fstart=(double)timer_start.tv_sec + ((double)timer_start.tv_nsec/1000000000.0);
     }else if(!mg400_running && Done_x && Done_y && (fstop-fstart)>timer && !Done_r ){
