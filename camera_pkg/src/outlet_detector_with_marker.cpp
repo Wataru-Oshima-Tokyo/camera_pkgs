@@ -287,7 +287,7 @@ bool OUTLET_CV::arucodetect_start_service(std_srvs::Empty::Request& req, std_srv
    final = false;
    _counter=0;
    rvecs_array.clear();
-   return RUN;
+   return true;
  }
 
 
