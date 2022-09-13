@@ -61,8 +61,7 @@ class CAMERA_CV{
     // Topics
     std::string IMAGE_TOPIC;
     std::string DEPTH_TOPIC;
-    // const std::string DEPTH_TOPIC = "/camera/depth/color/image_raw";
-    const std::string PUBLISH_TOPIC = "/camera_pkg/coordinate";
+    std::string PUBLISH_TOPIC;
     const std::string IMSHOW_SERVICE_START = "/imshow/start";
     const std::string IMSHOW_SERVICE_STOP = "/imshow/stop";
     const std::string CALIB_SERVICE_START = "/calibration/start";
@@ -88,6 +87,7 @@ CAMERA_CV::CAMERA_CV(){
   ros::NodeHandle private_nh("~");
   private_nh.param("image_topic", IMAGE_TOPIC, std::string("/color/image_rect_raw"));
   private_nh.param("depth_topic", DEPTH_TOPIC, std::string("/depth/image_rect_raw"));
+  private_nh.param("publish_topic", PUBLISH_TOPIC, std::string("/camera_pkg/coordinate"));
   lowThreshold = 6;
 };
 
@@ -337,11 +337,11 @@ int main( int argc, char** argv )
         std::string explain ="Left:robot coordinate Right:image coordinate Center:finishing calibrtion";
         std::string cmd_exp="L:Move R: xy_calibration M: z_calibration";
         if(cc.mode =="L"){
-            if(!cc.calibration)
+            if(!cc.calibration  && !cc.calibration)
               cc.status ="Executing";
-        }else if (cc.mode == "R"){
+        }else if (cc.mode == "R" && !cc.calibration){
             cc.status ="xy_calibration";
-        }else if (cc.mode == "M"){
+        }else if (cc.mode == "M"  && !cc.calibration){
             cc.status ="z_calibration";
         }
         if(cc.calibration){
