@@ -7,6 +7,7 @@
  #include <opencv2/core/core.hpp>
  #include <opencv2/videoio.hpp>
  #include <opencv2/aruco.hpp>
+ #include <opencv2/calib3d.hpp>
 
  // Include CvBridge, Image Transport, Image msg
  #include <image_transport/image_transport.h>
