@@ -43,7 +43,8 @@ class OUTLET_CV{
     Mat camera_matrix, dist_coeffs;
     std::ostringstream vector_to_marker;
     Ptr<aruco::Dictionary> dictionary = aruco::getPredefinedDictionary(aruco::DICT_4X4_50);
-    ros::Publisher pub, cmd_vel_pub;
+
+    ros::Publisher coordinate_pub, mg400_cmd_vel_pub, target_cmd_vel_pub;
     ros::Subscriber image_sub, depth_sub, mg400_sub, usbcam_sub, mg400_status;
     ros::NodeHandle nh;
     camera_pkg_msgs::Coordinate coordinate;
@@ -73,12 +74,14 @@ class OUTLET_CV{
     virtual void usbcam_callback(const sensor_msgs::ImageConstPtr&);
     virtual void aruco_marker_detector();
     virtual void adjustArm(double &x, double &y, double &z, double &ang);
+    virtual bool correct_position(double &);
     // Topics
     std::string IMAGE_TOPIC;
     std::string DEPTH_TOPIC;
     std::string USBCAM_TOPIC;
-    // const std::string DEPTH_TOPIC = "/camera/depth/color/image_raw";
-    const std::string PUBLISH_TOPIC = "/outlet/coordinate";
+    std::string TARGET_CMDVELTOPIC;
+    double adjust_speed;
+    const std::string COORDINATE_PUBLISH_TOPIC = "/outlet/coordinate";
     const std::string MG400_CMD_VEL_TOPIC = "/mg400/cmd_vel";
     const std::string MG400STATUS_TOPIC ="/mg400_bringup/msg/RobotStatus";
     const std::string MG400_TOPIC = "/mg400/working";
@@ -128,10 +131,12 @@ OUTLET_CV::OUTLET_CV(){
     private_nh.param("image_topic", IMAGE_TOPIC, std::string("/camera/color/image_raw"));
     private_nh.param("depth_topic", DEPTH_TOPIC, std::string("/camera/aligned_depth_to_color/image_raw"));
     private_nh.param("usbcam_topic", USBCAM_TOPIC, std::string("/usb_cam/color/image"));
+    private_nh.param("target_cmd_vel", TARGET_CMDVELTOPIC, std::string("cmd_vel"));
     private_nh.param("offset_fixed_x", fixed_x, -0.075);
     private_nh.param("offset_fixed_y", fixed_y, -0.04);
     private_nh.param("offset_fixed_z", fixed_z, 0.37);
     private_nh.param("Kp", Kp, 30.0);
+    private_nh.param("adjust_speed",adjust_speed, 0.05);
     private_nh.param("calibration_path", CALIBRATION, std::string(""));
     std::cout << "calibration path: " <<  CALIBRATION << std::endl; 
     cv::FileStorage fs;
@@ -156,7 +161,23 @@ void OUTLET_CV::setRun(bool run){
     RUN = run;
 }
 
-
+/*
+In case the target aruco marker is out of range from the robot arm 
+If it is holonomic, we can alsot conside adding 
+*/
+bool OUTLET_CV::correct_position(double &x ){
+  // printf("%lf\n", c_x);
+  geometry_msgs::Twist twist;
+  if(x <190){
+    twist.linear.x = adjust_speed;
+  }else if (x>400){
+    twist.linear.x = -adjust_speed;
+  }else{
+    return true;
+  }
+  target_cmd_vel_pub.publish(twist);
+  return false;
+}
 
 void OUTLET_CV::adjustArm(double &x, double &y, double &z, double &ang){
   //expand the ROI to detect how off the MG400 is
@@ -195,7 +216,7 @@ void OUTLET_CV::adjustArm(double &x, double &y, double &z, double &ang){
       // printf("\nlinear.y: %lf, linear.z: %lf\n", twist.linear.y, twist.linear.z);
       ROS_INFO("\nOffset_x: %lf, Offset_y: %lf, Offset_z: %lf\n", offset_x, offset_y, offset_z);
       ROS_INFO("\nlinear.x: %lf, linear.y: %lf, linear.z: %lf\n", twist.linear.x, twist.linear.y, twist.linear.z);
-      cmd_vel_pub.publish(twist);
+      mg400_cmd_vel_pub.publish(twist);
 
       if(std::abs(offset_z)<=threshold_z){
             Done_z = true;
@@ -217,7 +238,7 @@ void OUTLET_CV::adjustArm(double &x, double &y, double &z, double &ang){
         coordinate.x = 10;
         coordinate.y = 10;
         coordinate.z = 10;
-        pub.publish(coordinate);
+        coordinate_pub.publish(coordinate);
         final =true;
         destroyAllWindows();
       }
@@ -225,7 +246,7 @@ void OUTLET_CV::adjustArm(double &x, double &y, double &z, double &ang){
     }else if(!mg400_running && Done_x && Done_y && (fstop-fstart)>timer && !Done_r ){
       coordinate.t ="D";
       coordinate.r = angle;
-      pub.publish(coordinate);
+      coordinate_pub.publish(coordinate);
       Done_r = true;
       Done_x = false;
       Done_y = false;
@@ -234,7 +255,7 @@ void OUTLET_CV::adjustArm(double &x, double &y, double &z, double &ang){
     }else if(!mg400_running && !Done_x &&! Done_y && (fstop-fstart)>timer && Done_r && std::abs(ang) > 5 ){
       coordinate.t = "A";
       coordinate.r = ang;
-      pub.publish(coordinate);
+      coordinate_pub.publish(coordinate);
       clock_gettime(CLOCK_MONOTONIC, &timer_start); fstart=(double)timer_start.tv_sec + ((double)timer_start.tv_nsec/1000000000.0);
     }
     
@@ -275,7 +296,7 @@ bool OUTLET_CV::arucodetect_start_service(std_srvs::Empty::Request& req, std_srv
    coordinate.x = 10;
    coordinate.y = 10;
    coordinate.z = 10;
-   pub.publish(coordinate);
+   coordinate_pub.publish(coordinate);
    clock_gettime(CLOCK_MONOTONIC, &timer_start); fstart=(double)timer_start.tv_sec + ((double)timer_start.tv_nsec/1000000000.0);
    clock_gettime(CLOCK_MONOTONIC, &timer_stop); fstop=(double)timer_stop.tv_sec + ((double)timer_stop.tv_nsec/1000000000.0);
    ros::Rate _rate(10);
@@ -373,29 +394,31 @@ void OUTLET_CV::aruco_marker_detector(){
         std::vector<cv::Vec3d> rvecs, tvecs;
         cv::Mat rot_mat;
         cv::aruco::estimatePoseSingleMarkers(corners, 0.05, camera_matrix, dist_coeffs, rvecs, tvecs);
-        if(initial){
-            std::vector<double> z_array;
-            double z=0.0;
-            rep(i,0,5)
-              rep(j,0,5){
-                z = depth.at<uint16_t>((uint16_t)(c_y+j),(uint16_t)(c_x+i));
-                z_array.push_back(z);
+        if(initial ){
+            if(correct_position(c_x)){
+              std::vector<double> z_array;
+              double z=0.0;
+              rep(i,0,5)
+                rep(j,0,5){
+                  z = depth.at<uint16_t>((uint16_t)(c_y+j),(uint16_t)(c_x+i));
+                  z_array.push_back(z);
+              }
+              std::sort(z_array.begin(), z_array.end());
+              z = z_array[z_array.size()/2-1]; 
+              z = depth.at<uint16_t>((uint16_t)(c_y),(uint16_t)(c_x));
+              coordinate.t = "L";
+              coordinate.x = c_x;
+              coordinate.y = c_y;
+              if(coordinate.x !=0 && coordinate.y!=0){
+                  coordinate.z = z;
+              }else{
+                  coordinate.z = 0;
+              }
+              coordinate.r = 0;
+              coordinate_pub.publish(coordinate);
+              initial = false;
+              destroyAllWindows();
             }
-            std::sort(z_array.begin(), z_array.end());
-            z = z_array[z_array.size()/2-1]; 
-            z = depth.at<uint16_t>((uint16_t)(c_y),(uint16_t)(c_x));
-            coordinate.t = "L";
-            coordinate.x = c_x;
-            coordinate.y = c_y;
-            if(coordinate.x !=0 && coordinate.y!=0){
-                coordinate.z = z;
-            }else{
-                coordinate.z = 0;
-            }
-            coordinate.r = 0;
-            pub.publish(coordinate);
-            initial = false;
-            destroyAllWindows();
         }else{
             for(int i=0; i < ids.size(); i++)
             {
@@ -476,8 +499,9 @@ int main( int argc, char** argv )
 //    cc.darknet_bbox_sub = cc.nh.subscribe(cc.BBOX_TOPIC, 1000, &OUTLET_CV::bbox_callback, &cc);
    cc.pickup_start = cc.nh.advertiseService(cc.ARUCO_DETECT_SERVICE_START, &OUTLET_CV::arucodetect_start_service, &cc);
    cc.pickup_stop = cc.nh.advertiseService(cc.ARUCO_DETECT_SERVICE_RESET, &OUTLET_CV::arucodetect_reset_service, &cc);
-   cc.pub = cc.nh.advertise<camera_pkg_msgs::Coordinate>(cc.PUBLISH_TOPIC, 100);
-   cc.cmd_vel_pub = cc.nh.advertise<geometry_msgs::Twist>(cc.MG400_CMD_VEL_TOPIC,100);
+   cc.coordinate_pub = cc.nh.advertise<camera_pkg_msgs::Coordinate>(cc.COORDINATE_PUBLISH_TOPIC, 100);
+   cc.mg400_cmd_vel_pub = cc.nh.advertise<geometry_msgs::Twist>(cc.MG400_CMD_VEL_TOPIC,100);
+   cc.target_cmd_vel_pub = cc.nh.advertise<geometry_msgs::Twist>(cc.TARGET_CMDVELTOPIC,100);
    cc.mg400_sub = cc.nh.subscribe(cc.MG400_TOPIC,1000, &OUTLET_CV::mg400_callback, &cc);   
    std_srvs::Empty _emp;
    clock_gettime(CLOCK_MONOTONIC, &timer_start); fstart=(double)timer_start.tv_sec + ((double)timer_start.tv_nsec/1000000000.0);
