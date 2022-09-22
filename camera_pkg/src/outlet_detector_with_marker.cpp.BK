@@ -24,15 +24,15 @@
  #include <math.h>
 
 // #include <camera_pkg/Camera_CV.h>
- #define IMG_HEIGHT (480)
- #define IMG_WIDTH (640)
+ #define IMG_HEIGHT (240)
+ #define IMG_WIDTH (320)
  #define rep(i,a,b) for(int i=a;i<b;i++)
  #define fore(i,a) for(auto &i:a)
  using namespace std;
  using namespace cv;
 
 struct timespec timer_start, timer_stop;
-double fstart, fstop, detect_start, detect_stop;
+double fstart, fstop;
 
 class OUTLET_CV{
   public:
@@ -168,9 +168,9 @@ If it is holonomic, we can alsot conside adding
 bool OUTLET_CV::correct_position(double &x ){
   // printf("%lf\n", c_x);
   geometry_msgs::Twist twist;
-  if(x <w/5){
+  if(x <190){
     twist.linear.x = adjust_speed;
-  }else if (x> (4*w/5)){
+  }else if (x>400){
     twist.linear.x = -adjust_speed;
   }else{
     return true;
@@ -193,7 +193,7 @@ void OUTLET_CV::adjustArm(double &x, double &y, double &z, double &ang){
     if (Done_r){
         threshold_x = 0.0005;
         threshold_y = 0.0002 ;
-        threshold_z = 0.001;
+        threshold_z = 0.01;
       }else{
         _Kp *= 3;
         threshold_x = 0.01;
@@ -203,7 +203,7 @@ void OUTLET_CV::adjustArm(double &x, double &y, double &z, double &ang){
     //PD control
     double move_x = _Kp*offset_x - Kv*offset_x/1000;
     double move_y = _Kp*offset_y - Kv*offset_y/1000;
-    double move_z = _Kp*offset_z - Kv*offset_z/1000;
+    double move_z = (_Kp*0.5)*offset_z - Kv*offset_z/1000;
 
     if (!mg400_running && (fstop-fstart)>timer && (!Done_x || !Done_y)){
       // if(!Done_z)
@@ -420,12 +420,8 @@ void OUTLET_CV::aruco_marker_detector(){
               destroyAllWindows();
             }
         }else{
-            clock_gettime(CLOCK_MONOTONIC, &timer_start); detect_start=(double)timer_start.tv_sec + ((double)timer_start.tv_nsec/1000000000.0);
-            if (std::abs(timer_start-detect_stop) >5)
-              arucodetect_reset_service();
             for(int i=0; i < ids.size(); i++)
             {
-              clock_gettime(CLOCK_MONOTONIC, &timer_stop); detect_stop=(double)timer_stop.tv_sec + ((double)timer_stop.tv_nsec/1000000000.0);
               cv::drawFrameAxes(u_src, camera_matrix, dist_coeffs, rvecs[0], tvecs[0], 0.1);
               if (_counter>20){
                 std::sort(rvecs_array.begin(), rvecs_array.end());
@@ -494,19 +490,25 @@ int main( int argc, char** argv )
    ros::init(argc, argv, "mask_detector");
    OUTLET_CV cc;
    // Initialize the ROS Node "roscpp_example"
-   ros::Rate loop_rate(30);
-   
-   cc.image_sub = cc.nh.subscribe(cc.IMAGE_TOPIC, 100, &OUTLET_CV::image_callback, &cc);
-   cc.usbcam_sub = cc.nh.subscribe(cc.USBCAM_TOPIC, 100, &OUTLET_CV::usbcam_callback, &cc);
-   cc.depth_sub = cc.nh.subscribe(cc.DEPTH_TOPIC, 100, &OUTLET_CV::depth_callback, &cc);
-   cc.mg400_status = cc.nh.subscribe(cc.MG400STATUS_TOPIC,100, &OUTLET_CV::mg400_status_callback, &cc);
+  ros::Rate loop_rate(30);
+  //  ros::Rate loop_rate(100);
+  
+  int queue_size = 10;
+  //  cc.image_sub = cc.nh.subscribe(cc.IMAGE_TOPIC, 1000, &OUTLET_CV::image_callback, &cc);
+   cc.image_sub = cc.nh.subscribe(cc.IMAGE_TOPIC, queue_size, &OUTLET_CV::image_callback, &cc);
+  //  cc.usbcam_sub = cc.nh.subscribe(cc.USBCAM_TOPIC, 1000, &OUTLET_CV::usbcam_callback, &cc);
+   cc.usbcam_sub = cc.nh.subscribe(cc.USBCAM_TOPIC, queue_size, &OUTLET_CV::usbcam_callback, &cc);
+  //  cc.depth_sub = cc.nh.subscribe(cc.DEPTH_TOPIC, 1000, &OUTLET_CV::depth_callback, &cc);
+   cc.depth_sub = cc.nh.subscribe(cc.DEPTH_TOPIC, queue_size, &OUTLET_CV::depth_callback, &cc);
+
+   cc.mg400_status = cc.nh.subscribe(cc.MG400STATUS_TOPIC,1000, &OUTLET_CV::mg400_status_callback, &cc);
 //    cc.darknet_bbox_sub = cc.nh.subscribe(cc.BBOX_TOPIC, 1000, &OUTLET_CV::bbox_callback, &cc);
    cc.pickup_start = cc.nh.advertiseService(cc.ARUCO_DETECT_SERVICE_START, &OUTLET_CV::arucodetect_start_service, &cc);
    cc.pickup_stop = cc.nh.advertiseService(cc.ARUCO_DETECT_SERVICE_RESET, &OUTLET_CV::arucodetect_reset_service, &cc);
    cc.coordinate_pub = cc.nh.advertise<camera_pkg_msgs::Coordinate>(cc.COORDINATE_PUBLISH_TOPIC, 100);
    cc.mg400_cmd_vel_pub = cc.nh.advertise<geometry_msgs::Twist>(cc.MG400_CMD_VEL_TOPIC,100);
    cc.target_cmd_vel_pub = cc.nh.advertise<geometry_msgs::Twist>(cc.TARGET_CMDVELTOPIC,100);
-   cc.mg400_sub = cc.nh.subscribe(cc.MG400_TOPIC,100, &OUTLET_CV::mg400_callback, &cc);   
+   cc.mg400_sub = cc.nh.subscribe(cc.MG400_TOPIC,1000, &OUTLET_CV::mg400_callback, &cc);   
    std_srvs::Empty _emp;
    clock_gettime(CLOCK_MONOTONIC, &timer_start); fstart=(double)timer_start.tv_sec + ((double)timer_start.tv_nsec/1000000000.0);
    clock_gettime(CLOCK_MONOTONIC, &timer_stop); fstop=(double)timer_stop.tv_sec + ((double)timer_stop.tv_nsec/1000000000.0);
@@ -518,17 +520,13 @@ int main( int argc, char** argv )
         if(cc.getRun()){
             cc.aruco_marker_detector();
         }
-      if(cc.initial){
-          namedWindow("src", WINDOW_NORMAL);
-          cv::resizeWindow("src", IMG_WIDTH, IMG_HEIGHT);
-          imshow("src", cc.src);
-      }
-      else{
-	  //namedWindow("out", WINDOW_NORMAL);
-          //cv::resizeWindow("out", IMG_WIDTH/2, IMG_HEIGHT/2);
-          imshow("out", cc.u_src);
-      }
-        
+      if(cc.initial)
+        imshow("src", cc.src);
+      else
+        imshow("realsense_src", cc.src);
+        // imshow("out", cc.u_src);
+        // imshow("src", cc.usbcam_sub.src);
+        imshow("out", cc.u_src);
       waitKey(3);      
       }
       ros::spinOnce();
