@@ -32,7 +32,7 @@
  using namespace cv;
 
 struct timespec timer_start, timer_stop;
-double fstart, fstop;
+double fstart, fstop, detect_start, detect_stop;
 
 class OUTLET_CV{
   public:
@@ -168,15 +168,15 @@ If it is holonomic, we can alsot conside adding
 bool OUTLET_CV::correct_position(double &x ){
   // printf("%lf\n", c_x);
   geometry_msgs::Twist twist;
-  if(x <190){
+  if(x <w/5){
     twist.linear.x = adjust_speed;
-  }else if (x>400){
+  }else if (x> (4*w/5)){
     twist.linear.x = -adjust_speed;
   }else{
     return true;
   }
   target_cmd_vel_pub.publish(twist);
-  return false;
+  return true;
 }
 
 void OUTLET_CV::adjustArm(double &x, double &y, double &z, double &ang){
@@ -193,7 +193,7 @@ void OUTLET_CV::adjustArm(double &x, double &y, double &z, double &ang){
     if (Done_r){
         threshold_x = 0.0005;
         threshold_y = 0.0002 ;
-        threshold_z = 0.01;
+        threshold_z = 0.001;
       }else{
         _Kp *= 3;
         threshold_x = 0.01;
@@ -203,7 +203,7 @@ void OUTLET_CV::adjustArm(double &x, double &y, double &z, double &ang){
     //PD control
     double move_x = _Kp*offset_x - Kv*offset_x/1000;
     double move_y = _Kp*offset_y - Kv*offset_y/1000;
-    double move_z = (_Kp*0.5)*offset_z - Kv*offset_z/1000;
+    double move_z = _Kp*offset_z - Kv*offset_z/1000;
 
     if (!mg400_running && (fstop-fstart)>timer && (!Done_x || !Done_y)){
       // if(!Done_z)
@@ -420,8 +420,15 @@ void OUTLET_CV::aruco_marker_detector(){
               destroyAllWindows();
             }
         }else{
+            clock_gettime(CLOCK_MONOTONIC, &timer_start); detect_start=(double)timer_start.tv_sec + ((double)timer_start.tv_nsec/1000000000.0);
+            if (std::abs(detect_start-detect_stop) >5){
+              std_srvs::Empty::Request req;
+              std_srvs::Empty::Response res;
+              arucodetect_reset_service(req, res);
+            } 
             for(int i=0; i < ids.size(); i++)
             {
+              clock_gettime(CLOCK_MONOTONIC, &timer_stop); detect_stop=(double)timer_stop.tv_sec + ((double)timer_stop.tv_nsec/1000000000.0);
               cv::drawFrameAxes(u_src, camera_matrix, dist_coeffs, rvecs[0], tvecs[0], 0.1);
               if (_counter>20){
                 std::sort(rvecs_array.begin(), rvecs_array.end());
@@ -514,10 +521,16 @@ int main( int argc, char** argv )
         if(cc.getRun()){
             cc.aruco_marker_detector();
         }
-      if(cc.initial)
-        imshow("src", cc.src);
-      else
-        imshow("out", cc.u_src);
+      if(cc.initial){
+          namedWindow("src", WINDOW_NORMAL);
+          cv::resizeWindow("src", IMG_WIDTH, IMG_HEIGHT);
+          imshow("src", cc.src);
+      }
+      else{
+          namedWindow("out", WINDOW_NORMAL);
+          cv::resizeWindow("out", IMG_WIDTH, IMG_HEIGHT);
+          imshow("out", cc.u_src);
+      }
       waitKey(3);      
       }
       ros::spinOnce();
