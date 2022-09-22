@@ -421,8 +421,11 @@ void OUTLET_CV::aruco_marker_detector(){
             }
         }else{
             clock_gettime(CLOCK_MONOTONIC, &timer_start); detect_start=(double)timer_start.tv_sec + ((double)timer_start.tv_nsec/1000000000.0);
-            if (std::abs(timer_start-detect_stop) >5)
-              arucodetect_reset_service();
+            if (std::abs(detect_start-detect_stop) >5){
+              std_srvs::Empty::Request req;
+              std_srvs::Empty::Response res;
+              arucodetect_reset_service(req, res);
+            } 
             for(int i=0; i < ids.size(); i++)
             {
               clock_gettime(CLOCK_MONOTONIC, &timer_stop); detect_stop=(double)timer_stop.tv_sec + ((double)timer_stop.tv_nsec/1000000000.0);
@@ -524,11 +527,18 @@ int main( int argc, char** argv )
           imshow("src", cc.src);
       }
       else{
+<<<<<<< HEAD
 	  //namedWindow("out", WINDOW_NORMAL);
           //cv::resizeWindow("out", IMG_WIDTH/2, IMG_HEIGHT/2);
           imshow("out", cc.u_src);
       }
         
+=======
+          namedWindow("out", WINDOW_NORMAL);
+          cv::resizeWindow("out", IMG_WIDTH, IMG_HEIGHT);
+          imshow("out", cc.u_src);
+      }
+>>>>>>> bb3daaa7da308360d89fd66844df4cdb66374212
       waitKey(3);      
       }
       ros::spinOnce();
