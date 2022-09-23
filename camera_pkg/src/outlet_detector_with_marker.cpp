@@ -240,9 +240,12 @@ void OUTLET_CV::adjustArm(double &x, double &y, double &z, double &ang){
         coordinate.z = 10;
         coordinate_pub.publish(coordinate);
         final =true;
-        destroyAllWindows();
+        RUN = false;
+        clock_gettime(CLOCK_MONOTONIC, &timer_start); detect_start=(double)timer_start.tv_sec;
+        clock_gettime(CLOCK_MONOTONIC, &timer_stop); detect_stop=(double)timer_stop.tv_sec;
       }
     clock_gettime(CLOCK_MONOTONIC, &timer_start); fstart=(double)timer_start.tv_sec + ((double)timer_start.tv_nsec/1000000000.0);
+
     }else if(!mg400_running && Done_x && Done_y && (fstop-fstart)>timer && !Done_r ){
       coordinate.t ="D";
       coordinate.r = angle;
@@ -252,7 +255,7 @@ void OUTLET_CV::adjustArm(double &x, double &y, double &z, double &ang){
       Done_y = false;
       Done_z = false;
       clock_gettime(CLOCK_MONOTONIC, &timer_start); fstart=(double)timer_start.tv_sec + ((double)timer_start.tv_nsec/1000000000.0);
-    }else if(!mg400_running && !Done_x &&! Done_y && (fstop-fstart)>timer && Done_r && std::abs(ang) > 5 ){
+    }else if(!mg400_running && !Done_x &&! Done_y && (fstop-fstart)>timer && Done_r && std::abs(ang) > 3 ){
       coordinate.t = "A";
       coordinate.r = ang;
       coordinate_pub.publish(coordinate);
@@ -285,30 +288,31 @@ bool OUTLET_CV::arucodetect_start_service(std_srvs::Empty::Request& req, std_srv
  }
 
  bool OUTLET_CV::arucodetect_reset_service(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res){
-   cout << "Detection resets" << endl;
-   destroyAllWindows();
-   RUN = false;
-    Done_r = false;
-    Done_x = false;
-    Done_y = false;
-    Done_z = false;
-   coordinate.t = "I";
-   coordinate.x = 10;
-   coordinate.y = 10;
-   coordinate.z = 10;
-   coordinate_pub.publish(coordinate);
-   clock_gettime(CLOCK_MONOTONIC, &timer_start); fstart=(double)timer_start.tv_sec + ((double)timer_start.tv_nsec/1000000000.0);
-   clock_gettime(CLOCK_MONOTONIC, &timer_stop); fstop=(double)timer_stop.tv_sec + ((double)timer_stop.tv_nsec/1000000000.0);
-   ros::Rate _rate(10);
-   while((fstop-fstart)<5 && !mg400_running){
-      _rate.sleep();
-      clock_gettime(CLOCK_MONOTONIC, &timer_stop); fstop=(double)timer_stop.tv_sec + ((double)timer_stop.tv_nsec/1000000000.0);
-   }
-   initial=true;
-   final = false;
-   _counter=0;
-   rvecs_array.clear();
-   return true;
+  cout << "Detection resets" << endl;
+  destroyAllWindows();
+  Done_r = false;
+  Done_x = false;
+  Done_y = false;
+  Done_z = false;
+  coordinate.t = "I";
+  coordinate.x = 10;
+  coordinate.y = 10;
+  coordinate.z = 10;
+  coordinate_pub.publish(coordinate);
+  clock_gettime(CLOCK_MONOTONIC, &timer_start); fstart=(double)timer_start.tv_sec + ((double)timer_start.tv_nsec/1000000000.0);
+  clock_gettime(CLOCK_MONOTONIC, &timer_stop); fstop=(double)timer_stop.tv_sec + ((double)timer_stop.tv_nsec/1000000000.0);
+  clock_gettime(CLOCK_MONOTONIC, &timer_start); detect_start=(double)timer_start.tv_sec;
+  clock_gettime(CLOCK_MONOTONIC, &timer_stop); detect_stop=(double)timer_stop.tv_sec;
+  ros::Rate _rate(10);
+  while((fstop-fstart)<5 && !mg400_running){
+    _rate.sleep();
+    clock_gettime(CLOCK_MONOTONIC, &timer_stop); fstop=(double)timer_stop.tv_sec + ((double)timer_stop.tv_nsec/1000000000.0);
+  }
+  initial=true;
+  final = false;
+  _counter=0;
+  rvecs_array.clear();
+  return true;
  }
 
 
@@ -381,11 +385,25 @@ void OUTLET_CV::depth_callback(const sensor_msgs::ImageConstPtr& msg){
 }
 
 void OUTLET_CV::aruco_marker_detector(){          
-    if(initial)
-        aruco::detectMarkers(src, dictionary, corners, ids);
-    else
-        aruco::detectMarkers(u_src, dictionary, corners, ids);
+    if(initial){
+      aruco::detectMarkers(src, dictionary, corners, ids);
+      clock_gettime(CLOCK_MONOTONIC, &timer_start); detect_start=(double)timer_start.tv_sec;
+      clock_gettime(CLOCK_MONOTONIC, &timer_stop); detect_stop=(double)timer_stop.tv_sec;
+    } else{
+      clock_gettime(CLOCK_MONOTONIC, &timer_start); detect_start=(double)timer_start.tv_sec;
+      //erase it below later
+      // clock_gettime(CLOCK_MONOTONIC, &timer_stop); detect_stop=(double)timer_stop.tv_sec;
+      aruco::detectMarkers(u_src, dictionary, corners, ids);
+    }
+        
     // if at least one marker detected
+    
+    if (std::abs(detect_start-detect_stop) >10){
+      std::cout << "detection timeout" <<std::endl;
+      std_srvs::Empty::Request req;
+      std_srvs::Empty::Response res;
+      arucodetect_reset_service(req, res);
+    } 
     if (ids.size() > 0){
         // printf("detected\n");
         aruco::drawDetectedMarkers(src, corners, ids);
@@ -420,15 +438,9 @@ void OUTLET_CV::aruco_marker_detector(){
               destroyAllWindows();
             }
         }else{
-            clock_gettime(CLOCK_MONOTONIC, &timer_start); detect_start=(double)timer_start.tv_sec + ((double)timer_start.tv_nsec/1000000000.0);
-            if (std::abs(detect_start-detect_stop) >5){
-              std_srvs::Empty::Request req;
-              std_srvs::Empty::Response res;
-              arucodetect_reset_service(req, res);
-            } 
             for(int i=0; i < ids.size(); i++)
             {
-              clock_gettime(CLOCK_MONOTONIC, &timer_stop); detect_stop=(double)timer_stop.tv_sec + ((double)timer_stop.tv_nsec/1000000000.0);
+              clock_gettime(CLOCK_MONOTONIC, &timer_stop); detect_stop=(double)timer_stop.tv_sec;
               cv::drawFrameAxes(u_src, camera_matrix, dist_coeffs, rvecs[0], tvecs[0], 0.1);
               if (_counter>20){
                 std::sort(rvecs_array.begin(), rvecs_array.end());
@@ -483,6 +495,7 @@ void OUTLET_CV::aruco_marker_detector(){
 
             if(!mg400_running)
               adjustArm(tvecs[0](0), tvecs[0](1), tvecs[0](2), _angle);
+            
             }  
             }
         
