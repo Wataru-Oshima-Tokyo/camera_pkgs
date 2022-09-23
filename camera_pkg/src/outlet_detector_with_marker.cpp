@@ -521,25 +521,17 @@ int main( int argc, char** argv )
         if(cc.getRun()){
             cc.aruco_marker_detector();
         }
-      if(cc.initial){
-          namedWindow("src", WINDOW_NORMAL);
-          cv::resizeWindow("src", IMG_WIDTH, IMG_HEIGHT);
-          imshow("src", cc.src);
-      }
-      else{
-<<<<<<< HEAD
-	  //namedWindow("out", WINDOW_NORMAL);
-          //cv::resizeWindow("out", IMG_WIDTH/2, IMG_HEIGHT/2);
-          imshow("out", cc.u_src);
-      }
-        
-=======
-          namedWindow("out", WINDOW_NORMAL);
-          cv::resizeWindow("out", IMG_WIDTH, IMG_HEIGHT);
-          imshow("out", cc.u_src);
-      }
->>>>>>> bb3daaa7da308360d89fd66844df4cdb66374212
-      waitKey(3);      
+        if(cc.initial){
+            namedWindow("src", WINDOW_NORMAL);
+            cv::resizeWindow("src", IMG_WIDTH, IMG_HEIGHT);
+            imshow("src", cc.src);
+        }
+        else{
+            namedWindow("out", WINDOW_NORMAL);
+            cv::resizeWindow("out", IMG_WIDTH, IMG_HEIGHT);
+            imshow("out", cc.u_src);
+        }
+        waitKey(3);      
       }
       ros::spinOnce();
       loop_rate.sleep();
