@@ -48,25 +48,15 @@ class OUTLET_CV{
     ros::Subscriber image_sub, depth_sub, mg400_sub, usbcam_sub, mg400_status;
     ros::NodeHandle nh;
     camera_pkg_msgs::Coordinate coordinate;
-    ros::ServiceServer pickup_start, pickup_stop;
+    ros::ServiceServer detect_srv_start, detect_srv_stop, detect_srv_reset;
     int lowThreshold;
     int ix,iy,cx,cy;
     std::vector<int> ids;
     std::vector<std::vector<cv::Point2f> > corners;
-    // int _MIN_DH =15, _MIN_DS = 60, _MIN_DV = 60;
-    // int _MAX_DH = 15, _MAX_DS = 150, _MAX_DV = 60;
 
-    void makeRegion(int, void*);
-    void get_circle(int, void*);
-
-
-
-    void get_hsv(int event, int x, int y, int flags, void* userdata);
-    // Mat getDepth();
-    const std::string SRC_WINDOW = "src";
-    const std::string ROI_WINDOW = "roi";
     virtual bool arucodetect_start_service(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);
     virtual bool arucodetect_reset_service(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);
+    virtual bool arucodetect_stop_service(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);
     virtual void image_callback(const sensor_msgs::ImageConstPtr&);
     virtual void mg400_status_callback(const mg400_bringup::RobotStatus&);
     virtual void depth_callback(const sensor_msgs::ImageConstPtr&);
@@ -75,6 +65,7 @@ class OUTLET_CV{
     virtual void aruco_marker_detector();
     virtual void adjustArm(double &x, double &y, double &z, double &ang);
     virtual bool correct_position(double &);
+    virtual void InitializeValues();
     // Topics
     std::string IMAGE_TOPIC;
     std::string DEPTH_TOPIC;
@@ -87,13 +78,12 @@ class OUTLET_CV{
     const std::string MG400_TOPIC = "/mg400/working";
     const std::string ARUCO_DETECT_SERVICE_START = "/arucodetect/start";
     const std::string ARUCO_DETECT_SERVICE_RESET = "/arucodetect/reset";
-    std::string mode ="";
+    const std::string ARUCO_DETECT_SERVICE_STOP = "/arucodetect/stop";
+    
     OUTLET_CV();
     ~OUTLET_CV();
     bool getRun(); 
     void setRun(bool run);
-    const int max_lowThreshold = 100;
-    const std::string window_name = "Edge Map";
     int w,h; //heihgt and width for the first cam
     int u_w, u_h; //height and width for the second cam
     bool Drew = false;
@@ -105,6 +95,7 @@ class OUTLET_CV{
     bool initial = true;  
     bool final = false;
     double Kp;
+    std::string mode ="";
 private:
     bool RUN = false; 
     double detect_probability =0.0;
@@ -122,6 +113,8 @@ private:
     double threshold_x, threshold_y, threshold_z;
     std::string CALIBRATION;
     std::vector<double> rvecs_array;
+    std_srvs::Empty::Request req;
+    std_srvs::Empty::Response res;
 };
 
 
@@ -287,31 +280,45 @@ bool OUTLET_CV::arucodetect_start_service(std_srvs::Empty::Request& req, std_srv
 
  }
 
+ bool OUTLET_CV::arucodetect_stop_service(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res){
+   cout << "Detection stops" << endl;
+   RUN = false;
+   InitializeValues();
+   return true;
+
+ }
+
+
+ void OUTLET_CV::InitializeValues(){
+    Done_r = false;
+    Done_x = false;
+    Done_y = false;
+    Done_z = false;
+    clock_gettime(CLOCK_MONOTONIC, &timer_start); fstart=(double)timer_start.tv_sec + ((double)timer_start.tv_nsec/1000000000.0);
+    clock_gettime(CLOCK_MONOTONIC, &timer_stop); fstop=(double)timer_stop.tv_sec + ((double)timer_stop.tv_nsec/1000000000.0);
+    clock_gettime(CLOCK_MONOTONIC, &timer_start); detect_start=(double)timer_start.tv_sec;
+    clock_gettime(CLOCK_MONOTONIC, &timer_stop); detect_stop=(double)timer_stop.tv_sec;
+    initial= true;
+    final = false;
+    _counter=0;
+    rvecs_array.clear();
+ }
+
  bool OUTLET_CV::arucodetect_reset_service(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res){
   cout << "Detection resets" << endl;
   destroyAllWindows();
-  Done_r = false;
-  Done_x = false;
-  Done_y = false;
-  Done_z = false;
   coordinate.t = "I";
   coordinate.x = 10;
   coordinate.y = 10;
   coordinate.z = 10;
   coordinate_pub.publish(coordinate);
-  clock_gettime(CLOCK_MONOTONIC, &timer_start); fstart=(double)timer_start.tv_sec + ((double)timer_start.tv_nsec/1000000000.0);
-  clock_gettime(CLOCK_MONOTONIC, &timer_stop); fstop=(double)timer_stop.tv_sec + ((double)timer_stop.tv_nsec/1000000000.0);
-  clock_gettime(CLOCK_MONOTONIC, &timer_start); detect_start=(double)timer_start.tv_sec;
-  clock_gettime(CLOCK_MONOTONIC, &timer_stop); detect_stop=(double)timer_stop.tv_sec;
+  InitializeValues();
   ros::Rate _rate(10);
   while((fstop-fstart)<5 && !mg400_running){
     _rate.sleep();
     clock_gettime(CLOCK_MONOTONIC, &timer_stop); fstop=(double)timer_stop.tv_sec + ((double)timer_stop.tv_nsec/1000000000.0);
   }
-  initial=true;
-  final = false;
-  _counter=0;
-  rvecs_array.clear();
+
   return true;
  }
 
@@ -400,8 +407,6 @@ void OUTLET_CV::aruco_marker_detector(){
     
     if (std::abs(detect_start-detect_stop) >10){
       std::cout << "detection timeout" <<std::endl;
-      std_srvs::Empty::Request req;
-      std_srvs::Empty::Response res;
       arucodetect_reset_service(req, res);
     } 
     if (ids.size() > 0){
@@ -517,8 +522,9 @@ int main( int argc, char** argv )
    cc.depth_sub = cc.nh.subscribe(cc.DEPTH_TOPIC, 100, &OUTLET_CV::depth_callback, &cc);
    cc.mg400_status = cc.nh.subscribe(cc.MG400STATUS_TOPIC,100, &OUTLET_CV::mg400_status_callback, &cc);
 //    cc.darknet_bbox_sub = cc.nh.subscribe(cc.BBOX_TOPIC, 1000, &OUTLET_CV::bbox_callback, &cc);
-   cc.pickup_start = cc.nh.advertiseService(cc.ARUCO_DETECT_SERVICE_START, &OUTLET_CV::arucodetect_start_service, &cc);
-   cc.pickup_stop = cc.nh.advertiseService(cc.ARUCO_DETECT_SERVICE_RESET, &OUTLET_CV::arucodetect_reset_service, &cc);
+   cc.detect_srv_start = cc.nh.advertiseService(cc.ARUCO_DETECT_SERVICE_START, &OUTLET_CV::arucodetect_start_service, &cc);
+   cc.detect_srv_reset = cc.nh.advertiseService(cc.ARUCO_DETECT_SERVICE_RESET, &OUTLET_CV::arucodetect_reset_service, &cc);
+   cc.detect_srv_stop = cc.nh.advertiseService(cc.ARUCO_DETECT_SERVICE_STOP, &OUTLET_CV::arucodetect_stop_service, &cc);
    cc.coordinate_pub = cc.nh.advertise<camera_pkg_msgs::Coordinate>(cc.COORDINATE_PUBLISH_TOPIC, 100);
    cc.mg400_cmd_vel_pub = cc.nh.advertise<geometry_msgs::Twist>(cc.MG400_CMD_VEL_TOPIC,100);
    cc.target_cmd_vel_pub = cc.nh.advertise<geometry_msgs::Twist>(cc.TARGET_CMDVELTOPIC,100);
@@ -526,23 +532,20 @@ int main( int argc, char** argv )
    std_srvs::Empty _emp;
    clock_gettime(CLOCK_MONOTONIC, &timer_start); fstart=(double)timer_start.tv_sec + ((double)timer_start.tv_nsec/1000000000.0);
    clock_gettime(CLOCK_MONOTONIC, &timer_stop); fstop=(double)timer_stop.tv_sec + ((double)timer_stop.tv_nsec/1000000000.0);
-//    cv::namedWindow("out", cv::WINDOW_NORMAL);
-//    cv::resizeWindow("out", 640,480);
    while(ros::ok()){
-      // cout << cc.getRun() << endl;
       if(!cc.src.empty() && !cc.u_src.empty()){
         if(cc.getRun()){
             cc.aruco_marker_detector();
         }
         if(cc.initial){
-            namedWindow("src", WINDOW_NORMAL);
-            cv::resizeWindow("src", IMG_WIDTH, IMG_HEIGHT);
-            imshow("src", cc.src);
+            // namedWindow("src", WINDOW_NORMAL);
+            // cv::resizeWindow("src", IMG_WIDTH, IMG_HEIGHT);
+            // imshow("src", cc.src);
         }
         else{
-            namedWindow("out", WINDOW_NORMAL);
-            cv::resizeWindow("out", IMG_WIDTH, IMG_HEIGHT);
-            imshow("out", cc.u_src);
+            // namedWindow("out", WINDOW_NORMAL);
+            // cv::resizeWindow("out", IMG_WIDTH, IMG_HEIGHT);
+            // imshow("out", cc.u_src);
         }
         waitKey(3);      
       }
