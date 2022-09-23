@@ -391,6 +391,8 @@ void OUTLET_CV::aruco_marker_detector(){
       clock_gettime(CLOCK_MONOTONIC, &timer_stop); detect_stop=(double)timer_stop.tv_sec;
     } else{
       clock_gettime(CLOCK_MONOTONIC, &timer_start); detect_start=(double)timer_start.tv_sec;
+      //erase it below later
+      // clock_gettime(CLOCK_MONOTONIC, &timer_stop); detect_stop=(double)timer_stop.tv_sec;
       aruco::detectMarkers(u_src, dictionary, corners, ids);
     }
         
