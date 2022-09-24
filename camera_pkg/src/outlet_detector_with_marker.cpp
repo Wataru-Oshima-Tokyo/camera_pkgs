@@ -67,6 +67,7 @@ class OUTLET_CV{
     virtual bool correct_position(double &);
     virtual void InitializeValues();
     virtual bool adjust_height(const double &height, const double &depth);
+    virtual void putTexts(const double &x, const double &y, const double &z, const double &r);
     // Topics
     std::string IMAGE_TOPIC;
     std::string DEPTH_TOPIC;
@@ -106,6 +107,8 @@ private:
     //set the kernel size 3
     const int kernel_size = 3;
     bool Done_x = false; bool Done_y = false; bool Done_z = false; bool Done_r= false;
+    bool Done_depth = false;
+    bool Done_height = false;
     bool mg400_running = false;
     const double timer = 1.5;
     const double quit_searching = 120; 
@@ -188,7 +191,7 @@ void OUTLET_CV::adjustArm(double &x, double &y, double &z, double &ang){
     double _Kp = Kp;
     if (Done_r){
         threshold_x = 0.0005;
-        threshold_y = 0.0002 ;
+        threshold_y = 0.0002;
         threshold_z = 0.002; //0.001
       }else{
         _Kp *= 3;
@@ -264,26 +267,34 @@ void OUTLET_CV::adjustArm(double &x, double &y, double &z, double &ang){
 
 bool OUTLET_CV::adjust_height(const double &height, const double &depth){
   geometry_msgs::Twist twist;
-  const double diff_height = 0.0074 - height;
+  const double diff_height = 0.0114 - height;
   const double diff_depth = 0.13- depth;
-  const double _Kp = Kp*2;
+  const double _Kp = Kp*3;
   const double move_height = _Kp*diff_height; 
   const double move_depth = _Kp*diff_height; 
   twist.linear.z = move_height; // vertical
   twist.linear.x = -move_depth;
-  const double threshold_height = 0.0007;  
-  const double threshold_depth = 0.02;         
-  
+  const double threshold_height = 0.0005;  
+  const double threshold_depth = 0.03;         
+  if (std::abs(diff_height)<=threshold_height){
+    Done_height =true;
+  }
+  if (std::abs(diff_depth)<=threshold_depth){
+    Done_depth = true; 
+  }
   if (initial_position){
     clock_gettime(CLOCK_MONOTONIC, &timer_stop); fstop=(double)timer_stop.tv_sec + ((double)timer_stop.tv_nsec/1000000000.0);
-      if((std::abs(diff_height)<=threshold_height) && (std::abs(diff_depth)<=threshold_depth)){
-        clock_gettime(CLOCK_MONOTONIC, &timer_stop); fstop=(double)timer_stop.tv_sec + ((double)timer_stop.tv_nsec/1000000000.0);
+      if(Done_height && Done_depth){
+        clock_gettime(CLOCK_MONOTONIC, &timer_start); fstart=(double)timer_start.tv_sec + ((double)timer_start.tv_nsec/1000000000.0);
         initial_position =false;
+        Done_height = false;
+        Done_depth = false;
         return true;  
       }else{
         if(!mg400_running && (fstop-fstart)>timer){
             clock_gettime(CLOCK_MONOTONIC, &timer_start); fstart=(double)timer_start.tv_sec + ((double)timer_start.tv_nsec/1000000000.0);
             mg400_cmd_vel_pub.publish(twist);
+            std::cout << "diff_height: " << std::abs(diff_height) << "diff_depth: " << std::abs(diff_depth) << std::endl;
           }
           return false;
       }
@@ -292,7 +303,42 @@ bool OUTLET_CV::adjust_height(const double &height, const double &depth){
   }
 }
 
+  void OUTLET_CV::putTexts(const double &x, const double &y, const double &z, const double &r){
+                // This section is going to print the data for all the detected
+            // markers. If you have more than a single marker, it is
+            // recommended to change the below section so that either you
+            // only print the data for a specific marker, or you print the
+            // data for each marker separately.
+            vector_to_marker.str(std::string());
+            vector_to_marker.str(std::string());
+            vector_to_marker << std::setprecision(4)
+                                << "x: " << std::setw(8) << x;
+            cv::putText(u_src, vector_to_marker.str(),
+                        cv::Point(10, 30), cv::FONT_HERSHEY_SIMPLEX, 1,
+                        cv::Scalar(0, 252, 124), 1, CV_AVX);
 
+            vector_to_marker.str(std::string());
+            vector_to_marker << std::setprecision(4)
+                                << "y: " << std::setw(8) << y;
+            cv::putText(u_src, vector_to_marker.str(),
+                        cv::Point(10, 90), cv::FONT_HERSHEY_SIMPLEX, 1,
+                        cv::Scalar(0, 252, 124), 1, CV_AVX);
+
+            vector_to_marker.str(std::string());
+            vector_to_marker << std::setprecision(4)
+                                << "z: " << std::setw(8) << z;
+            cv::putText(u_src, vector_to_marker.str(),
+                        cv::Point(10, 150), cv::FONT_HERSHEY_SIMPLEX, 1,
+                        cv::Scalar(0, 252, 124), 1, CV_AVX);
+            
+                        vector_to_marker.str(std::string());
+
+            vector_to_marker << std::setprecision(4)
+                                << "angle: " << std::setw(8) << r;
+            cv::putText(u_src, vector_to_marker.str(),
+                        cv::Point(10, 210), cv::FONT_HERSHEY_SIMPLEX, 1,
+                        cv::Scalar(0, 252, 124), 1, CV_AVX);
+  }
 
   void OUTLET_CV::aruco_marker_detector(){          
     if(initial){
@@ -363,7 +409,8 @@ bool OUTLET_CV::adjust_height(const double &height, const double &depth){
               clock_gettime(CLOCK_MONOTONIC, &timer_stop); detect_stop=(double)timer_stop.tv_sec;
               cv::drawFrameAxes(u_src, camera_matrix, dist_coeffs, rvecs[0], tvecs[0], 0.1);
               if (!adjust_height(tvecs[0](1),tvecs[0](2)))
-                  break;
+                break;
+                  
 
               if (_counter>40){
                 std::sort(rvecs_array.begin(), rvecs_array.end());
@@ -376,41 +423,7 @@ bool OUTLET_CV::adjust_height(const double &height, const double &depth){
                 break;
               }
               double _angle = rvecs[0](2)*180/M_PI;
-
-            // This section is going to print the data for all the detected
-            // markers. If you have more than a single marker, it is
-            // recommended to change the below section so that either you
-            // only print the data for a specific marker, or you print the
-            // data for each marker separately.
-            vector_to_marker.str(std::string());
-            vector_to_marker << std::setprecision(4)
-                                << "x: " << std::setw(8) << tvecs[0](0);
-            cv::putText(u_src, vector_to_marker.str(),
-                        cv::Point(10, 30), cv::FONT_HERSHEY_SIMPLEX, 1,
-                        cv::Scalar(0, 252, 124), 1, CV_AVX);
-
-            vector_to_marker.str(std::string());
-            vector_to_marker << std::setprecision(4)
-                                << "y: " << std::setw(8) << tvecs[0](1);
-            cv::putText(u_src, vector_to_marker.str(),
-                        cv::Point(10, 90), cv::FONT_HERSHEY_SIMPLEX, 1,
-                        cv::Scalar(0, 252, 124), 1, CV_AVX);
-
-            vector_to_marker.str(std::string());
-            vector_to_marker << std::setprecision(4)
-                                << "z: " << std::setw(8) << tvecs[0](2);
-            cv::putText(u_src, vector_to_marker.str(),
-                        cv::Point(10, 150), cv::FONT_HERSHEY_SIMPLEX, 1,
-                        cv::Scalar(0, 252, 124), 1, CV_AVX);
-            
-                        vector_to_marker.str(std::string());
-
-            vector_to_marker << std::setprecision(4)
-                                << "angle: " << std::setw(8) << _angle;
-            cv::putText(u_src, vector_to_marker.str(),
-                        cv::Point(10, 210), cv::FONT_HERSHEY_SIMPLEX, 1,
-                        cv::Scalar(0, 252, 124), 1, CV_AVX);
-
+              putTexts(tvecs[0](0),tvecs[0](1),tvecs[0](2),_angle);
 
             if(!mg400_running)
               adjustArm(tvecs[0](0), tvecs[0](1), tvecs[0](2), _angle);
@@ -496,6 +509,8 @@ bool OUTLET_CV::adjust_height(const double &height, const double &depth){
   Done_x = false;
   Done_y = false;
   Done_z = false;
+  Done_height = false;
+  Done_depth = false;
   clock_gettime(CLOCK_MONOTONIC, &timer_start); fstart=(double)timer_start.tv_sec + ((double)timer_start.tv_nsec/1000000000.0);
   clock_gettime(CLOCK_MONOTONIC, &timer_stop); fstop=(double)timer_stop.tv_sec + ((double)timer_stop.tv_nsec/1000000000.0);
   clock_gettime(CLOCK_MONOTONIC, &timer_start); detect_start=(double)timer_start.tv_sec;
