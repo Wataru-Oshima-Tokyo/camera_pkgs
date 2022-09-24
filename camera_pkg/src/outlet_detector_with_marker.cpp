@@ -186,7 +186,7 @@ void OUTLET_CV::adjustArm(double &x, double &y, double &z, double &ang){
     if (Done_r){
         threshold_x = 0.0005;
         threshold_y = 0.0002 ;
-        threshold_z = 0.001;
+        threshold_z = 0.002; //0.001
       }else{
         _Kp *= 3;
         threshold_x = 0.01;
@@ -316,13 +316,12 @@ bool OUTLET_CV::arucodetect_start_service(std_srvs::Empty::Request& req, std_srv
   else
     coordinate.z = 0;
   coordinate_pub.publish(coordinate);
-  InitializeValues();
   ros::Rate _rate(10);
   while((fstop-fstart)<5 && !mg400_running){
     _rate.sleep();
     clock_gettime(CLOCK_MONOTONIC, &timer_stop); fstop=(double)timer_stop.tv_sec + ((double)timer_stop.tv_nsec/1000000000.0);
   }
-
+  InitializeValues();
   return true;
  }
 
