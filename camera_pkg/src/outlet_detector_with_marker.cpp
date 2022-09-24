@@ -186,7 +186,7 @@ void OUTLET_CV::adjustArm(double &x, double &y, double &z, double &ang){
     if (Done_r){
         threshold_x = 0.0005;
         threshold_y = 0.0002 ;
-        threshold_z = 0.002; //0.001
+        threshold_z = 0.001; //0.001
       }else{
         _Kp *= 3;
         threshold_x = 0.01;
