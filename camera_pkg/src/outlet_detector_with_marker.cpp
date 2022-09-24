@@ -284,6 +284,7 @@ bool OUTLET_CV::arucodetect_start_service(std_srvs::Empty::Request& req, std_srv
    cout << "Detection stops" << endl;
    RUN = false;
    InitializeValues();
+   initial= false;
    return true;
 
  }
@@ -311,7 +312,8 @@ bool OUTLET_CV::arucodetect_start_service(std_srvs::Empty::Request& req, std_srv
   coordinate.x = 10;
   coordinate.y = 10;
   coordinate.z = 10;
-  coordinate_pub.publish(coordinate);
+  if (Done_r && Done_x && Done_y && Done_z)
+    coordinate_pub.publish(coordinate);
   InitializeValues();
   ros::Rate _rate(10);
   while((fstop-fstart)<5 && !mg400_running){
@@ -540,12 +542,12 @@ int main( int argc, char** argv )
         if(cc.initial){
             // namedWindow("src", WINDOW_NORMAL);
             // cv::resizeWindow("src", IMG_WIDTH, IMG_HEIGHT);
-            // imshow("src", cc.src);
+            imshow("src", cc.src);
         }
         else{
             // namedWindow("out", WINDOW_NORMAL);
             // cv::resizeWindow("out", IMG_WIDTH, IMG_HEIGHT);
-            // imshow("out", cc.u_src);
+            imshow("out", cc.u_src);
         }
         waitKey(3);      
       }
