@@ -112,13 +112,20 @@ class Image{
             vector_to_marker.str(std::string());
             vector_to_marker << std::setprecision(4)
                                 << "z: " << std::setw(8) << tvecs[0](2);
+            cv::putText(imageCopy, vector_to_marker.str(),
+                        cv::Point(10, 70), cv::FONT_HERSHEY_SIMPLEX, 0.6,
+                        cv::Scalar(0, 252, 124), 1, CV_AVX);
 
             vector_to_marker.str(std::string());
             vector_to_marker << std::setprecision(4)
                                 << "angle: " << std::setw(8) << angle;
             cv::putText(imageCopy, vector_to_marker.str(),
-                        cv::Point(10, 70), cv::FONT_HERSHEY_SIMPLEX, 0.6,
-                        cv::Scalar(0, 252, 124), 1, CV_AVX);
+                        cv::Point(10, 90), cv::FONT_HERSHEY_SIMPLEX, 0.6,
+                        cv::Scalar(0, 255, 255), 1, CV_AVX);
+            std::cout << "x: " <<  tvecs[0](0)
+            << "y: " << tvecs[0](1)
+            << "z: " << tvecs[0](2)
+            << "angle: " << angle <<std::endl;
         }        
         imshow("original", src);
         if(!imageCopy.empty())

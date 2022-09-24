@@ -32,7 +32,7 @@
  using namespace cv;
 
 struct timespec timer_start, timer_stop;
-double fstart, fstop, detect_start, detect_stop;
+double fstart, fstop, detect_start, detect_stop, total_time_start, total_time_stop;
 
 class OUTLET_CV{
   public:
@@ -66,6 +66,7 @@ class OUTLET_CV{
     virtual void adjustArm(double &x, double &y, double &z, double &ang);
     virtual bool correct_position(double &);
     virtual void InitializeValues();
+    virtual bool adjust_height(const double &height, const double &depth);
     // Topics
     std::string IMAGE_TOPIC;
     std::string DEPTH_TOPIC;
@@ -100,12 +101,14 @@ private:
     bool RUN = false; 
     double detect_probability =0.0;
     bool detected=false;
+    bool initial_position = true;
     const int ratio = 3;
     //set the kernel size 3
     const int kernel_size = 3;
     bool Done_x = false; bool Done_y = false; bool Done_z = false; bool Done_r= false;
     bool mg400_running = false;
-    int timer = 1.5;
+    const double timer = 1.5;
+    const double quit_searching = 120; 
     int offset_x_counter =0;
     int offset_y_counter =0;
     int _counter =0;
@@ -186,7 +189,7 @@ void OUTLET_CV::adjustArm(double &x, double &y, double &z, double &ang){
     if (Done_r){
         threshold_x = 0.0005;
         threshold_y = 0.0002 ;
-        threshold_z = 0.001; //0.001
+        threshold_z = 0.002; //0.001
       }else{
         _Kp *= 3;
         threshold_x = 0.01;
@@ -236,6 +239,7 @@ void OUTLET_CV::adjustArm(double &x, double &y, double &z, double &ang){
         RUN = false;
         clock_gettime(CLOCK_MONOTONIC, &timer_start); detect_start=(double)timer_start.tv_sec;
         clock_gettime(CLOCK_MONOTONIC, &timer_stop); detect_stop=(double)timer_stop.tv_sec;
+        clock_gettime(CLOCK_MONOTONIC, &timer_start); total_time_stop=(double)timer_start.tv_sec + ((double)timer_start.tv_nsec/1000000000.0);
       }
     clock_gettime(CLOCK_MONOTONIC, &timer_start); fstart=(double)timer_start.tv_sec + ((double)timer_start.tv_nsec/1000000000.0);
 
@@ -257,144 +261,40 @@ void OUTLET_CV::adjustArm(double &x, double &y, double &z, double &ang){
     
 }
 
-void OUTLET_CV::mg400_status_callback(const mg400_bringup::RobotStatus& msg){
-  if(msg.robot_status == 7){
-    mg400_running = true;
-  }else {
-    mg400_running = false;
-  }
-}
 
-
-void OUTLET_CV::mg400_callback(const std_msgs::Bool& msg){
-  if(!msg.data){ 
-       ADJUST=true;
-        // put the cmd_vel control below
-  }
-}
-
-bool OUTLET_CV::arucodetect_start_service(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res){
-   cout << "Detection starts" << endl;
-   RUN = true;
-   return RUN;
-
- }
-
- bool OUTLET_CV::arucodetect_stop_service(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res){
-   cout << "Detection stops" << endl;
-   RUN = false;
-   InitializeValues();
-   initial= false;
-   return true;
-
- }
-
-
- void OUTLET_CV::InitializeValues(){
-    Done_r = false;
-    Done_x = false;
-    Done_y = false;
-    Done_z = false;
-    clock_gettime(CLOCK_MONOTONIC, &timer_start); fstart=(double)timer_start.tv_sec + ((double)timer_start.tv_nsec/1000000000.0);
+bool OUTLET_CV::adjust_height(const double &height, const double &depth){
+  geometry_msgs::Twist twist;
+  const double diff_height = 0.0074 - height;
+  const double diff_depth = 0.13- depth;
+  const double _Kp = Kp*2;
+  const double move_height = _Kp*diff_height; 
+  const double move_depth = _Kp*diff_height; 
+  twist.linear.z = move_height; // vertical
+  twist.linear.x = -move_depth;
+  const double threshold_height = 0.0007;  
+  const double threshold_depth = 0.02;         
+  
+  if (initial_position){
     clock_gettime(CLOCK_MONOTONIC, &timer_stop); fstop=(double)timer_stop.tv_sec + ((double)timer_stop.tv_nsec/1000000000.0);
-    clock_gettime(CLOCK_MONOTONIC, &timer_start); detect_start=(double)timer_start.tv_sec;
-    clock_gettime(CLOCK_MONOTONIC, &timer_stop); detect_stop=(double)timer_stop.tv_sec;
-    initial= true;
-    final = false;
-    _counter=0;
-    rvecs_array.clear();
- }
-
- bool OUTLET_CV::arucodetect_reset_service(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res){
-  cout << "Detection resets" << endl;
-  destroyAllWindows();
-  coordinate.t = "I";
-  coordinate.x = 10;
-  coordinate.y = 10;
-  if (Done_r && Done_x && Done_y && Done_z)
-    coordinate.z = 10;
-  else
-    coordinate.z = 0;
-  coordinate_pub.publish(coordinate);
-  ros::Rate _rate(10);
-  while((fstop-fstart)<5 && !mg400_running){
-    _rate.sleep();
-    clock_gettime(CLOCK_MONOTONIC, &timer_stop); fstop=(double)timer_stop.tv_sec + ((double)timer_stop.tv_nsec/1000000000.0);
+      if((std::abs(diff_height)<=threshold_height) && (std::abs(diff_depth)<=threshold_depth)){
+        clock_gettime(CLOCK_MONOTONIC, &timer_stop); fstop=(double)timer_stop.tv_sec + ((double)timer_stop.tv_nsec/1000000000.0);
+        initial_position =false;
+        return true;  
+      }else{
+        if(!mg400_running && (fstop-fstart)>timer){
+            clock_gettime(CLOCK_MONOTONIC, &timer_start); fstart=(double)timer_start.tv_sec + ((double)timer_start.tv_nsec/1000000000.0);
+            mg400_cmd_vel_pub.publish(twist);
+          }
+          return false;
+      }
+  }else{
+    return true;
   }
-  InitializeValues();
-  return true;
- }
-
-
-void OUTLET_CV::depth_callback(const sensor_msgs::ImageConstPtr& msg){
-    std_msgs::Header msg_header = msg->header;
-    std::string frame_id = msg_header.frame_id.c_str();
-    // ROS_INFO_STREAM("New Image from " << frame_id);
-
-    cv_bridge::CvImagePtr cv_ptr;
-    try
-    {
-        cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::TYPE_16UC1);
-        // cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
-
-    }
-    catch (cv_bridge::Exception& e)
-    {
-        ROS_ERROR("cv_bridge exception: %s", e.what());
-        return;
-    }
-
-    depth = cv_ptr->image;
-
 }
 
- void OUTLET_CV::image_callback(const sensor_msgs::ImageConstPtr& msg){
-    std_msgs::Header msg_header = msg->header;
-    std::string frame_id = msg_header.frame_id.c_str();
-    // ROS_INFO_STREAM("New Image from " << frame_id);
 
-    cv_bridge::CvImagePtr cv_ptr;
-    try
-    {
-        cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
-    }
-    catch (cv_bridge::Exception& e)
-    {
-        ROS_ERROR("cv_bridge exception: %s", e.what());
-        return;
-    }
 
-    src = cv_ptr->image;
-    w = src.size().width;
-    h = src.size().height;
-    // namedWindow(window_name, WINDOW_AUTOSIZE );
-    // CannyThreshold(0, 0);
-
- }
-
-  void OUTLET_CV::usbcam_callback(const sensor_msgs::ImageConstPtr& msg){
-    std_msgs::Header msg_header = msg->header;
-    std::string frame_id = msg_header.frame_id.c_str();
-    // ROS_INFO_STREAM("New Image from " << frame_id);
-
-    cv_bridge::CvImagePtr cv_ptr;
-    try
-    {
-        cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
-    }
-    catch (cv_bridge::Exception& e)
-    {
-        ROS_ERROR("cv_bridge exception: %s", e.what());
-        return;
-    }
-
-    u_src = cv_ptr->image;
-    u_w = u_src.size().width;
-    u_h = u_src.size().height;
-
-}
-
-void OUTLET_CV::aruco_marker_detector(){          
+  void OUTLET_CV::aruco_marker_detector(){          
     if(initial){
       aruco::detectMarkers(src, dictionary, corners, ids);
       clock_gettime(CLOCK_MONOTONIC, &timer_start); detect_start=(double)timer_start.tv_sec;
@@ -402,14 +302,24 @@ void OUTLET_CV::aruco_marker_detector(){
     } else{
       clock_gettime(CLOCK_MONOTONIC, &timer_start); detect_start=(double)timer_start.tv_sec;
       //erase it below later
-      clock_gettime(CLOCK_MONOTONIC, &timer_stop); detect_stop=(double)timer_stop.tv_sec;
+      // clock_gettime(CLOCK_MONOTONIC, &timer_stop); detect_stop=(double)timer_stop.tv_sec;
+      // clock_gettime(CLOCK_MONOTONIC, &timer_start); total_time_start=(double)timer_start.tv_sec + ((double)timer_start.tv_nsec/1000000000.0);
+      // clock_gettime(CLOCK_MONOTONIC, &timer_stop); total_time_stop=(double)timer_stop.tv_sec + ((double)timer_stop.tv_nsec/1000000000.0);
+      //------------------------
       aruco::detectMarkers(u_src, dictionary, corners, ids);
     }
+
+    //if the total time searching for the marker, then quit (120 secs)
+    if (std::abs(total_time_stop-total_time_start)>quit_searching){
+        std::cout << "Detection time exceeds 120 secs" <<std::endl;
+        arucodetect_reset_service(req,res);
+    }
+        
         
     // if at least one marker detected
     
-    if (std::abs(detect_start-detect_stop) >10){
-      std::cout << "detection timeout" <<std::endl;
+    if (std::abs(detect_start-detect_stop) >5){
+      std::cout << "Detection timeout" <<std::endl;
       arucodetect_reset_service(req, res);
     } 
     if (ids.size() > 0){
@@ -444,19 +354,20 @@ void OUTLET_CV::aruco_marker_detector(){
               coordinate_pub.publish(coordinate);
               initial = false;
               destroyAllWindows();
+              clock_gettime(CLOCK_MONOTONIC, &timer_start); total_time_start=(double)timer_start.tv_sec + ((double)timer_start.tv_nsec/1000000000.0);
+              clock_gettime(CLOCK_MONOTONIC, &timer_stop); total_time_stop=(double)timer_stop.tv_sec + ((double)timer_stop.tv_nsec/1000000000.0);
             }
         }else{
             for(int i=0; i < ids.size(); i++)
             {
               clock_gettime(CLOCK_MONOTONIC, &timer_stop); detect_stop=(double)timer_stop.tv_sec;
               cv::drawFrameAxes(u_src, camera_matrix, dist_coeffs, rvecs[0], tvecs[0], 0.1);
-              if (_counter>20){
+              if (!adjust_height(tvecs[0](1),tvecs[0](2)))
+                  break;
+
+              if (_counter>40){
                 std::sort(rvecs_array.begin(), rvecs_array.end());
-                angle = rvecs_array[rvecs_array.size()/2-1]*180/M_PI;
-                std::cout << "angle: " <<angle <<"\n"
-                  <<"distance: " << coordinate.z 
-                  <<std::endl;
-                
+                angle = rvecs_array[rvecs_array.size()/2-1]*180/M_PI;               
                 _counter = -1;
                 break;
               }else if (_counter>=0){
@@ -505,11 +416,152 @@ void OUTLET_CV::aruco_marker_detector(){
               adjustArm(tvecs[0](0), tvecs[0](1), tvecs[0](2), _angle);
             
             }  
-            }
-        
+        }
+        clock_gettime(CLOCK_MONOTONIC, &timer_stop); total_time_stop=(double)timer_stop.tv_sec + ((double)timer_stop.tv_nsec/1000000000.0);
     }
 
+  }
+
+
+  void OUTLET_CV::depth_callback(const sensor_msgs::ImageConstPtr& msg){
+    std_msgs::Header msg_header = msg->header;
+    std::string frame_id = msg_header.frame_id.c_str();
+    // ROS_INFO_STREAM("New Image from " << frame_id);
+
+    cv_bridge::CvImagePtr cv_ptr;
+    try
+    {
+        cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::TYPE_16UC1);
+        // cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
+
+    }
+    catch (cv_bridge::Exception& e)
+    {
+        ROS_ERROR("cv_bridge exception: %s", e.what());
+        return;
+    }
+
+    depth = cv_ptr->image;
+
+  }
+
+  void OUTLET_CV::image_callback(const sensor_msgs::ImageConstPtr& msg){
+    std_msgs::Header msg_header = msg->header;
+    std::string frame_id = msg_header.frame_id.c_str();
+    // ROS_INFO_STREAM("New Image from " << frame_id);
+
+    cv_bridge::CvImagePtr cv_ptr;
+    try
+    {
+        cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
+    }
+    catch (cv_bridge::Exception& e)
+    {
+        ROS_ERROR("cv_bridge exception: %s", e.what());
+        return;
+    }
+
+    src = cv_ptr->image;
+    w = src.size().width;
+    h = src.size().height;
+    // namedWindow(window_name, WINDOW_AUTOSIZE );
+    // CannyThreshold(0, 0);
+
+  }
+
+  void OUTLET_CV::usbcam_callback(const sensor_msgs::ImageConstPtr& msg){
+  std_msgs::Header msg_header = msg->header;
+  std::string frame_id = msg_header.frame_id.c_str();
+  // ROS_INFO_STREAM("New Image from " << frame_id);
+
+  cv_bridge::CvImagePtr cv_ptr;
+  try
+  {
+      cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
+  }
+  catch (cv_bridge::Exception& e)
+  {
+      ROS_ERROR("cv_bridge exception: %s", e.what());
+      return;
+  }
+
+  u_src = cv_ptr->image;
+  u_w = u_src.size().width;
+  u_h = u_src.size().height;
+
+  }
+
+  void OUTLET_CV::InitializeValues(){
+  Done_r = false;
+  Done_x = false;
+  Done_y = false;
+  Done_z = false;
+  clock_gettime(CLOCK_MONOTONIC, &timer_start); fstart=(double)timer_start.tv_sec + ((double)timer_start.tv_nsec/1000000000.0);
+  clock_gettime(CLOCK_MONOTONIC, &timer_stop); fstop=(double)timer_stop.tv_sec + ((double)timer_stop.tv_nsec/1000000000.0);
+  clock_gettime(CLOCK_MONOTONIC, &timer_start); detect_start=(double)timer_start.tv_sec;
+  clock_gettime(CLOCK_MONOTONIC, &timer_stop); detect_stop=(double)timer_stop.tv_sec;            
+  clock_gettime(CLOCK_MONOTONIC, &timer_start); total_time_start=(double)timer_start.tv_sec + ((double)timer_start.tv_nsec/1000000000.0);
+  clock_gettime(CLOCK_MONOTONIC, &timer_stop); total_time_stop=(double)timer_stop.tv_sec + ((double)timer_stop.tv_nsec/1000000000.0);
+  initial= true;
+  final = false;
+  initial_position = true;
+  _counter=0;
+  rvecs_array.clear();
 }
+
+  void OUTLET_CV::mg400_status_callback(const mg400_bringup::RobotStatus& msg){
+    if(msg.robot_status == 7){
+      mg400_running = true;
+    }else {
+      mg400_running = false;
+    }
+  }
+
+
+  void OUTLET_CV::mg400_callback(const std_msgs::Bool& msg){
+    if(!msg.data){ 
+          ADJUST=true;
+          // put the cmd_vel control below
+    }
+  }
+bool OUTLET_CV::arucodetect_start_service(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res){
+   cout << "Detection starts" << endl;
+   RUN = true;
+   return RUN;
+
+ }
+
+ bool OUTLET_CV::arucodetect_stop_service(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res){
+   cout << "Detection stops" << endl;
+   RUN = false;
+   destroyAllWindows();
+  //  InitializeValues();
+   return true;
+
+ }
+ bool OUTLET_CV::arucodetect_reset_service(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res){
+  cout << "Detection resets" << endl;
+  destroyAllWindows();
+  coordinate.t = "I";
+  if(Done_x && Done_y && Done_z && Done_r){
+      coordinate.x = 10;
+      coordinate.y = 10;
+      coordinate.z = 10;
+  }else{
+      coordinate.x = 100;
+      coordinate.y = 100;
+      coordinate.z = 100;
+  }
+  coordinate_pub.publish(coordinate);
+  InitializeValues();
+  ros::Rate _rate(10);
+  while((fstop-fstart)<5 && !mg400_running){
+    _rate.sleep();
+    clock_gettime(CLOCK_MONOTONIC, &timer_stop); fstop=(double)timer_stop.tv_sec + ((double)timer_stop.tv_nsec/1000000000.0);
+  }
+  
+  return true;
+ }
 
 
 int main( int argc, char** argv )
@@ -539,16 +591,17 @@ int main( int argc, char** argv )
       if(!cc.src.empty() && !cc.u_src.empty()){
         if(cc.getRun()){
             cc.aruco_marker_detector();
-        }
-        if(cc.initial){
-            // namedWindow("src", WINDOW_NORMAL);
-            // cv::resizeWindow("src", IMG_WIDTH, IMG_HEIGHT);
+            if(cc.initial){
+            namedWindow("src", WINDOW_NORMAL);
+            cv::resizeWindow("src", IMG_WIDTH, IMG_HEIGHT);
             imshow("src", cc.src);
-        }
-        else{
-            // namedWindow("out", WINDOW_NORMAL);
-            // cv::resizeWindow("out", IMG_WIDTH, IMG_HEIGHT);
-            imshow("out", cc.u_src);
+
+            }
+            else{
+                namedWindow("out", WINDOW_NORMAL);
+                cv::resizeWindow("out", IMG_WIDTH, IMG_HEIGHT);
+                imshow("out", cc.u_src);
+            }
         }
         waitKey(3);      
       }
