@@ -311,9 +311,11 @@ bool OUTLET_CV::arucodetect_start_service(std_srvs::Empty::Request& req, std_srv
   coordinate.t = "I";
   coordinate.x = 10;
   coordinate.y = 10;
-  coordinate.z = 10;
   if (Done_r && Done_x && Done_y && Done_z)
-    coordinate_pub.publish(coordinate);
+    coordinate.z = 10;
+  else
+    coordinate.z = 0;
+  coordinate_pub.publish(coordinate);
   InitializeValues();
   ros::Rate _rate(10);
   while((fstop-fstart)<5 && !mg400_running){
@@ -401,7 +403,7 @@ void OUTLET_CV::aruco_marker_detector(){
     } else{
       clock_gettime(CLOCK_MONOTONIC, &timer_start); detect_start=(double)timer_start.tv_sec;
       //erase it below later
-      // clock_gettime(CLOCK_MONOTONIC, &timer_stop); detect_stop=(double)timer_stop.tv_sec;
+      clock_gettime(CLOCK_MONOTONIC, &timer_stop); detect_stop=(double)timer_stop.tv_sec;
       aruco::detectMarkers(u_src, dictionary, corners, ids);
     }
         
