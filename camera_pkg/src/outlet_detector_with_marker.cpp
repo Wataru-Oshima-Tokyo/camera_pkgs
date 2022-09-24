@@ -412,7 +412,7 @@ void OUTLET_CV::aruco_marker_detector(){
         std::vector<cv::Vec3d> rvecs, tvecs;
         cv::Mat rot_mat;
         cv::aruco::estimatePoseSingleMarkers(corners, 0.05, camera_matrix, dist_coeffs, rvecs, tvecs);
-        if(initial ){
+        if(initial){
             if(correct_position(c_x)){
               std::vector<double> z_array;
               double z=0.0;
