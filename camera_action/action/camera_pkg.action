@@ -1,0 +1,10 @@
+#Define the goal
+#uint32 task_id  # Specify which dishwasher we want to use
+float64 duration
+string command
+---
+# Define the result
+bool done
+---
+# Define a feedback message
+float32 rate

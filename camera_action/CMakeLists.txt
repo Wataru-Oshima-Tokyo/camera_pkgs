@@ -1,36 +1,22 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(camera_pkg)
+project(camera_action)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
-add_compile_options(-std=c++11)
+# add_compile_options(-std=c++11)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  cv_bridge
-  image_transport
-  message_generation
-  roscpp
-  rospy
-  sensor_msgs
-  std_msgs
-  camera_pkg_msgs
-  darknet_ros_msgs
-  mg400_bringup
-  camera_action
   actionlib
   actionlib_msgs
+  geometry_msgs
+  roscpp
+  rospy
+  std_msgs
+  tf
 )
 
-find_package(OpenCV 4  REQUIRED)
-find_package(Threads REQUIRED)
-find_package(OpenMP REQUIRED)
-if(OPENMP_FOUND)
-  message(STATUS "OPENMP FOUND")
-  set(OpenMP_FLAGS ${OpenMP_CXX_FLAGS})  # or if you use C: ${OpenMP_C_FLAGS}
-  set(OpenMP_LIBS gomp)
-endif()
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 
@@ -67,7 +53,8 @@ endif()
 ## Generate messages in the 'msg' folder
 # add_message_files(
 #   FILES
-#   Coordinate.msg
+#   Message1.msg
+#   Message2.msg
 # )
 
 ## Generate services in the 'srv' folder
@@ -77,19 +64,18 @@ endif()
 #   Service2.srv
 # )
 
-## Generate actions in the 'action' folder
-# add_action_files(
-#   FILES
-#   Action1.action
-#   Action2.action
-# )
+add_action_files(
+  FILES
+  camera_pkg.action
+)
 
-## Generate added messages and services with any dependencies listed here
-#generate_messages(
-#   DEPENDENCIES
-#   sensor_msgs
-#   std_msgs
-# )
+# Generate added messages and services with any dependencies listed here
+generate_messages(
+  DEPENDENCIES
+  std_msgs
+  actionlib_msgs
+)
+
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -121,11 +107,10 @@ endif()
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
- INCLUDE_DIRS include
- LIBRARIES camera_pkg
-  CATKIN_DEPENDS cv_bridge image_transport  opencv2 roscpp rospy sensor_msgs std_msgs
+#  INCLUDE_DIRS include
+#  LIBRARIES camera_action
+#  CATKIN_DEPENDS actionlib actionlib_msgs geometry_msgs roscpp rospy std_msgs tf
 #  DEPENDS system_lib
-  DEPENDS OpenMP
 )
 
 ###########
@@ -135,25 +120,24 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-  include
+# include
   ${catkin_INCLUDE_DIRS}
-  ${OpenCV_INCLUDE_DIRS}
-  )
+)
 
 ## Declare a C++ library
-add_library(${PROJECT_NAME}
-   src/ros_rgbd.cpp
- )
+# add_library(${PROJECT_NAME}
+#   src/${PROJECT_NAME}/camera_action.cpp
+# )
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
 ## either from message generation or dynamic reconfigure
- add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-# add_executable(${PROJECT_NAME}_node src/camera_pkg_node.cpp)
+# add_executable(${PROJECT_NAME}_node src/camera_action_node.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -164,51 +148,6 @@ add_library(${PROJECT_NAME}
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-
-add_executable(ros_rgbd src/ros_rgbd.cpp)
-target_link_libraries(ros_rgbd ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
-
-add_executable(ros_image src/ros_image.cpp)
-target_link_libraries(ros_image ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
-
-add_executable(aruco_detector src/aruco_detector.cpp)
-target_link_libraries(aruco_detector ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
-
-add_executable(pub_image src/pub_image.cpp)
-target_link_libraries(pub_image ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
-
-add_executable(yolo_outlet_detector src/yolo_outlet_detector.cpp)
-target_link_libraries(yolo_outlet_detector ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
-
-add_executable(ir_image src/ir_image.cpp)
-target_link_libraries(ir_image ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
-
-add_executable(line_trace src/line_trace.cpp)
-target_compile_options(line_trace PRIVATE ${OpenMP_FLAGS})
-add_dependencies(line_trace ${catkin_EXPORTED_TARGETS})
-target_link_libraries(line_trace ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${OpenMP_LIBS})
-
-add_executable(mask_detect src/mask_detector.cpp)
-target_compile_options(mask_detect PRIVATE ${OpenMP_FLAGS})
-add_dependencies(mask_detect ${catkin_EXPORTED_TARGETS})
-target_link_libraries(mask_detect ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${OpenMP_LIBS})
-
-add_executable(outlet_detect src/outlet_detector_with_marker.cpp)
-target_compile_options(outlet_detect PRIVATE ${OpenMP_FLAGS})
-add_dependencies(outlet_detect ${catkin_EXPORTED_TARGETS})
-target_link_libraries(outlet_detect ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${OpenMP_LIBS})
-
-add_executable(camera_astra src/astra.cpp)
-target_link_libraries(camera_astra ${OpenCV_LIBRARIES} ${catkin_LIBRARIES})
-add_executable(sobel_img_opencv src/sobel_image.cpp)
-target_link_libraries(sobel_img_opencv ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
-add_executable(simplecv src/simple_img_draw.cpp)
-target_link_libraries(simplecv ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
-#add_executable(talker src/pub.cpp)
-#target_link_libraries(talker ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
-#add_executable(listener src/sub.cpp)
-#target_link_libraries(listener ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
-
 
 ## Specify libraries to link a library or executable target against
 # target_link_libraries(${PROJECT_NAME}_node
@@ -231,24 +170,24 @@ target_link_libraries(simplecv ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
 
 ## Mark executables for installation
 ## See http://docs.ros.org/melodic/api/catkin/html/howto/format1/building_executables.html
-#install(TARGETS ${PROJECT_NAME}
+# install(TARGETS ${PROJECT_NAME}_node
 #   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 # )
 
 ## Mark libraries for installation
 ## See http://docs.ros.org/melodic/api/catkin/html/howto/format1/building_libraries.html
-install(TARGETS ${PROJECT_NAME}
-   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-   RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
- )
+# install(TARGETS ${PROJECT_NAME}
+#   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+#   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+#   RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+# )
 
 ## Mark cpp header files for installation
- install(DIRECTORY include/${PROJECT_NAME}/
-   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-   FILES_MATCHING PATTERN "*.h"
-   PATTERN ".svn" EXCLUDE
- )
+# install(DIRECTORY include/${PROJECT_NAME}/
+#   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+#   FILES_MATCHING PATTERN "*.h"
+#   PATTERN ".svn" EXCLUDE
+# )
 
 ## Mark other files for installation (e.g. launch and bag files, etc.)
 # install(FILES
@@ -262,7 +201,7 @@ install(TARGETS ${PROJECT_NAME}
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_camera_pkg.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_camera_action.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()
