@@ -653,9 +653,11 @@ int main( int argc, char** argv )
         if(cc.server.isPreemptRequested()){
           cc.server.setPreempted();
           ROS_WARN("Preempt Goal\n");
+          cc.setRun(false);
         }else{
           if(cc.start_time + ros::Duration(cc.current_goal->duration) < ros::Time::now()){
-            cc.server.setAborted(); // abort it
+            cc.server.setPreempted();
+            ROS_WARN("Preempt Goal\n");
           }else{
             if(!cc.src.empty() && !cc.u_src.empty()){
               if(cc.getRun()){
