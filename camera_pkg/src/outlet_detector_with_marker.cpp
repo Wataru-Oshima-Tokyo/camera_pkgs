@@ -42,7 +42,7 @@ class OUTLET_CV{
     Mat u_src, u_dst ; // for the second camera
     Mat depth; //for the depth cammera
     Mat camera_matrix, dist_coeffs; //for calibration parameters
-    std::ostringstream vector_to_marker; //
+    std::ostringstream vector_to_marker; //for putting text on the image
     Ptr<aruco::Dictionary> dictionary = aruco::getPredefinedDictionary(aruco::DICT_4X4_50); //the dictionary for aruco marker 
     ros::Time start_time;
 
@@ -60,21 +60,21 @@ class OUTLET_CV{
     actionlib::SimpleActionServer<camera_action::camera_pkgAction> server;//make a server
 
     //functions
-    virtual bool arucodetect_start_service(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res); 
-    virtual bool arucodetect_reset_service(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);
-    virtual bool arucodetect_stop_service(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);
-    virtual void image_callback(const sensor_msgs::ImageConstPtr&);
-    virtual void mg400_status_callback(const mg400_bringup::RobotStatus&);
-    virtual void depth_callback(const sensor_msgs::ImageConstPtr&);
-    virtual void usbcam_callback(const sensor_msgs::ImageConstPtr&);
-    virtual void aruco_marker_detector();
-    virtual void adjustArm(double &x, double &y, double &z, double &ang);
-    virtual bool correct_position(double &);
-    virtual void InitializeValues();
-    virtual bool adjust_height(const double &height, const double &depth);
-    virtual void putTexts(const double &x, const double &y, const double &z, const double &r);
-    virtual void initial_detction();
-    virtual void hand_camera_detction();
+    virtual bool arucodetect_start_service(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);  //the service to start the detection
+    virtual bool arucodetect_reset_service(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res); // the service to reset the detection
+    virtual bool arucodetect_stop_service(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res); // the service to stop the detection
+    virtual void image_callback(const sensor_msgs::ImageConstPtr&); //to get an image from Realsense
+    virtual void mg400_status_callback(const mg400_bringup::RobotStatus&); //to get a status of MG400
+    virtual void depth_callback(const sensor_msgs::ImageConstPtr&); //to get a depth image from Realsense
+    virtual void usbcam_callback(const sensor_msgs::ImageConstPtr&); // to get a rgb image from USB camera 
+    virtual void aruco_marker_detector(); //detecting function inside
+    virtual void adjustArm(double &x, double &y, double &z, double &ang); // adjusting the robot arm by the coordinate obtained from the detected marker
+    virtual bool correct_position(double &); //if the detected marker is at the edge of the image obtained by Realsense, move the mobile robot to the center 
+    virtual void InitializeValues(); //initialzie all variables
+    virtual bool adjust_height(const double &height, const double &depth); // to adjust the robot arm to the initial postion where the camera reads the angle of the detected marker 
+    virtual void putTexts(const double &x, const double &y, const double &z, const double &r); //puttting some texts
+    virtual void initial_detction(); //the function of detecting a marker by Realsense
+    virtual void hand_camera_detction(); // the functioin of detecting a marker by USB camera
     
     // Topics
     std::string IMAGE_TOPIC;
@@ -97,11 +97,11 @@ class OUTLET_CV{
     int u_w, u_h; //height and width for the second cam
     double offset_x =0; double offset_y=0; double offset_z=0;
     double fixed_x,fixed_y, fixed_z;
-    double c_x,c_y;
-    bool initial = true;  
-    bool final = false;
-    double Kp;
-    std::string mode ="";
+    double c_x,c_y; // the x, y coordinate of center of the marker 
+    bool initial = true;  //used to switch an image from realsense to USB camera
+    bool _final = false; // to decide if MG400 tries to insert the plug or not
+    double Kp; // the proportional coeficient
+    std::string mode =""; 
 private:
     bool RUN = false; 
     double detect_probability =0.0;
@@ -259,13 +259,13 @@ void OUTLET_CV::adjustArm(double &x, double &y, double &z, double &ang){
     }
     clock_gettime(CLOCK_MONOTONIC, &timer_stop); fstop=(double)timer_stop.tv_sec + ((double)timer_stop.tv_nsec/1000000000.0);
     if(!mg400_running && Done_x && Done_y && (fstop-fstart)>timer && Done_r){
-      if (!final){
+      if (!_F){
         coordinate.t ="F";
         coordinate.x = 10;
         coordinate.y = 10;
         coordinate.z = 10;
         coordinate_pub_.publish(coordinate);
-        final =true;
+        _final =true;
         RUN = false;
         //after the operation is done, then initialize the timers
         clock_gettime(CLOCK_MONOTONIC, &timer_start); detect_start=(double)timer_start.tv_sec;
@@ -572,7 +572,7 @@ void OUTLET_CV::InitializeValues(){
   clock_gettime(CLOCK_MONOTONIC, &timer_start); total_time_start=(double)timer_start.tv_sec + ((double)timer_start.tv_nsec/1000000000.0);
   clock_gettime(CLOCK_MONOTONIC, &timer_stop); total_time_stop=(double)timer_stop.tv_sec + ((double)timer_stop.tv_nsec/1000000000.0);
   initial= true;
-  final = false;
+  _final = false;
   initial_position = true;
   _counter=0;
   rvecs_array.clear();
