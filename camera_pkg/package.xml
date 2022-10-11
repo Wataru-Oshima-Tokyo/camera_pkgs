@@ -78,6 +78,7 @@
   <exec_depend>camera_pkg_msgs</exec_depend>mg400_bringup
   <exec_depend>darknet_ros_msgs</exec_depend>
   <exec_depend>mg400_bringup</exec_depend>
+  <depend>camera_action</depend>
   <!-- The export tag contains other, unspecified, tags -->
   <export>
     <!-- Other tools can request additional information be placed here -->

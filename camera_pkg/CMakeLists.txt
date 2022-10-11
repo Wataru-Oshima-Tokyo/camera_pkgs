@@ -18,6 +18,9 @@ find_package(catkin REQUIRED COMPONENTS
   camera_pkg_msgs
   darknet_ros_msgs
   mg400_bringup
+  camera_action
+  actionlib
+  actionlib_msgs
 )
 
 find_package(OpenCV 4  REQUIRED)
@@ -201,10 +204,10 @@ add_executable(sobel_img_opencv src/sobel_image.cpp)
 target_link_libraries(sobel_img_opencv ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
 add_executable(simplecv src/simple_img_draw.cpp)
 target_link_libraries(simplecv ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
-add_executable(talker src/pub.cpp)
-target_link_libraries(talker ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
-add_executable(listener src/sub.cpp)
-target_link_libraries(listener ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
+#add_executable(talker src/pub.cpp)
+#target_link_libraries(talker ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
+#add_executable(listener src/sub.cpp)
+#target_link_libraries(listener ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
 
 
 ## Specify libraries to link a library or executable target against

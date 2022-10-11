@@ -7,6 +7,7 @@
  #include <opencv2/core/core.hpp>
  #include <opencv2/videoio.hpp>
  #include <opencv2/aruco.hpp>
+ #include <opencv2/calib3d.hpp>
 
  // Include CvBridge, Image Transport, Image msg
  #include <image_transport/image_transport.h>
@@ -61,9 +62,6 @@ class Image{
         cvtColor(src, src_hsv, COLOR_BGR2HSV);
 
         clock_gettime(CLOCK_MONOTONIC, &stop); fstop=(double)stop.tv_sec + ((double)stop.tv_nsec/1000000000.0);
-        std::string fps= "FPS: " + std::to_string(1/(fstop-fstart));
-
-        putText(src, fps,Point(10, 30), FONT_HERSHEY_DUPLEX,1.0,Scalar(118, 185, 0), 2);
         // cv::imshow("src", src);
         // cv::waitKey(3);
     }
@@ -90,8 +88,8 @@ class Image{
         cv::aruco::estimatePoseSingleMarkers(corners, 0.05, camera_matrix, dist_coeffs, rvecs, tvecs);
         for(int i=0; i < ids.size(); i++)
         {
-            cv::drawFrameAxes(imageCopy, camera_matrix, dist_coeffs, rvecs[i], tvecs[i], 0.1);
-
+            cv::drawFrameAxes(imageCopy, camera_matrix, dist_coeffs, rvecs[0], tvecs[0], 0.1);
+            double angle = rvecs[0](2)*180/M_PI;
             // This section is going to print the data for all the detected
             // markers. If you have more than a single marker, it is
             // recommended to change the below section so that either you
@@ -117,6 +115,17 @@ class Image{
             cv::putText(imageCopy, vector_to_marker.str(),
                         cv::Point(10, 70), cv::FONT_HERSHEY_SIMPLEX, 0.6,
                         cv::Scalar(0, 252, 124), 1, CV_AVX);
+
+            vector_to_marker.str(std::string());
+            vector_to_marker << std::setprecision(4)
+                                << "angle: " << std::setw(8) << angle;
+            cv::putText(imageCopy, vector_to_marker.str(),
+                        cv::Point(10, 90), cv::FONT_HERSHEY_SIMPLEX, 0.6,
+                        cv::Scalar(0, 255, 255), 1, CV_AVX);
+            std::cout << "x: " <<  tvecs[0](0)
+            << "y: " << tvecs[0](1)
+            << "z: " << tvecs[0](2)
+            << "angle: " << angle <<std::endl;
         }        
         imshow("original", src);
         if(!imageCopy.empty())
