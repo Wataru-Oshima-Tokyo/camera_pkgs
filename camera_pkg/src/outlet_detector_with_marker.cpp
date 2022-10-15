@@ -46,7 +46,7 @@ class OUTLET_CV{
     Ptr<aruco::Dictionary> dictionary = aruco::getPredefinedDictionary(aruco::DICT_4X4_50); //the dictionary for aruco marker 
     ros::Time start_time;
 
-    ros::Publisher coordinate_pub_, mg400_cmd_vel_pub_, target_cmd_vel_pub_; //publish topics
+    ros::Publisher coordinate_pub_, mg400_cmd_vel_pub_, target_cmd_vel_pub_, insert_queue_pub_; //publish topics
     ros::Subscriber image_sub_, depth_sub_, mg400_sub_, usbcam_sub_, mg400_status_sub_; //subscribe topics
     ros::NodeHandle nh; 
     camera_pkg_msgs::Coordinate coordinate; //coordinate for sending to MG400
@@ -75,7 +75,8 @@ class OUTLET_CV{
     virtual void putTexts(const double &x, const double &y, const double &z, const double &r); //puttting some texts
     virtual void initial_detction(); //the function of detecting a marker by Realsense
     virtual void hand_camera_detction(); // the functioin of detecting a marker by USB camera
-    
+    virtual void insert_queue(); //get the insert queue
+
     // Topics
     std::string IMAGE_TOPIC;
     std::string DEPTH_TOPIC;
@@ -88,7 +89,7 @@ class OUTLET_CV{
     const std::string ARUCO_DETECT_SERVICE_START = "/arucodetect/start";
     const std::string ARUCO_DETECT_SERVICE_RESET = "/arucodetect/reset";
     const std::string ARUCO_DETECT_SERVICE_STOP = "/arucodetect/stop";
-    
+    const std::string INSERT_QUEUE_TOPIC = "/insert_now";
     OUTLET_CV();
     ~OUTLET_CV();
     bool getRun(); 
@@ -173,7 +174,7 @@ server(nh, "charging_station", false)
   coordinate_pub_ = nh.advertise<camera_pkg_msgs::Coordinate>(COORDINATE_PUBLISH_TOPIC, 100);
   mg400_cmd_vel_pub_ = nh.advertise<geometry_msgs::Twist>(MG400_CMD_VEL_TOPIC,100);
   target_cmd_vel_pub_ = nh.advertise<geometry_msgs::Twist>(TARGET_CMDVELTOPIC,100);
-  
+  insert_queue_pub_ = nh.advertise<std_msgs::Bool>(INSERT_QUEUE_TOPIC,100);
   //start the server
   server.start(); 
 };
@@ -191,6 +192,12 @@ void OUTLET_CV::setRun(bool run){
     RUN = run;
 }
 
+//pusblishing the insert queue
+void OUTLET_CV::insert_queue(){
+  std_msgs::Bool msg;
+  msg.data = _final;
+  insert_queue_pub_.publish(msg);
+}
 /*
 In case the target aruco marker is out of range from the robot arm 
 If it is holonomic, we can alsot conside adding 
@@ -260,12 +267,12 @@ void OUTLET_CV::adjustArm(double &x, double &y, double &z, double &ang){
     clock_gettime(CLOCK_MONOTONIC, &timer_stop); fstop=(double)timer_stop.tv_sec + ((double)timer_stop.tv_nsec/1000000000.0);
     if(!mg400_running && Done_x && Done_y && (fstop-fstart)>timer && Done_r){
       if (!_final){
+        _final =true;
         coordinate.t ="F";
         coordinate.x = 10;
         coordinate.y = 10;
         coordinate.z = 10;
         coordinate_pub_.publish(coordinate);
-        _final =true;
         RUN = false;
         //after the operation is done, then initialize the timers
         clock_gettime(CLOCK_MONOTONIC, &timer_start); detect_start=(double)timer_start.tv_sec;
