@@ -467,7 +467,7 @@ void OUTLET_CV::aruco_marker_detector(){
       
       
   //if the marker has not been detected for 5 seconds
-  if (std::abs(detect_start-detect_stop) >5){
+  if (std::abs(detect_start-detect_stop) >5 && !_final){
     std::cout << "Detection timeout" <<std::endl;
     arucodetect_reset_service(req, res);
   } 
