@@ -2,6 +2,7 @@
 #uint32 task_id  # Specify which dishwasher we want to use
 float64 duration
 string command
+float64 angle
 ---
 # Define the result
 bool done

@@ -21,7 +21,7 @@ class Image{
    public:	 
         Image(){
                 ros::NodeHandle private_nh("~");
-                private_nh.param("image_topic", IMAGE_TOPIC, std::string("/usb_cam/image_raw"));  
+                private_nh.param("image_topic", IMAGE_TOPIC, std::string("/usb_cam2/image_raw"));  
                 private_nh.param("calibration_path", CALIBRATION, std::string(""));
                 std::cout << "calibration path: " <<  CALIBRATION << std::endl;            
                 cv::FileStorage fs;
@@ -122,9 +122,9 @@ class Image{
             cv::putText(imageCopy, vector_to_marker.str(),
                         cv::Point(10, 90), cv::FONT_HERSHEY_SIMPLEX, 0.6,
                         cv::Scalar(0, 255, 255), 1, CV_AVX);
-            std::cout << "x: " <<  tvecs[0](0)
-            << "y: " << tvecs[0](1)
-            << "z: " << tvecs[0](2)
+            std::cout << "x: " <<  tvecs[0](0) << "\n"
+            << "y: " << tvecs[0](1) << "\n"
+            << "z: " << tvecs[0](2) << "\n"
             << "angle: " << angle <<std::endl;
         }        
         imshow("original", src);
