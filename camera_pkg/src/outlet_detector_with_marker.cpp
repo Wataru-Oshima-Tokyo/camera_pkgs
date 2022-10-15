@@ -205,9 +205,9 @@ If it is holonomic, we can alsot conside adding
 bool OUTLET_CV::correct_position(double &x ){
 
   geometry_msgs::Twist twist;
-  if(x <w/5){
+  if(x <(3*w/10)){
     twist.linear.x = adjust_speed;
-  }else if (x> (4*w/5)){
+  }else if (x> (7*w/10)){
     twist.linear.x = -adjust_speed;
   }else{
     return true;
