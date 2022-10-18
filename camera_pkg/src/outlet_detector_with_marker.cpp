@@ -47,7 +47,7 @@ class OUTLET_CV{
     ros::Time start_time;
 
     ros::Publisher coordinate_pub_, mg400_cmd_vel_pub_, target_cmd_vel_pub_, insert_queue_pub_; //publish topics
-    ros::Subscriber image_sub_, depth_sub_, mg400_sub_, usbcam_sub_, mg400_status_sub_; //subscribe topics
+    ros::Subscriber image_sub_, depth_sub_, mg400_sub_, usbcam_sub_, mg400_status_sub_,insert_queue_sub_; //subscribe topics
     ros::NodeHandle nh; 
     camera_pkg_msgs::Coordinate coordinate; //coordinate for sending to MG400
     ros::ServiceServer detect_srv_start_, detect_srv_stop_, detect_srv_reset_; //service
@@ -75,8 +75,7 @@ class OUTLET_CV{
     virtual void putTexts(const double &x, const double &y, const double &z, const double &r); //puttting some texts
     virtual void initial_detction(); //the function of detecting a marker by Realsense
     virtual void hand_camera_detction(); // the functioin of detecting a marker by USB camera
-    virtual void insert_queue(); //get the insert queue
-
+    virtual void insert_result_callback(const std_msgs::Bool &result);
     // Topics
     std::string IMAGE_TOPIC;
     std::string DEPTH_TOPIC;
@@ -89,7 +88,9 @@ class OUTLET_CV{
     const std::string ARUCO_DETECT_SERVICE_START = "/arucodetect/start";
     const std::string ARUCO_DETECT_SERVICE_RESET = "/arucodetect/reset";
     const std::string ARUCO_DETECT_SERVICE_STOP = "/arucodetect/stop";
-    const std::string INSERT_QUEUE_TOPIC = "/insert_now";
+    const std::string INSERT_RESULT_TOPIC = "/insert_result";
+
+
     OUTLET_CV();
     ~OUTLET_CV();
     bool getRun(); 
@@ -103,6 +104,7 @@ class OUTLET_CV{
     bool _final = false; // to decide if MG400 tries to insert the plug or not
     double Kp; // the proportional coeficient
     std::string mode =""; 
+    bool insert_result = false;
 private:
     bool RUN = false; 
     double detect_probability =0.0;
@@ -113,7 +115,6 @@ private:
     //They are for deciding if MG400 is in the initial position
     bool Done_depth = false;
     bool Done_height = false;
-
     bool mg400_running = false; // if the MG400 is still moviing
     const double timer = 1.5; // the interval to send the command to MG400
     const double quit_searching = 120; //timer for the entire operation since it detected the marker
@@ -164,6 +165,7 @@ server(nh, "charging_station", false)
   usbcam_sub_ = nh.subscribe(USBCAM_TOPIC, 100, &OUTLET_CV::usbcam_callback, this);
   depth_sub_ = nh.subscribe(DEPTH_TOPIC, 100, &OUTLET_CV::depth_callback, this);
   mg400_status_sub_ = nh.subscribe(MG400STATUS_TOPIC,100, &OUTLET_CV::mg400_status_callback, this);
+  insert_queue_sub_ = nh.subscribe(INSERT_RESULT_TOPIC,100, &OUTLET_CV::insert_result_callback, this);
 
   //Services
   detect_srv_start_ = nh.advertiseService(ARUCO_DETECT_SERVICE_START, &OUTLET_CV::arucodetect_start_service, this);
@@ -174,7 +176,7 @@ server(nh, "charging_station", false)
   coordinate_pub_ = nh.advertise<camera_pkg_msgs::Coordinate>(COORDINATE_PUBLISH_TOPIC, 100);
   mg400_cmd_vel_pub_ = nh.advertise<geometry_msgs::Twist>(MG400_CMD_VEL_TOPIC,100);
   target_cmd_vel_pub_ = nh.advertise<geometry_msgs::Twist>(TARGET_CMDVELTOPIC,100);
-  insert_queue_pub_ = nh.advertise<std_msgs::Bool>(INSERT_QUEUE_TOPIC,100);
+  
   //start the server
   server.start(); 
 };
@@ -192,12 +194,7 @@ void OUTLET_CV::setRun(bool run){
     RUN = run;
 }
 
-//pusblishing the insert queue
-void OUTLET_CV::insert_queue(){
-  std_msgs::Bool msg;
-  msg.data = _final;
-  insert_queue_pub_.publish(msg);
-}
+
 /*
 In case the target aruco marker is out of range from the robot arm 
 If it is holonomic, we can alsot conside adding 
@@ -212,10 +209,15 @@ bool OUTLET_CV::correct_position(double &x ){
   }else{
     return true;
   }
-  target_cmd_vel_pub_.publish(twist);
+  // target_cmd_vel_pub_.publish(twist);
   return true;
 }
 
+
+void OUTLET_CV::insert_result_callback(const std_msgs::Bool &result){
+    insert_result = result.data;
+    std::cout << "insert_result: " << insert_result << std::endl;
+}; 
 //this is a crucial function because it is moving the arm to the correct position to insert 
 void OUTLET_CV::adjustArm(double &x, double &y, double &z, double &ang){
     geometry_msgs::Twist twist;
@@ -278,11 +280,17 @@ void OUTLET_CV::adjustArm(double &x, double &y, double &z, double &ang){
         clock_gettime(CLOCK_MONOTONIC, &timer_start); detect_start=(double)timer_start.tv_sec;
         clock_gettime(CLOCK_MONOTONIC, &timer_stop); detect_stop=(double)timer_stop.tv_sec;
         clock_gettime(CLOCK_MONOTONIC, &timer_start); total_time_stop=(double)timer_start.tv_sec + ((double)timer_start.tv_nsec/1000000000.0);
-        server.setSucceeded();
-        ROS_INFO("Succeeded it!");
+        ros::Rate _rate(10);
+        while ((detect_stop -detect_start)<10){
+            clock_gettime(CLOCK_MONOTONIC, &timer_stop); detect_stop=(double)timer_stop.tv_sec;
+            _rate.sleep();
+        }
+        clock_gettime(CLOCK_MONOTONIC, &timer_start); detect_start=(double)timer_start.tv_sec;
+        clock_gettime(CLOCK_MONOTONIC, &timer_stop); detect_stop=(double)timer_stop.tv_sec;
+        server.setPreempted();
+        ROS_INFO("Preempted it!");
       }
     clock_gettime(CLOCK_MONOTONIC, &timer_start); fstart=(double)timer_start.tv_sec + ((double)timer_start.tv_nsec/1000000000.0);
-
     }else if(!mg400_running && Done_x && Done_y && (fstop-fstart)>timer && !Done_r ){
       //if the angle adjustment is done 
       coordinate.t ="D";
@@ -655,6 +663,11 @@ int main( int argc, char** argv )
           cc.current_goal = cc.server.acceptNewGoal();
           cc.start_time = ros::Time::now();
           cc.setRun(true);
+          if (cc.insert_result){
+              cc.insert_result = false;
+              cc.server.setSucceeded();
+              ROS_INFO("Succeeded it!\n");
+          }
       }
       if(cc.server.isActive()){
         if(cc.server.isPreemptRequested()){
