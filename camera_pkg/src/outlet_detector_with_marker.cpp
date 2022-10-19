@@ -46,8 +46,8 @@ class OUTLET_CV{
     Ptr<aruco::Dictionary> dictionary = aruco::getPredefinedDictionary(aruco::DICT_4X4_50); //the dictionary for aruco marker 
     ros::Time start_time;
 
-    ros::Publisher coordinate_pub_, mg400_cmd_vel_pub_, target_cmd_vel_pub_, insert_queue_pub_; //publish topics
-    ros::Subscriber image_sub_, depth_sub_, mg400_sub_, usbcam_sub_, mg400_status_sub_,insert_queue_sub_; //subscribe topics
+    ros::Publisher coordinate_pub_, mg400_cmd_vel_pub_, target_cmd_vel_pub_;//publish topics
+    ros::Subscriber image_sub_, depth_sub_, mg400_sub_, usbcam_sub_, mg400_status_sub_; //subscribe topics
     ros::NodeHandle nh; 
     camera_pkg_msgs::Coordinate coordinate; //coordinate for sending to MG400
     ros::ServiceServer detect_srv_start_, detect_srv_stop_, detect_srv_reset_; //service
@@ -75,7 +75,6 @@ class OUTLET_CV{
     virtual void putTexts(const double &x, const double &y, const double &z, const double &r); //puttting some texts
     virtual void initial_detction(); //the function of detecting a marker by Realsense
     virtual void hand_camera_detction(); // the functioin of detecting a marker by USB camera
-    virtual void insert_result_callback(const std_msgs::Bool &result);
     // Topics
     std::string IMAGE_TOPIC;
     std::string DEPTH_TOPIC;
@@ -88,7 +87,6 @@ class OUTLET_CV{
     const std::string ARUCO_DETECT_SERVICE_START = "/arucodetect/start";
     const std::string ARUCO_DETECT_SERVICE_RESET = "/arucodetect/reset";
     const std::string ARUCO_DETECT_SERVICE_STOP = "/arucodetect/stop";
-    const std::string INSERT_RESULT_TOPIC = "/insert_result";
 
 
     OUTLET_CV();
@@ -104,7 +102,6 @@ class OUTLET_CV{
     bool _final = false; // to decide if MG400 tries to insert the plug or not
     double Kp; // the proportional coeficient
     std::string mode =""; 
-    bool insert_result = false;
 private:
     bool RUN = false; 
     double detect_probability =0.0;
@@ -165,7 +162,6 @@ server(nh, "charging_station", false)
   usbcam_sub_ = nh.subscribe(USBCAM_TOPIC, 100, &OUTLET_CV::usbcam_callback, this);
   depth_sub_ = nh.subscribe(DEPTH_TOPIC, 100, &OUTLET_CV::depth_callback, this);
   mg400_status_sub_ = nh.subscribe(MG400STATUS_TOPIC,100, &OUTLET_CV::mg400_status_callback, this);
-  insert_queue_sub_ = nh.subscribe(INSERT_RESULT_TOPIC,100, &OUTLET_CV::insert_result_callback, this);
 
   //Services
   detect_srv_start_ = nh.advertiseService(ARUCO_DETECT_SERVICE_START, &OUTLET_CV::arucodetect_start_service, this);
@@ -213,11 +209,6 @@ bool OUTLET_CV::correct_position(double &x ){
   return true;
 }
 
-
-void OUTLET_CV::insert_result_callback(const std_msgs::Bool &result){
-    insert_result = result.data;
-    std::cout << "insert_result: " << insert_result << std::endl;
-}; 
 //this is a crucial function because it is moving the arm to the correct position to insert 
 void OUTLET_CV::adjustArm(double &x, double &y, double &z, double &ang){
     geometry_msgs::Twist twist;
@@ -280,15 +271,9 @@ void OUTLET_CV::adjustArm(double &x, double &y, double &z, double &ang){
         clock_gettime(CLOCK_MONOTONIC, &timer_start); detect_start=(double)timer_start.tv_sec;
         clock_gettime(CLOCK_MONOTONIC, &timer_stop); detect_stop=(double)timer_stop.tv_sec;
         clock_gettime(CLOCK_MONOTONIC, &timer_start); total_time_stop=(double)timer_start.tv_sec + ((double)timer_start.tv_nsec/1000000000.0);
-        ros::Rate _rate(10);
-        while ((detect_stop -detect_start)<10){
-            clock_gettime(CLOCK_MONOTONIC, &timer_stop); detect_stop=(double)timer_stop.tv_sec;
-            _rate.sleep();
-        }
-        clock_gettime(CLOCK_MONOTONIC, &timer_start); detect_start=(double)timer_start.tv_sec;
-        clock_gettime(CLOCK_MONOTONIC, &timer_stop); detect_stop=(double)timer_stop.tv_sec;
-        server.setPreempted();
-        ROS_INFO("Preempted it!");
+        ros::Duration(7).sleep();
+        server.setSucceeded();
+        ROS_INFO("Succeeded it!");
       }
     clock_gettime(CLOCK_MONOTONIC, &timer_start); fstart=(double)timer_start.tv_sec + ((double)timer_start.tv_nsec/1000000000.0);
     }else if(!mg400_running && Done_x && Done_y && (fstop-fstart)>timer && !Done_r ){
@@ -663,11 +648,6 @@ int main( int argc, char** argv )
           cc.current_goal = cc.server.acceptNewGoal();
           cc.start_time = ros::Time::now();
           cc.setRun(true);
-          if (cc.insert_result){
-              cc.insert_result = false;
-              cc.server.setSucceeded();
-              ROS_INFO("Succeeded it!\n");
-          }
       }
       if(cc.server.isActive()){
         if(cc.server.isPreemptRequested()){
