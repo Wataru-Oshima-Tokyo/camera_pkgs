@@ -14,11 +14,13 @@
 #include <sensor_msgs/image_encodings.h>
 #include <geometry_msgs/Twist.h>
 #include <mg400_bringup/RobotStatus.h>
+#include <mg400_bringup/InsertStatus.h>
 #include "std_msgs/String.h"
 #include "std_msgs/Bool.h"
 #include "std_srvs/Empty.h"
 #include <vector>
 #include <camera_pkg_msgs/Coordinate.h>
+#include <camera_pkg_msgs/InsertStatus.h>
 #include <map>
 #include <math.h>
 //include action files
@@ -50,7 +52,7 @@ class OUTLET_CV{
     ros::Subscriber image_sub_, depth_sub_, mg400_sub_, usbcam_sub_, mg400_status_sub_; //subscribe topics
     ros::NodeHandle nh; 
     camera_pkg_msgs::Coordinate coordinate; //coordinate for sending to MG400
-    ros::ServiceServer detect_srv_start_, detect_srv_stop_, detect_srv_reset_; //service
+    ros::ServiceServer detect_srv_start_, detect_srv_stop_, detect_srv_reset_, insert_result_srv_; //service
     std::vector<int> ids; //ids for markers
     std::vector<std::vector<cv::Point2f> > corners; // corners for markers
     double adjust_speed; //the velociy for a mobile robots
@@ -63,6 +65,7 @@ class OUTLET_CV{
     virtual bool arucodetect_start_service(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);  //the service to start the detection
     virtual bool arucodetect_reset_service(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res); // the service to reset the detection
     virtual bool arucodetect_stop_service(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res); // the service to stop the detection
+    virtual bool insert_result_service(mg400_bringup::InsertStatus::Request& req, mg400_bringup::InsertStatus::Response& res); // the service to insert_result
     virtual void image_callback(const sensor_msgs::ImageConstPtr&); //to get an image from Realsense
     virtual void mg400_status_callback(const mg400_bringup::RobotStatus&); //to get a status of MG400
     virtual void depth_callback(const sensor_msgs::ImageConstPtr&); //to get a depth image from Realsense
@@ -87,12 +90,13 @@ class OUTLET_CV{
     const std::string ARUCO_DETECT_SERVICE_START = "/arucodetect/start";
     const std::string ARUCO_DETECT_SERVICE_RESET = "/arucodetect/reset";
     const std::string ARUCO_DETECT_SERVICE_STOP = "/arucodetect/stop";
-
+    const std::string INSERT_RESULT_SERVICE_TOPIC = "/insert_result";
 
     OUTLET_CV();
     ~OUTLET_CV();
     bool getRun(); 
     void setRun(bool run);
+    bool setInsert_result(const bool &result);
     int w,h; //heihgt and width for the first cam
     int u_w, u_h; //height and width for the second cam
     double offset_x =0; double offset_y=0; double offset_z=0;
@@ -101,7 +105,8 @@ class OUTLET_CV{
     bool initial = true;  //used to switch an image from realsense to USB camera
     bool _final = false; // to decide if MG400 tries to insert the plug or not
     double Kp; // the proportional coeficient
-    std::string mode =""; 
+    std::string mode ="";
+    bool insert_result = false; //insert_result  
 private:
     bool RUN = false; 
     double detect_probability =0.0;
@@ -112,6 +117,7 @@ private:
     //They are for deciding if MG400 is in the initial position
     bool Done_depth = false;
     bool Done_height = false;
+    
     bool mg400_running = false; // if the MG400 is still moviing
     const double timer = 1.5; // the interval to send the command to MG400
     const double quit_searching = 120; //timer for the entire operation since it detected the marker
@@ -167,7 +173,7 @@ server(nh, "charging_station", false)
   detect_srv_start_ = nh.advertiseService(ARUCO_DETECT_SERVICE_START, &OUTLET_CV::arucodetect_start_service, this);
   detect_srv_reset_ = nh.advertiseService(ARUCO_DETECT_SERVICE_RESET, &OUTLET_CV::arucodetect_reset_service, this);
   detect_srv_stop_ = nh.advertiseService(ARUCO_DETECT_SERVICE_STOP, &OUTLET_CV::arucodetect_stop_service, this);
-
+  insert_result_srv_ = nh.advertiseService(INSERT_RESULT_SERVICE_TOPIC, &OUTLET_CV::insert_result_service, this);
   //Publishers
   coordinate_pub_ = nh.advertise<camera_pkg_msgs::Coordinate>(COORDINATE_PUBLISH_TOPIC, 100);
   mg400_cmd_vel_pub_ = nh.advertise<geometry_msgs::Twist>(MG400_CMD_VEL_TOPIC,100);
@@ -271,9 +277,6 @@ void OUTLET_CV::adjustArm(double &x, double &y, double &z, double &ang){
         clock_gettime(CLOCK_MONOTONIC, &timer_start); detect_start=(double)timer_start.tv_sec;
         clock_gettime(CLOCK_MONOTONIC, &timer_stop); detect_stop=(double)timer_stop.tv_sec;
         clock_gettime(CLOCK_MONOTONIC, &timer_start); total_time_stop=(double)timer_start.tv_sec + ((double)timer_start.tv_nsec/1000000000.0);
-        ros::Duration(7).sleep();
-        server.setSucceeded();
-        ROS_INFO("Succeeded it!");
       }
     clock_gettime(CLOCK_MONOTONIC, &timer_start); fstart=(double)timer_start.tv_sec + ((double)timer_start.tv_nsec/1000000000.0);
     }else if(!mg400_running && Done_x && Done_y && (fstop-fstart)>timer && !Done_r ){
@@ -587,6 +590,17 @@ void OUTLET_CV::mg400_status_callback(const mg400_bringup::RobotStatus& msg){
   }
 }
 
+bool OUTLET_CV::setInsert_result(const bool &result){
+  insert_result = result;
+  ROS_INFO("Set insert result initialized");
+}
+
+bool OUTLET_CV::insert_result_service(mg400_bringup::InsertStatus::Request& req, mg400_bringup::InsertStatus::Response& res){
+  insert_result = true;
+  ROS_INFO("Set insert result succeeded!");
+  return true;
+}
+
 //detection starts by this service
 bool OUTLET_CV::arucodetect_start_service(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res){
   cout << "Detection starts" << endl;
@@ -648,6 +662,7 @@ int main( int argc, char** argv )
           cc.current_goal = cc.server.acceptNewGoal();
           cc.start_time = ros::Time::now();
           cc.setRun(true);
+          cc.setInsert_result(false);
       }
       if(cc.server.isActive()){
         if(cc.server.isPreemptRequested()){
@@ -658,6 +673,7 @@ int main( int argc, char** argv )
           if(cc.start_time + ros::Duration(cc.current_goal->duration) < ros::Time::now()){
             cc.server.setPreempted();
             ROS_WARN("Preempt Goal\n");
+            cc.setRun(false);
           }else{
             if(!cc.src.empty() && !cc.u_src.empty()){
               if(cc.getRun()){
@@ -670,6 +686,12 @@ int main( int argc, char** argv )
                     namedWindow("out", WINDOW_NORMAL);
                     cv::resizeWindow("out", IMG_WIDTH, IMG_HEIGHT);
                     imshow("out", cc.u_src);
+                  }
+              }else if(cc._final){
+                  if(cc.insert_result){
+                    cc.server.setSucceeded();
+                    cc.setRun(false);
+                    cc.InitializeValues();
                   }
               }
               waitKey(3);      
