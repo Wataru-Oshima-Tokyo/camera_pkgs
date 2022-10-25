@@ -628,6 +628,7 @@ bool OUTLET_CV::arucodetect_stop_service(std_srvs::Empty::Request& req, std_srvs
       coordinate.x = 10;
       coordinate.y = 10;
       coordinate.z = 10;
+      RUN = false;
   }else{ //otherwise;
       coordinate.x = 100;
       coordinate.y = 100;
@@ -689,9 +690,8 @@ int main( int argc, char** argv )
                   }
               }else if(cc._final){
                   if(cc.insert_result){
+                    destroyAllWindows();
                     cc.server.setSucceeded();
-                    cc.setRun(false);
-                    cc.InitializeValues();
                   }
               }
               waitKey(3);      
@@ -702,6 +702,6 @@ int main( int argc, char** argv )
       ros::spinOnce();
       loop_rate.sleep();
    }
-  destroyAllWindows();
+  
   return 0;
 }
