@@ -107,6 +107,8 @@ class OUTLET_CV{
     double Kp; // the proportional coeficient
     std::string mode ="";
     bool insert_result = false; //insert_result  
+    ros::Time insert_time; 
+    bool show_image;
 private:
     bool RUN = false; 
     double detect_probability =0.0;
@@ -144,6 +146,7 @@ server(nh, "charging_station", false)
   private_nh.param("offset_fixed_x", fixed_x, -0.075);
   private_nh.param("offset_fixed_y", fixed_y, -0.04);
   private_nh.param("offset_fixed_z", fixed_z, 0.37);
+  private_nh.param("show_image", show_image, true);
   private_nh.param("Kp", Kp, 30.0);
   private_nh.param("adjust_speed",adjust_speed, 0.05);
   private_nh.param("calibration_path", CALIBRATION, std::string(""));
@@ -277,6 +280,7 @@ void OUTLET_CV::adjustArm(double &x, double &y, double &z, double &ang){
         clock_gettime(CLOCK_MONOTONIC, &timer_start); detect_start=(double)timer_start.tv_sec;
         clock_gettime(CLOCK_MONOTONIC, &timer_stop); detect_stop=(double)timer_stop.tv_sec;
         clock_gettime(CLOCK_MONOTONIC, &timer_start); total_time_stop=(double)timer_start.tv_sec + ((double)timer_start.tv_nsec/1000000000.0);
+        insert_time = ros::Time::now();
       }
     clock_gettime(CLOCK_MONOTONIC, &timer_start); fstart=(double)timer_start.tv_sec + ((double)timer_start.tv_nsec/1000000000.0);
     }else if(!mg400_running && Done_x && Done_y && (fstop-fstart)>timer && !Done_r ){
@@ -680,15 +684,24 @@ int main( int argc, char** argv )
               if(cc.getRun()){
                   cc.aruco_marker_detector();
                   if(cc.initial){ //showing the screen received from realsense
+                  if(cc.show_image){
                     namedWindow("src", WINDOW_NORMAL);
                     cv::resizeWindow("src", IMG_WIDTH, IMG_HEIGHT);
                     imshow("src", cc.src);
+                  }
                   }else{ //showing the screen received from hand eye camera
-                    namedWindow("out", WINDOW_NORMAL);
-                    cv::resizeWindow("out", IMG_WIDTH, IMG_HEIGHT);
-                    imshow("out", cc.u_src);
+                    if(cc.show_image){
+                      namedWindow("out", WINDOW_NORMAL);
+                      cv::resizeWindow("out", IMG_WIDTH, IMG_HEIGHT);
+                      imshow("out", cc.u_src);
+                    }
                   }
               }else if(cc._final){
+                  if (cc.insert_time + ros::Duration(30) <ros::Time::now()){
+                      cc.server.setPreempted();
+                      ROS_WARN("Preempt Goal\n");
+                      cc.setRun(false);
+                  }
                   if(cc.insert_result){
                     destroyAllWindows();
                     cc.server.setSucceeded();
