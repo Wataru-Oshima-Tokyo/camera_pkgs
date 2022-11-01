@@ -20,7 +20,6 @@
 #include "std_srvs/Empty.h"
 #include <vector>
 #include <camera_pkg_msgs/Coordinate.h>
-#include <camera_pkg_msgs/InsertStatus.h>
 #include <map>
 #include <math.h>
 //include action files
