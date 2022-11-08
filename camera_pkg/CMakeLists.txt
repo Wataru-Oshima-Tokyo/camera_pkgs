@@ -16,8 +16,8 @@ find_package(catkin REQUIRED COMPONENTS
   sensor_msgs
   std_msgs
   camera_pkg_msgs
-  darknet_ros_msgs
-  mg400_bringup
+  #darknet_ros_msgs
+  #mg400_bringup
   camera_action
   actionlib
   actionlib_msgs
@@ -165,45 +165,45 @@ add_library(${PROJECT_NAME}
 ## same as for the library above
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
-add_executable(ros_rgbd src/ros_rgbd.cpp)
-target_link_libraries(ros_rgbd ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
+#add_executable(ros_rgbd src/ros_rgbd.cpp)
+#target_link_libraries(ros_rgbd ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
 
-add_executable(ros_image src/ros_image.cpp)
-target_link_libraries(ros_image ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
+#add_executable(ros_image src/ros_image.cpp)
+#target_link_libraries(ros_image ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
 
-add_executable(aruco_detector src/aruco_detector.cpp)
-target_link_libraries(aruco_detector ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
+#add_executable(aruco_detector src/aruco_detector.cpp)
+#target_link_libraries(aruco_detector ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
 
-add_executable(pub_image src/pub_image.cpp)
-target_link_libraries(pub_image ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
+#add_executable(pub_image src/pub_image.cpp)
+#target_link_libraries(pub_image ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
 
-add_executable(yolo_outlet_detector src/yolo_outlet_detector.cpp)
-target_link_libraries(yolo_outlet_detector ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
+#add_executable(yolo_outlet_detector src/yolo_outlet_detector.cpp)
+#target_link_libraries(yolo_outlet_detector ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
 
-add_executable(ir_image src/ir_image.cpp)
-target_link_libraries(ir_image ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
+#add_executable(ir_image src/ir_image.cpp)
+#target_link_libraries(ir_image ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
 
-add_executable(line_trace src/line_trace.cpp)
-target_compile_options(line_trace PRIVATE ${OpenMP_FLAGS})
-add_dependencies(line_trace ${catkin_EXPORTED_TARGETS})
-target_link_libraries(line_trace ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${OpenMP_LIBS})
+#add_executable(line_trace src/line_trace.cpp)
+#target_compile_options(line_trace PRIVATE ${OpenMP_FLAGS})
+#add_dependencies(line_trace ${catkin_EXPORTED_TARGETS})
+#target_link_libraries(line_trace ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${OpenMP_LIBS})
 
-add_executable(mask_detect src/mask_detector.cpp)
-target_compile_options(mask_detect PRIVATE ${OpenMP_FLAGS})
-add_dependencies(mask_detect ${catkin_EXPORTED_TARGETS})
-target_link_libraries(mask_detect ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${OpenMP_LIBS})
+#add_executable(mask_detect src/mask_detector.cpp)
+#target_compile_options(mask_detect PRIVATE ${OpenMP_FLAGS})
+#add_dependencies(mask_detect ${catkin_EXPORTED_TARGETS})
+#target_link_libraries(mask_detect ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${OpenMP_LIBS})
 
 add_executable(outlet_detect src/outlet_detector_with_marker.cpp)
 target_compile_options(outlet_detect PRIVATE ${OpenMP_FLAGS})
 add_dependencies(outlet_detect ${catkin_EXPORTED_TARGETS})
 target_link_libraries(outlet_detect ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${OpenMP_LIBS})
 
-add_executable(camera_astra src/astra.cpp)
-target_link_libraries(camera_astra ${OpenCV_LIBRARIES} ${catkin_LIBRARIES})
-add_executable(sobel_img_opencv src/sobel_image.cpp)
+#add_executable(camera_astra src/astra.cpp)
+#target_link_libraries(camera_astra ${OpenCV_LIBRARIES} ${catkin_LIBRARIES})
+#add_executable(sobel_img_opencv src/sobel_image.cpp)
 target_link_libraries(sobel_img_opencv ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
-add_executable(simplecv src/simple_img_draw.cpp)
-target_link_libraries(simplecv ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
+#add_executable(simplecv src/simple_img_draw.cpp)
+#target_link_libraries(simplecv ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
 #add_executable(talker src/pub.cpp)
 #target_link_libraries(talker ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
 #add_executable(listener src/sub.cpp)
