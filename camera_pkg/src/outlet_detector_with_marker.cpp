@@ -323,7 +323,7 @@ bool OUTLET_CV::adjust_height(const double &height, const double &depth){
   }
   if (initial_position){
     clock_gettime(CLOCK_MONOTONIC, &timer_stop); fstop=(double)timer_stop.tv_sec + ((double)timer_stop.tv_nsec/1000000000.0);
-      if(Done_height && Done_depth || std::abs(total_time_stop-total_time_start)>30){
+      if(Done_height && Done_depth || std::abs(total_time_stop-total_time_start)>15){
         //if the adjustment is done or the time of operation exceeds 30 seconds, then finalize the position
         clock_gettime(CLOCK_MONOTONIC, &timer_start); fstart=(double)timer_start.tv_sec + ((double)timer_start.tv_nsec/1000000000.0);
         initial_position =false;
@@ -668,6 +668,7 @@ int main( int argc, char** argv )
           cc.start_time = ros::Time::now();
           cc.setRun(true);
           cc.setInsert_result(false);
+          cc.initial = true;
       }
       if(cc.server.isActive()){
         if(cc.server.isPreemptRequested()){
