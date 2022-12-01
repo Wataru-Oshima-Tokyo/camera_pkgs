@@ -23,7 +23,16 @@ find_package(catkin REQUIRED COMPONENTS
   actionlib_msgs
 )
 
-find_package(OpenCV 4  REQUIRED)
+set(_opencv_version 4)
+
+find_package(OpenCV 4 QUIET)
+if(NOT OpenCV_FOUND)
+  message(STATUS "Did not find OpenCV 4, trying OpenCV 3")
+  set(_opencv_version 3)
+endif()
+
+find_package(OpenCV ${_opencv_version} REQUIRED)
+
 find_package(Threads REQUIRED)
 find_package(OpenMP REQUIRED)
 if(OPENMP_FOUND)
@@ -165,14 +174,17 @@ add_library(${PROJECT_NAME}
 ## same as for the library above
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
-#add_executable(ros_rgbd src/ros_rgbd.cpp)
-#target_link_libraries(ros_rgbd ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
+add_executable(ros_rgbd src/ros_rgbd.cpp)
+target_link_libraries(ros_rgbd ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
 
-#add_executable(ros_image src/ros_image.cpp)
-#target_link_libraries(ros_image ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
+add_executable(ros_image src/ros_image.cpp)
+target_link_libraries(ros_image ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
+if(DEFINED OPENCV4_FOUND)
+  add_executable(aruco_detector src/aruco_detector.cpp)
+  target_link_libraries(aruco_detector ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
+endif()
 
-add_executable(aruco_detector src/aruco_detector.cpp)
-target_link_libraries(aruco_detector ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
+
 
 #add_executable(pub_image src/pub_image.cpp)
 #target_link_libraries(pub_image ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
