@@ -17,7 +17,7 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   camera_pkg_msgs
   #darknet_ros_msgs
-  mg400_bringup
+  #mg400_bringup
   camera_action
   actionlib
   actionlib_msgs
@@ -205,10 +205,10 @@ endif()
 #add_dependencies(mask_detect ${catkin_EXPORTED_TARGETS})
 #target_link_libraries(mask_detect ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${OpenMP_LIBS})
 
-add_executable(outlet_detect src/outlet_detector_with_marker.cpp)
-target_compile_options(outlet_detect PRIVATE ${OpenMP_FLAGS})
-add_dependencies(outlet_detect ${catkin_EXPORTED_TARGETS})
-target_link_libraries(outlet_detect ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${OpenMP_LIBS})
+#add_executable(outlet_detect src/outlet_detector_with_marker.cpp)
+#target_compile_options(outlet_detect PRIVATE ${OpenMP_FLAGS})
+#add_dependencies(outlet_detect ${catkin_EXPORTED_TARGETS})
+#target_link_libraries(outlet_detect ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${OpenMP_LIBS})
 
 #add_executable(camera_astra src/astra.cpp)
 #target_link_libraries(camera_astra ${OpenCV_LIBRARIES} ${catkin_LIBRARIES})
