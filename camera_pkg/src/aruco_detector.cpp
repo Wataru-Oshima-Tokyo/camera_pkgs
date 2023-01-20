@@ -88,7 +88,7 @@ class Image{
         cv::aruco::estimatePoseSingleMarkers(corners, 0.05, camera_matrix, dist_coeffs, rvecs, tvecs);
         for(int i=0; i < ids.size(); i++)
         {
-            cv::drawFrameAxes(imageCopy, camera_matrix, dist_coeffs, rvecs[0], tvecs[0], 0.1);
+            // cv::drawFrameAxes(imageCopy, camera_matrix, dist_coeffs, rvecs[0], tvecs[0], 0.1);
             double angle = rvecs[0](2)*180/M_PI;
             // This section is going to print the data for all the detected
             // markers. If you have more than a single marker, it is

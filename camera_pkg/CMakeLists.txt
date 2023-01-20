@@ -23,7 +23,7 @@ find_package(catkin REQUIRED COMPONENTS
   actionlib_msgs
 )
 
-find_package(OpenCV 4  REQUIRED)
+find_package(OpenCV 3  REQUIRED)
 find_package(Threads REQUIRED)
 find_package(OpenMP REQUIRED)
 if(OPENMP_FOUND)
