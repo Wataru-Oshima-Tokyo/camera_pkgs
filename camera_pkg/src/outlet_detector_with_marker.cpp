@@ -402,12 +402,13 @@ void OUTLET_CV::initial_detection(){
                 coordinate.z = 0;
             }
             coordinate.r = 0;
-            if (coordinate.z > 500){
+            if (coordinate.z > 400){
               server.setPreempted();
-              ROS_WARN("Preempt Goal\n");
+              ROS_WARN("Too far away: Preempt Goal\n");
               setRun(false);
+            }else{
+              coordinate_pub_.publish(coordinate);
             }
-            coordinate_pub_.publish(coordinate);
             initial = false;
             destroyAllWindows();
             clock_gettime(CLOCK_MONOTONIC, &timer_start); fstart=(double)timer_start.tv_sec + ((double)timer_start.tv_nsec/1000000000.0);
