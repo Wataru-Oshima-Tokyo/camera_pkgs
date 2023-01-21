@@ -1,4 +1,4 @@
-import pyrealsense2 as rs
+import pyrealsense2.pyrealsense2 as rs
 
 width = 848
 height = 480
