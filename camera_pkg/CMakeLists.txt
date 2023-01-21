@@ -186,24 +186,21 @@ endif()
 
 
 
-#add_executable(pub_image src/pub_image.cpp)
-#target_link_libraries(pub_image ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
+add_executable(yolo_outlet_detector src/yolo_outlet_detector.cpp)
+target_link_libraries(yolo_outlet_detector ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
 
-#add_executable(yolo_outlet_detector src/yolo_outlet_detector.cpp)
-#target_link_libraries(yolo_outlet_detector ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
+add_executable(ir_image src/ir_image.cpp)
+target_link_libraries(ir_image ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
 
-#add_executable(ir_image src/ir_image.cpp)
-#target_link_libraries(ir_image ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
+add_executable(line_trace src/line_trace.cpp)
+target_compile_options(line_trace PRIVATE ${OpenMP_FLAGS})
+add_dependencies(line_trace ${catkin_EXPORTED_TARGETS})
+target_link_libraries(line_trace ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${OpenMP_LIBS})
 
-#add_executable(line_trace src/line_trace.cpp)
-#target_compile_options(line_trace PRIVATE ${OpenMP_FLAGS})
-#add_dependencies(line_trace ${catkin_EXPORTED_TARGETS})
-#target_link_libraries(line_trace ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${OpenMP_LIBS})
-
-#add_executable(mask_detect src/mask_detector.cpp)
-#target_compile_options(mask_detect PRIVATE ${OpenMP_FLAGS})
-#add_dependencies(mask_detect ${catkin_EXPORTED_TARGETS})
-#target_link_libraries(mask_detect ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${OpenMP_LIBS})
+add_executable(mask_detect src/mask_detector.cpp)
+target_compile_options(mask_detect PRIVATE ${OpenMP_FLAGS})
+add_dependencies(mask_detect ${catkin_EXPORTED_TARGETS})
+target_link_libraries(mask_detect ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${OpenMP_LIBS})
 
 add_executable(outlet_detect src/outlet_detector_with_marker.cpp)
 target_compile_options(outlet_detect PRIVATE ${OpenMP_FLAGS})

@@ -686,6 +686,9 @@ int main( int argc, char** argv )
             ROS_WARN("Preempt Goal\n");
             cc.setRun(false);
           }else{
+            camera_action::camera_pkgFeedback feedback;
+            feedback.rate = (ros::Time::now() - cc.start_time).toSec() / cc.current_goal->duration;
+            cc.server.publishFeedback(feedback);
             if(!cc.src.empty() && !cc.u_src.empty()){
               if(cc.getRun()){
                   cc.aruco_marker_detector();
@@ -703,7 +706,7 @@ int main( int argc, char** argv )
                     }
                   }
               }else if(cc._final){
-                  if (cc.insert_time + ros::Duration(15) <ros::Time::now()){
+                  if (cc.insert_time + ros::Duration(10) <ros::Time::now()){
                       cc.server.setPreempted();
                       ROS_WARN("Preempt Goal\n");
                       cc.setRun(false);
