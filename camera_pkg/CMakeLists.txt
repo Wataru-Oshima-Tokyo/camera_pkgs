@@ -186,8 +186,8 @@ endif()
 
 
 
-add_executable(yolo_outlet_detector src/yolo_outlet_detector.cpp)
-target_link_libraries(yolo_outlet_detector ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
+# add_executable(yolo_outlet_detector src/yolo_outlet_detector.cpp)
+# target_link_libraries(yolo_outlet_detector ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
 
 add_executable(ir_image src/ir_image.cpp)
 target_link_libraries(ir_image ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
