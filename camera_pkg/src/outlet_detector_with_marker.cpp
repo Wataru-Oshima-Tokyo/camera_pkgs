@@ -46,6 +46,8 @@ class OUTLET_CV{
     std::ostringstream vector_to_marker; //for putting text on the image
     Ptr<aruco::Dictionary> dictionary = aruco::getPredefinedDictionary(aruco::DICT_4X4_50); //the dictionary for aruco marker 
     ros::Time start_time;
+    std_srvs::Empty::Request req; // empty request
+    std_srvs::Empty::Response res; //empty response
 
     ros::Publisher coordinate_pub_, mg400_cmd_vel_pub_, target_cmd_vel_pub_;//publish topics
     ros::Subscriber image_sub_, depth_sub_, mg400_sub_, usbcam_sub_, mg400_status_sub_; //subscribe topics
@@ -75,7 +77,7 @@ class OUTLET_CV{
     virtual void InitializeValues(); //initialzie all variables
     virtual bool adjust_height(const double &height, const double &depth); // to adjust the robot arm to the initial postion where the camera reads the angle of the detected marker 
     virtual void putTexts(const double &x, const double &y, const double &z, const double &r); //puttting some texts
-    virtual void initial_detction(); //the function of detecting a marker by Realsense
+    virtual void initial_detection(); //the function of detecting a marker by Realsense
     virtual void hand_camera_detction(); // the functioin of detecting a marker by USB camera
     // Topics
     std::string IMAGE_TOPIC;
@@ -127,8 +129,6 @@ private:
     double threshold_x, threshold_y, threshold_z; //thresholds for the marker
     std::string CALIBRATION; //calibration path
     std::vector<double> rvecs_array; //the angele for marker
-    std_srvs::Empty::Request req; // empty request
-    std_srvs::Empty::Response res; //empty response
     std::vector<cv::Vec3d> rvecs, tvecs; //for marker angle and distance
 };
 
@@ -322,7 +322,7 @@ bool OUTLET_CV::adjust_height(const double &height, const double &depth){
   }
   if (initial_position){
     clock_gettime(CLOCK_MONOTONIC, &timer_stop); fstop=(double)timer_stop.tv_sec + ((double)timer_stop.tv_nsec/1000000000.0);
-      if(Done_height && Done_depth || std::abs(total_time_stop-total_time_start)>30){
+      if(Done_height && Done_depth || std::abs(total_time_stop-total_time_start)>15){
         //if the adjustment is done or the time of operation exceeds 30 seconds, then finalize the position
         clock_gettime(CLOCK_MONOTONIC, &timer_start); fstart=(double)timer_start.tv_sec + ((double)timer_start.tv_nsec/1000000000.0);
         initial_position =false;
@@ -382,7 +382,7 @@ void OUTLET_CV::putTexts(const double &x, const double &y, const double &z, cons
 }
 
 //this is the function to control the arm once the marked is detectd by realsense camera
-void OUTLET_CV::initial_detction(){
+void OUTLET_CV::initial_detection(){
   std::vector<double> z_array;
             double z=0.0;
             rep(i,0,5)
@@ -402,7 +402,13 @@ void OUTLET_CV::initial_detction(){
                 coordinate.z = 0;
             }
             coordinate.r = 0;
-            coordinate_pub_.publish(coordinate);
+            if (coordinate.z > 400){
+              server.setPreempted();
+              ROS_WARN("Too far away: Preempt Goal\n");
+              setRun(false);
+            }else{
+              coordinate_pub_.publish(coordinate);
+            }
             initial = false;
             destroyAllWindows();
             clock_gettime(CLOCK_MONOTONIC, &timer_start); fstart=(double)timer_start.tv_sec + ((double)timer_start.tv_nsec/1000000000.0);
@@ -480,7 +486,7 @@ void OUTLET_CV::aruco_marker_detector(){
       cv::aruco::estimatePoseSingleMarkers(corners, 0.05, camera_matrix, dist_coeffs, rvecs, tvecs);
       if(initial){
           if(correct_position(c_x)){
-            initial_detction(); 
+            initial_detection(); 
           }
       }else{
             hand_camera_detction();
@@ -667,6 +673,7 @@ int main( int argc, char** argv )
           cc.start_time = ros::Time::now();
           cc.setRun(true);
           cc.setInsert_result(false);
+          cc.initial = true;
       }
       if(cc.server.isActive()){
         if(cc.server.isPreemptRequested()){
@@ -696,7 +703,7 @@ int main( int argc, char** argv )
                     }
                   }
               }else if(cc._final){
-                  if (cc.insert_time + ros::Duration(30) <ros::Time::now()){
+                  if (cc.insert_time + ros::Duration(15) <ros::Time::now()){
                       cc.server.setPreempted();
                       ROS_WARN("Preempt Goal\n");
                       cc.setRun(false);
