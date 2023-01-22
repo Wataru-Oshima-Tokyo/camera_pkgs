@@ -693,11 +693,11 @@ int main( int argc, char** argv )
               if(cc.getRun()){
                   cc.aruco_marker_detector();
                   if(cc.initial){ //showing the screen received from realsense
-                  if(cc.show_image){
-                    namedWindow("src", WINDOW_NORMAL);
-                    cv::resizeWindow("src", IMG_WIDTH, IMG_HEIGHT);
-                    imshow("src", cc.src);
-                  }
+                    if(cc.show_image){
+                      namedWindow("src", WINDOW_NORMAL);
+                      cv::resizeWindow("src", IMG_WIDTH, IMG_HEIGHT);
+                      imshow("src", cc.src);
+                    }
                   }else{ //showing the screen received from hand eye camera
                     if(cc.show_image){
                       namedWindow("out", WINDOW_NORMAL);
@@ -707,6 +707,7 @@ int main( int argc, char** argv )
                   }
               }else if(cc._final){
                   if (cc.insert_time + ros::Duration(10) <ros::Time::now()){
+                      destroyAllWindows();
                       cc.server.setPreempted();
                       ROS_WARN("Preempt Goal\n");
                       cc.setRun(false);
