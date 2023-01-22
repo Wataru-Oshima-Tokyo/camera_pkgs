@@ -424,8 +424,8 @@ void OUTLET_CV::hand_camera_detction(){
     {
       clock_gettime(CLOCK_MONOTONIC, &timer_stop); detect_stop=(double)timer_stop.tv_sec;
       cv::drawFrameAxes(u_src, camera_matrix, dist_coeffs, rvecs[0], tvecs[0], 0.1);
-      if (!adjust_height(tvecs[0](1),tvecs[0](2)))
-        break;
+      // if (!adjust_height(tvecs[0](1),tvecs[0](2)))
+      //   break;
           
 
       if (_counter>40){
@@ -690,6 +690,9 @@ int main( int argc, char** argv )
             ROS_WARN("Preempt Goal\n");
             cc.setRun(false);
           }else{
+            camera_action::camera_pkgFeedback feedback;
+            feedback.rate = (ros::Time::now() - cc.start_time).toSec() / cc.current_goal->duration;
+            cc.server.publishFeedback(feedback);
             if(!cc.src.empty() && !cc.u_src.empty()){
               if(cc.getRun()){
                   cc.aruco_marker_detector();

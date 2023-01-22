@@ -16,14 +16,23 @@ find_package(catkin REQUIRED COMPONENTS
   sensor_msgs
   std_msgs
   camera_pkg_msgs
-  darknet_ros_msgs
+  #darknet_ros_msgs
   mg400_bringup
   camera_action
   actionlib
   actionlib_msgs
 )
 
-find_package(OpenCV 4  REQUIRED)
+set(_opencv_version 4)
+
+find_package(OpenCV 4 QUIET)
+if(NOT OpenCV_FOUND)
+  message(STATUS "Did not find OpenCV 4, trying OpenCV 3")
+  set(_opencv_version 3)
+endif()
+
+find_package(OpenCV ${_opencv_version} REQUIRED)
+
 find_package(Threads REQUIRED)
 find_package(OpenMP REQUIRED)
 if(OPENMP_FOUND)
@@ -170,15 +179,15 @@ target_link_libraries(ros_rgbd ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
 
 add_executable(ros_image src/ros_image.cpp)
 target_link_libraries(ros_image ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
+if(DEFINED OPENCV4_FOUND)
+  add_executable(aruco_detector src/aruco_detector.cpp)
+  target_link_libraries(aruco_detector ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
+endif()
 
-add_executable(aruco_detector src/aruco_detector.cpp)
-target_link_libraries(aruco_detector ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
 
-add_executable(pub_image src/pub_image.cpp)
-target_link_libraries(pub_image ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
 
-add_executable(yolo_outlet_detector src/yolo_outlet_detector.cpp)
-target_link_libraries(yolo_outlet_detector ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
+# add_executable(yolo_outlet_detector src/yolo_outlet_detector.cpp)
+# target_link_libraries(yolo_outlet_detector ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
 
 add_executable(ir_image src/ir_image.cpp)
 target_link_libraries(ir_image ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
@@ -198,12 +207,12 @@ target_compile_options(outlet_detect PRIVATE ${OpenMP_FLAGS})
 add_dependencies(outlet_detect ${catkin_EXPORTED_TARGETS})
 target_link_libraries(outlet_detect ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${OpenMP_LIBS})
 
-add_executable(camera_astra src/astra.cpp)
-target_link_libraries(camera_astra ${OpenCV_LIBRARIES} ${catkin_LIBRARIES})
-add_executable(sobel_img_opencv src/sobel_image.cpp)
-target_link_libraries(sobel_img_opencv ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
-add_executable(simplecv src/simple_img_draw.cpp)
-target_link_libraries(simplecv ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
+#add_executable(camera_astra src/astra.cpp)
+#target_link_libraries(camera_astra ${OpenCV_LIBRARIES} ${catkin_LIBRARIES})
+#add_executable(sobel_img_opencv src/sobel_image.cpp)
+# target_link_libraries(sobel_img_opencv ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
+#add_executable(simplecv src/simple_img_draw.cpp)
+#target_link_libraries(simplecv ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
 #add_executable(talker src/pub.cpp)
 #target_link_libraries(talker ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} )
 #add_executable(listener src/sub.cpp)
