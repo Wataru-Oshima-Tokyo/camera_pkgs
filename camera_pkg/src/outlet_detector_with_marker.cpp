@@ -97,7 +97,7 @@ class OUTLET_CV{
     ~OUTLET_CV();
     bool getRun(); 
     void setRun(bool run);
-    bool setInsert_result(const bool &result);
+    bool setInsert_result(const int &result);
     int w,h; //heihgt and width for the first cam
     int u_w, u_h; //height and width for the second cam
     double offset_x =0; double offset_y=0; double offset_z=0;
@@ -107,7 +107,7 @@ class OUTLET_CV{
     bool _final = false; // to decide if MG400 tries to insert the plug or not
     double Kp; // the proportional coeficient
     std::string mode ="";
-    bool insert_result = false; //insert_result  
+    int insert_result = 0; //insert_result  
     ros::Time insert_time; 
     bool show_image;
 private:
@@ -475,6 +475,9 @@ void OUTLET_CV::aruco_marker_detector(){
   if (std::abs(detect_start-detect_stop) >5 && !_final){
     std::cout << "Detection timeout" <<std::endl;
     arucodetect_reset_service(req, res);
+    server.setPreempted();
+    ROS_WARN("Preempt Goal\n");
+    setRun(false);
   } 
   // if at least one marker detected
   if (ids.size() > 0){
@@ -599,13 +602,14 @@ void OUTLET_CV::mg400_status_callback(const mg400_bringup::RobotStatus& msg){
   }
 }
 
-bool OUTLET_CV::setInsert_result(const bool &result){
+bool OUTLET_CV::setInsert_result(const int &result){
   insert_result = result;
   ROS_INFO("Set insert result initialized");
 }
 
 bool OUTLET_CV::insert_result_service(mg400_bringup::InsertStatus::Request& req, mg400_bringup::InsertStatus::Response& res){
-  insert_result = true;
+  std::cout << req.result << std::endl;
+  insert_result = req.result;
   ROS_INFO("Set insert result succeeded!");
   return true;
 }
@@ -672,7 +676,7 @@ int main( int argc, char** argv )
           cc.current_goal = cc.server.acceptNewGoal();
           cc.start_time = ros::Time::now();
           cc.setRun(true);
-          cc.setInsert_result(false);
+          cc.setInsert_result(0);
           cc.initial = true;
       }
       if(cc.server.isActive()){
@@ -703,12 +707,12 @@ int main( int argc, char** argv )
                     }
                   }
               }else if(cc._final){
-                  if (cc.insert_time + ros::Duration(15) <ros::Time::now()){
+                  if (cc.insert_result == 2){
                       cc.server.setPreempted();
                       ROS_WARN("Preempt Goal\n");
                       cc.setRun(false);
                   }
-                  if(cc.insert_result){
+                  if(cc.insert_result == 1){
                     destroyAllWindows();
                     cc.server.setSucceeded();
                   }
