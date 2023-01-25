@@ -419,7 +419,6 @@ void OUTLET_CV::initial_detection(){
 
 //this is the function to adjust the position of the arm based on the info from the hand eye camera
 void OUTLET_CV::hand_camera_detction(){
-    ROS_INFO("HAND_CAMERA_DETECTION");
     for(int i=0; i < ids.size(); i++)
     {
       clock_gettime(CLOCK_MONOTONIC, &timer_stop); detect_stop=(double)timer_stop.tv_sec;
@@ -676,11 +675,11 @@ int main( int argc, char** argv )
    clock_gettime(CLOCK_MONOTONIC, &timer_stop); fstop=(double)timer_stop.tv_sec + ((double)timer_stop.tv_nsec/1000000000.0);
    while(ros::ok()){
       if(cc.server.isNewGoalAvailable()){
+          cc.InitializeValues();
           cc.current_goal = cc.server.acceptNewGoal();
           cc.start_time = ros::Time::now();
           cc.setRun(true);
           cc.setInsert_result(0);
-          cc.initial = true;
           ROS_INFO("Got a new goal");
       }
       if(cc.server.isActive()){
