@@ -718,12 +718,14 @@ int main( int argc, char** argv )
                       cc.server.setPreempted();
                       ROS_WARN("Preempt Goal\n");
                       cc.setRun(false);
+                      cc._final = false;
                   }
                   if(cc.insert_result == 1){
                     destroyAllWindows();
                     cc.server.setSucceeded();
                     ROS_WARN("Insert action: Succeeded\n");
                     cc.setRun(false);
+                    cc._final = false;
                   }
               }
               waitKey(3);      
