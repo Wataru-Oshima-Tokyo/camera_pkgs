@@ -383,38 +383,45 @@ void OUTLET_CV::putTexts(const double &x, const double &y, const double &z, cons
 
 //this is the function to control the arm once the marked is detectd by realsense camera
 void OUTLET_CV::initial_detection(){
-  std::vector<double> z_array;
-            double z=0.0;
-            rep(i,0,5)
-              rep(j,0,5){
-                z = depth.at<uint16_t>((uint16_t)(c_y+j),(uint16_t)(c_x+i));
-                z_array.push_back(z);
-            }
-            std::sort(z_array.begin(), z_array.end());
-            z = z_array[z_array.size()/2-1]; 
-            z = depth.at<uint16_t>((uint16_t)(c_y),(uint16_t)(c_x));
-            coordinate.t = "L";
-            coordinate.x = c_x;
-            coordinate.y = c_y;
-            if(coordinate.x !=0 && coordinate.y!=0){
-                coordinate.z = z;
-            }else{
-                coordinate.z = 0;
-            }
-            coordinate.r = 0;
-            if (coordinate.z > 400){
-              server.setPreempted();
-              ROS_WARN("Too far away: Preempt Goal\n");
-              setRun(false);
-            }else{
-              coordinate_pub_.publish(coordinate);
-            }
-            initial = false;
-            destroyAllWindows();
-            clock_gettime(CLOCK_MONOTONIC, &timer_start); fstart=(double)timer_start.tv_sec + ((double)timer_start.tv_nsec/1000000000.0);
-            clock_gettime(CLOCK_MONOTONIC, &timer_stop); fstop=(double)timer_stop.tv_sec + ((double)timer_stop.tv_nsec/1000000000.0);    
-            clock_gettime(CLOCK_MONOTONIC, &timer_start); total_time_start=(double)timer_start.tv_sec + ((double)timer_start.tv_nsec/1000000000.0);
-            clock_gettime(CLOCK_MONOTONIC, &timer_stop); total_time_stop=(double)timer_stop.tv_sec + ((double)timer_stop.tv_nsec/1000000000.0);
+        std::vector<double> z_array;
+        double z=0.0;
+        try{
+          rep(i,0,5)
+          rep(j,0,5){
+            z = depth.at<uint16_t>((uint16_t)(c_y+j),(uint16_t)(c_x+i));
+            z_array.push_back(z);
+          }
+          std::sort(z_array.begin(), z_array.end());
+          z = z_array[z_array.size()/2-1]; 
+          z = depth.at<uint16_t>((uint16_t)(c_y),(uint16_t)(c_x));
+        }catch(...){
+          z = 99999.9;
+          ROS_WARN("Something goes wrong with the depth value\n");
+        }
+
+        coordinate.t = "L";
+        coordinate.x = c_x;
+        coordinate.y = c_y;
+        if(coordinate.x !=0 && coordinate.y!=0){
+            coordinate.z = z;
+        }else{
+            coordinate.z = 0;
+        }
+        coordinate.r = 0;
+        if (coordinate.z > 400){
+          server.setPreempted();
+          ROS_WARN("Too far away: Preempt Goal\n");
+          setRun(false);
+        }else{
+          coordinate_pub_.publish(coordinate);
+        }
+        ROS_INFO("Initial detection finished");
+        initial = false;
+        destroyAllWindows();
+        clock_gettime(CLOCK_MONOTONIC, &timer_start); fstart=(double)timer_start.tv_sec + ((double)timer_start.tv_nsec/1000000000.0);
+        clock_gettime(CLOCK_MONOTONIC, &timer_stop); fstop=(double)timer_stop.tv_sec + ((double)timer_stop.tv_nsec/1000000000.0);    
+        clock_gettime(CLOCK_MONOTONIC, &timer_start); total_time_start=(double)timer_start.tv_sec + ((double)timer_start.tv_nsec/1000000000.0);
+        clock_gettime(CLOCK_MONOTONIC, &timer_stop); total_time_stop=(double)timer_stop.tv_sec + ((double)timer_stop.tv_nsec/1000000000.0);
 }
 
 //this is the function to adjust the position of the arm based on the info from the hand eye camera
@@ -450,26 +457,16 @@ void OUTLET_CV::hand_camera_detction(){
 //this is the function to detect a marker
 void OUTLET_CV::aruco_marker_detector(){          
   if(initial){
+    ROS_INFO("Start detectubg a marker");
     aruco::detectMarkers(src, dictionary, corners, ids);
     clock_gettime(CLOCK_MONOTONIC, &timer_start); detect_start=(double)timer_start.tv_sec;
     clock_gettime(CLOCK_MONOTONIC, &timer_stop); detect_stop=(double)timer_stop.tv_sec;
   } else{
     clock_gettime(CLOCK_MONOTONIC, &timer_start); detect_start=(double)timer_start.tv_sec;
-    //erase it below later
-    // clock_gettime(CLOCK_MONOTONIC, &timer_stop); detect_stop=(double)timer_stop.tv_sec;
-    // clock_gettime(CLOCK_MONOTONIC, &timer_start); total_time_start=(double)timer_start.tv_sec + ((double)timer_start.tv_nsec/1000000000.0);
-    // clock_gettime(CLOCK_MONOTONIC, &timer_stop); total_time_stop=(double)timer_stop.tv_sec + ((double)timer_stop.tv_nsec/1000000000.0);
-    //------------------------
     aruco::detectMarkers(u_src, dictionary, corners, ids);
   }
 
-  //if the total time searching for the marker, then quit (120 secs)
-  if (std::abs(total_time_stop-total_time_start)>quit_searching){
-      std::cout << "Detection time exceeds 120 secs" <<std::endl;
-      arucodetect_reset_service(req,res);
-  }
-      
-      
+            
   //if the marker has not been detected for 5 seconds
   if (std::abs(detect_start-detect_stop) >5 && !_final){
     std::cout << "Detection timeout" <<std::endl;
@@ -487,9 +484,10 @@ void OUTLET_CV::aruco_marker_detector(){
       
       cv::aruco::estimatePoseSingleMarkers(corners, 0.05, camera_matrix, dist_coeffs, rvecs, tvecs);
       if(initial){
-          if(correct_position(c_x)){
+          // if(correct_position(c_x)){
+            ROS_INFO("Initial detection starts");
             initial_detection(); 
-          }
+          // }
       }else{
             hand_camera_detction();
       }
@@ -675,9 +673,9 @@ int main( int argc, char** argv )
    clock_gettime(CLOCK_MONOTONIC, &timer_stop); fstop=(double)timer_stop.tv_sec + ((double)timer_stop.tv_nsec/1000000000.0);
    while(ros::ok()){
       if(cc.server.isNewGoalAvailable()){
-          cc.InitializeValues();
           cc.current_goal = cc.server.acceptNewGoal();
           cc.start_time = ros::Time::now();
+          cc.InitializeValues();
           cc.setRun(true);
           cc.setInsert_result(0);
           ROS_INFO("Got a new goal");
@@ -696,7 +694,7 @@ int main( int argc, char** argv )
             camera_action::camera_pkgFeedback feedback;
             feedback.rate = (ros::Time::now() - cc.start_time).toSec() / cc.current_goal->duration;
             cc.server.publishFeedback(feedback);
-            if(!cc.src.empty() && !cc.u_src.empty()){
+            if(!cc.src.empty() && !cc.u_src.empty() && !cc.depth.empty()){
               if(cc.getRun()){
                   cc.aruco_marker_detector();
                   if(cc.initial){ //showing the screen received from realsense
