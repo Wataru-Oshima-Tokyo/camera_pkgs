@@ -597,7 +597,7 @@ bool OUTLET_CV::arucodetect_stop_service(std_srvs::Empty::Request& req, std_srvs
   ros::Rate _rate(10);
   //wait for a little bit
   send_command_now = ros::Time::now();
-  while((send_command_now+ros::Duration(timer) <ros::Time::now()) && !mg400_running){
+  while((send_command_now+ros::Duration(5) >ros::Time::now()) || mg400_running){
     _rate.sleep();
   }
   return true;
