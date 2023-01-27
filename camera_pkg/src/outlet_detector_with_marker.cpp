@@ -33,8 +33,7 @@
 using namespace std;
 using namespace cv;
 
-struct timespec timer_start, timer_stop;
-double fstart, fstop, detect_start, detect_stop, total_time_start, total_time_stop;
+
 
 class OUTLET_CV{
   public:
@@ -75,7 +74,7 @@ class OUTLET_CV{
     virtual void adjustArm(double &x, double &y, double &z, double &ang); // adjusting the robot arm by the coordinate obtained from the detected marker
     virtual bool correct_position(double &); //if the detected marker is at the edge of the image obtained by Realsense, move the mobile robot to the center 
     virtual void InitializeValues(); //initialzie all variables
-    virtual bool adjust_height(const double &height, const double &depth); // to adjust the robot arm to the initial postion where the camera reads the angle of the detected marker 
+    // virtual bool adjust_height(const double &height, const double &depth); // to adjust the robot arm to the initial postion where the camera reads the angle of the detected marker 
     virtual void putTexts(const double &x, const double &y, const double &z, const double &r); //puttting some texts
     virtual void initial_detection(); //the function of detecting a marker by Realsense
     virtual void hand_camera_detction(); // the functioin of detecting a marker by USB camera
@@ -109,6 +108,8 @@ class OUTLET_CV{
     std::string mode ="";
     int insert_result = 0; //insert_result  
     ros::Time insert_time; 
+    ros::Time send_command_now;
+    ros::Time detect_start;
     bool show_image;
 private:
     bool RUN = false; 
@@ -123,7 +124,6 @@ private:
     
     bool mg400_running = false; // if the MG400 is still moviing
     const double timer = 1.5; // the interval to send the command to MG400
-    const double quit_searching = 120; //timer for the entire operation since it detected the marker
     int _counter =0; // for how many pcitures to get angle
     double angle=0; // the detected angle
     double threshold_x, threshold_y, threshold_z; //thresholds for the marker
@@ -241,12 +241,11 @@ void OUTLET_CV::adjustArm(double &x, double &y, double &z, double &ang){
     double move_z = _Kp*offset_z;
 
 
-    if (!mg400_running && (fstop-fstart)>timer && (!Done_x || !Done_y)){
+    if (!mg400_running && (send_command_now+ros::Duration(timer) <ros::Time::now()) && (!Done_x || !Done_y)){
       twist.linear.x = -move_z; // depth
       twist.linear.y = move_x; // horizontal 
       twist.linear.z = move_y; // vertical
       
-      clock_gettime(CLOCK_MONOTONIC, &timer_start); fstart=(double)timer_start.tv_sec + ((double)timer_start.tv_nsec/1000000000.0);
       ROS_INFO("\nOffset_x: %lf, Offset_y: %lf, Offset_z: %lf\n", offset_x, offset_y, offset_z);
       ROS_INFO("\nlinear.x: %lf, linear.y: %lf, linear.z: %lf\n", twist.linear.x, twist.linear.y, twist.linear.z);
       mg400_cmd_vel_pub_.publish(twist);
@@ -265,8 +264,7 @@ void OUTLET_CV::adjustArm(double &x, double &y, double &z, double &ang){
       }
 
     }
-    clock_gettime(CLOCK_MONOTONIC, &timer_stop); fstop=(double)timer_stop.tv_sec + ((double)timer_stop.tv_nsec/1000000000.0);
-    if(!mg400_running && Done_x && Done_y && (fstop-fstart)>timer && Done_r){
+    if(!mg400_running && Done_x && Done_y && (send_command_now+ros::Duration(timer) <ros::Time::now()) && Done_r){
       if (!_final){
         _final =true;
         coordinate.t ="F";
@@ -276,13 +274,10 @@ void OUTLET_CV::adjustArm(double &x, double &y, double &z, double &ang){
         coordinate_pub_.publish(coordinate);
         RUN = false;
         //after the operation is done, then initialize the timers
-        clock_gettime(CLOCK_MONOTONIC, &timer_start); detect_start=(double)timer_start.tv_sec;
-        clock_gettime(CLOCK_MONOTONIC, &timer_stop); detect_stop=(double)timer_stop.tv_sec;
-        clock_gettime(CLOCK_MONOTONIC, &timer_start); total_time_stop=(double)timer_start.tv_sec + ((double)timer_start.tv_nsec/1000000000.0);
         insert_time = ros::Time::now();
+        send_command_now = ros::Time::now();
       }
-    clock_gettime(CLOCK_MONOTONIC, &timer_start); fstart=(double)timer_start.tv_sec + ((double)timer_start.tv_nsec/1000000000.0);
-    }else if(!mg400_running && Done_x && Done_y && (fstop-fstart)>timer && !Done_r ){
+    }else if(!mg400_running && Done_x && Done_y && (send_command_now+ros::Duration(timer) <ros::Time::now()) && !Done_r ){
       //if the angle adjustment is done 
       coordinate.t ="D";
       coordinate.r = angle;
@@ -291,57 +286,17 @@ void OUTLET_CV::adjustArm(double &x, double &y, double &z, double &ang){
       Done_x = false;
       Done_y = false;
       Done_z = false;
-      clock_gettime(CLOCK_MONOTONIC, &timer_start); fstart=(double)timer_start.tv_sec + ((double)timer_start.tv_nsec/1000000000.0);
-    }else if(!mg400_running && !Done_x &&! Done_y && (fstop-fstart)>timer && Done_r && std::abs(ang) > 3 ){
+      send_command_now = ros::Time::now();
+    }else if(!mg400_running && !Done_x && !Done_y && (send_command_now+ros::Duration(timer) <ros::Time::now()) && Done_r && std::abs(ang) > 3 ){
       //if the angle is more than 3, then adjust it
       coordinate.t = "A";
       coordinate.r = ang;
       coordinate_pub_.publish(coordinate);
-      clock_gettime(CLOCK_MONOTONIC, &timer_start); fstart=(double)timer_start.tv_sec + ((double)timer_start.tv_nsec/1000000000.0);
+      send_command_now = ros::Time::now();
     }
     
 }
 
-//this is the function for moving the arm to the intial postion to read the angle of a marker
-bool OUTLET_CV::adjust_height(const double &height, const double &depth){
-  geometry_msgs::Twist twist;
-  const double diff_height = 0.0114 - height;
-  const double diff_depth = 0.13- depth;
-  const double _Kp = Kp*3;
-  const double move_height = _Kp*diff_height; 
-  const double move_depth = _Kp*diff_height; 
-  twist.linear.z = move_height; // vertical
-  twist.linear.x = -move_depth; // depth
-  const double threshold_height = 0.0005;  
-  const double threshold_depth = 0.03;         
-  if (std::abs(diff_height)<=threshold_height){
-    Done_height =true;
-  }
-  if (std::abs(diff_depth)<=threshold_depth){
-    Done_depth = true; 
-  }
-  if (initial_position){
-    clock_gettime(CLOCK_MONOTONIC, &timer_stop); fstop=(double)timer_stop.tv_sec + ((double)timer_stop.tv_nsec/1000000000.0);
-      if(Done_height && Done_depth || std::abs(total_time_stop-total_time_start)>15){
-        //if the adjustment is done or the time of operation exceeds 30 seconds, then finalize the position
-        clock_gettime(CLOCK_MONOTONIC, &timer_start); fstart=(double)timer_start.tv_sec + ((double)timer_start.tv_nsec/1000000000.0);
-        initial_position =false;
-        Done_height = false;
-        Done_depth = false;
-        return true;  
-      }else{
-        if(!mg400_running && (fstop-fstart)>timer){
-            //if the position is still not the correct position
-            clock_gettime(CLOCK_MONOTONIC, &timer_start); fstart=(double)timer_start.tv_sec + ((double)timer_start.tv_nsec/1000000000.0);
-            mg400_cmd_vel_pub_.publish(twist);
-            std::cout << "diff_height: " << std::abs(diff_height) << "diff_depth: " << std::abs(diff_depth) << std::endl;
-          }
-          return false;
-      }
-  }else{
-    return true;
-  }
-}
 
 //this is the function to put some comments on the imshow screen
 void OUTLET_CV::putTexts(const double &x, const double &y, const double &z, const double &r){
@@ -418,17 +373,14 @@ void OUTLET_CV::initial_detection(){
         ROS_INFO("Initial detection finished");
         initial = false;
         destroyAllWindows();
-        clock_gettime(CLOCK_MONOTONIC, &timer_start); fstart=(double)timer_start.tv_sec + ((double)timer_start.tv_nsec/1000000000.0);
-        clock_gettime(CLOCK_MONOTONIC, &timer_stop); fstop=(double)timer_stop.tv_sec + ((double)timer_stop.tv_nsec/1000000000.0);    
-        clock_gettime(CLOCK_MONOTONIC, &timer_start); total_time_start=(double)timer_start.tv_sec + ((double)timer_start.tv_nsec/1000000000.0);
-        clock_gettime(CLOCK_MONOTONIC, &timer_stop); total_time_stop=(double)timer_stop.tv_sec + ((double)timer_stop.tv_nsec/1000000000.0);
+        send_command_now = ros::Time::now();
 }
 
 //this is the function to adjust the position of the arm based on the info from the hand eye camera
 void OUTLET_CV::hand_camera_detction(){
     for(int i=0; i < ids.size(); i++)
     {
-      clock_gettime(CLOCK_MONOTONIC, &timer_stop); detect_stop=(double)timer_stop.tv_sec;
+      detect_start = ros::Time::now();
       cv::drawFrameAxes(u_src, camera_matrix, dist_coeffs, rvecs[0], tvecs[0], 0.1);
       // if (!adjust_height(tvecs[0](1),tvecs[0](2)))
       //   break;
@@ -449,26 +401,24 @@ void OUTLET_CV::hand_camera_detction(){
 
     if(!mg400_running)
       adjustArm(tvecs[0](0), tvecs[0](1), tvecs[0](2), _angle);
-    
     }  
 
 }
 
 //this is the function to detect a marker
 void OUTLET_CV::aruco_marker_detector(){          
+  
+   
   if(initial){
-    ROS_INFO("Start detectubg a marker");
+    ROS_INFO("Start detecting a marker");
     aruco::detectMarkers(src, dictionary, corners, ids);
-    clock_gettime(CLOCK_MONOTONIC, &timer_start); detect_start=(double)timer_start.tv_sec;
-    clock_gettime(CLOCK_MONOTONIC, &timer_stop); detect_stop=(double)timer_stop.tv_sec;
   } else{
-    clock_gettime(CLOCK_MONOTONIC, &timer_start); detect_start=(double)timer_start.tv_sec;
     aruco::detectMarkers(u_src, dictionary, corners, ids);
   }
 
             
   //if the marker has not been detected for 5 seconds
-  if (std::abs(detect_start-detect_stop) >5 && !_final){
+  if (detect_start + ros::Duration(5) <ros::Time::now() && !_final){
     std::cout << "Detection timeout" <<std::endl;
     arucodetect_reset_service(req, res);
     server.setPreempted();
@@ -477,6 +427,7 @@ void OUTLET_CV::aruco_marker_detector(){
   } 
   // if at least one marker detected
   if (ids.size() > 0){
+      detect_start = ros::Time::now();
       // printf("detected\n");
       aruco::drawDetectedMarkers(src, corners, ids);
       c_x = (corners[0][0].x + corners[0][1].x)/2;
@@ -484,15 +435,11 @@ void OUTLET_CV::aruco_marker_detector(){
       
       cv::aruco::estimatePoseSingleMarkers(corners, 0.05, camera_matrix, dist_coeffs, rvecs, tvecs);
       if(initial){
-          // if(correct_position(c_x)){
             ROS_INFO("Initial detection starts");
             initial_detection(); 
-          // }
       }else{
             hand_camera_detction();
       }
-      //counting the total timer of operation regardless the marker is detected or not
-      clock_gettime(CLOCK_MONOTONIC, &timer_stop); total_time_stop=(double)timer_stop.tv_sec + ((double)timer_stop.tv_nsec/1000000000.0);
   }
 
 }
@@ -577,12 +524,8 @@ void OUTLET_CV::InitializeValues(){
   Done_z = false;
   Done_height = false;
   Done_depth = false;
-  clock_gettime(CLOCK_MONOTONIC, &timer_start); fstart=(double)timer_start.tv_sec + ((double)timer_start.tv_nsec/1000000000.0);
-  clock_gettime(CLOCK_MONOTONIC, &timer_stop); fstop=(double)timer_stop.tv_sec + ((double)timer_stop.tv_nsec/1000000000.0);
-  clock_gettime(CLOCK_MONOTONIC, &timer_start); detect_start=(double)timer_start.tv_sec;
-  clock_gettime(CLOCK_MONOTONIC, &timer_stop); detect_stop=(double)timer_stop.tv_sec;            
-  clock_gettime(CLOCK_MONOTONIC, &timer_start); total_time_start=(double)timer_start.tv_sec + ((double)timer_start.tv_nsec/1000000000.0);
-  clock_gettime(CLOCK_MONOTONIC, &timer_stop); total_time_stop=(double)timer_stop.tv_sec + ((double)timer_stop.tv_nsec/1000000000.0);
+  detect_start = ros::Time::now();
+  send_command_now = ros::Time::now();
   initial= true;
   _final = false;
   initial_position = true;
@@ -652,11 +595,10 @@ bool OUTLET_CV::arucodetect_stop_service(std_srvs::Empty::Request& req, std_srvs
   InitializeValues();
   ros::Rate _rate(10);
   //wait for a little bit
-  while((fstop-fstart)<5 && !mg400_running){
+  send_command_now = ros::Time::now();
+  while((send_command_now+ros::Duration(timer) <ros::Time::now()) && !mg400_running){
     _rate.sleep();
-    clock_gettime(CLOCK_MONOTONIC, &timer_stop); fstop=(double)timer_stop.tv_sec + ((double)timer_stop.tv_nsec/1000000000.0);
   }
-  
   return true;
  }
 
@@ -669,8 +611,6 @@ int main( int argc, char** argv )
    // Initialize the ROS Node "roscpp_example"
    ros::Rate loop_rate(30);
    //start the timer
-   clock_gettime(CLOCK_MONOTONIC, &timer_start); fstart=(double)timer_start.tv_sec + ((double)timer_start.tv_nsec/1000000000.0);
-   clock_gettime(CLOCK_MONOTONIC, &timer_stop); fstop=(double)timer_stop.tv_sec + ((double)timer_stop.tv_nsec/1000000000.0);
    while(ros::ok()){
       if(cc.server.isNewGoalAvailable()){
           cc.current_goal = cc.server.acceptNewGoal();
@@ -679,6 +619,8 @@ int main( int argc, char** argv )
           cc.setRun(true);
           cc.setInsert_result(0);
           ROS_INFO("Got a new goal");
+          cc.detect_start = ros::Time::now();
+          cc.send_command_now = ros::Time::now();
       }
       if(cc.server.isActive()){
         if(cc.server.isPreemptRequested()){
