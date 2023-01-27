@@ -123,7 +123,7 @@ private:
     bool Done_height = false;
     
     bool mg400_running = false; // if the MG400 is still moviing
-    const double timer = 1.5; // the interval to send the command to MG400
+    const double timer = 0.8; // the interval to send the command to MG400
     int _counter =0; // for how many pcitures to get angle
     double angle=0; // the detected angle
     double threshold_x, threshold_y, threshold_z; //thresholds for the marker
@@ -249,7 +249,7 @@ void OUTLET_CV::adjustArm(double &x, double &y, double &z, double &ang){
       ROS_INFO("\nOffset_x: %lf, Offset_y: %lf, Offset_z: %lf\n", offset_x, offset_y, offset_z);
       ROS_INFO("\nlinear.x: %lf, linear.y: %lf, linear.z: %lf\n", twist.linear.x, twist.linear.y, twist.linear.z);
       mg400_cmd_vel_pub_.publish(twist);
-
+      send_command_now = ros::Time::now();
       if(std::abs(offset_z)<=threshold_z){
             Done_z = true;
       }
