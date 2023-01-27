@@ -420,7 +420,8 @@ void OUTLET_CV::aruco_marker_detector(){
   //if the marker has not been detected for 5 seconds
   if (detect_start + ros::Duration(5) <ros::Time::now() && !_final){
     std::cout << "Detection timeout" <<std::endl;
-    arucodetect_reset_service(req, res);
+    if (!initial)
+      arucodetect_reset_service(req, res);
     server.setPreempted();
     ROS_WARN("Preempt Goal\n");
     setRun(false);
@@ -627,6 +628,7 @@ int main( int argc, char** argv )
           cc.server.setPreempted();
           ROS_WARN("Preempt Goal\n");
           cc.setRun(false);
+          cc.arucodetect_reset_service(cc.req, cc.res);
         }else{
           if(cc.start_time + ros::Duration(cc.current_goal->duration) < ros::Time::now()){
             cc.server.setPreempted();
