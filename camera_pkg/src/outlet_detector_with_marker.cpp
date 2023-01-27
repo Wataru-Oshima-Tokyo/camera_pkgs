@@ -625,19 +625,20 @@ int main( int argc, char** argv )
       }
       if(cc.server.isActive()){
         if(cc.server.isPreemptRequested()){
-          cc.server.setPreempted();
-          ROS_WARN("Preempt Goal\n");
           if (!cc.initial)
             cc.arucodetect_reset_service(cc.req, cc.res);
           cc.setRun(false);
+          cc.server.setPreempted();
+          ROS_WARN("Preempt Goal\n");
 
         }else{
           if(cc.start_time + ros::Duration(cc.current_goal->duration) < ros::Time::now()){
-            cc.server.setPreempted();
-            ROS_WARN("Preempt Goal\n");
             if (!cc.initial)
               cc.arucodetect_reset_service(cc.req, cc.res);
             cc.setRun(false);
+            cc.server.setPreempted();
+            ROS_WARN("Preempt Goal\n");
+
           }else{
             camera_action::camera_pkgFeedback feedback;
             feedback.rate = (ros::Time::now() - cc.start_time).toSec() / cc.current_goal->duration;
