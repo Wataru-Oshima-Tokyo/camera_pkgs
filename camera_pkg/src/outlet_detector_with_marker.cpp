@@ -628,7 +628,8 @@ int main( int argc, char** argv )
           cc.server.setPreempted();
           ROS_WARN("Preempt Goal\n");
           cc.setRun(false);
-          cc.arucodetect_reset_service(cc.req, cc.res);
+          if (!cc.initial)
+            cc.arucodetect_reset_service(cc.req, cc.res);
         }else{
           if(cc.start_time + ros::Duration(cc.current_goal->duration) < ros::Time::now()){
             cc.server.setPreempted();
