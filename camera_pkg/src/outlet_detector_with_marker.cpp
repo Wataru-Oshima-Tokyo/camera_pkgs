@@ -44,7 +44,7 @@ class OUTLET_CV{
     Mat camera_matrix, dist_coeffs; //for calibration parameters
     std::ostringstream vector_to_marker; //for putting text on the image
     Ptr<aruco::Dictionary> dictionary = aruco::getPredefinedDictionary(aruco::DICT_4X4_50); //the dictionary for aruco marker 
-    ros::Time start_time;
+    ros::Time start_time,adjust_start, adjust_end;
     std_srvs::Empty::Request req; // empty request
     std_srvs::Empty::Response res; //empty response
 
@@ -74,7 +74,7 @@ class OUTLET_CV{
     virtual void adjustArm(double &x, double &y, double &z, double &ang); // adjusting the robot arm by the coordinate obtained from the detected marker
     virtual bool correct_position(double &); //if the detected marker is at the edge of the image obtained by Realsense, move the mobile robot to the center 
     virtual void InitializeValues(); //initialzie all variables
-    // virtual bool adjust_height(const double &height, const double &depth); // to adjust the robot arm to the initial postion where the camera reads the angle of the detected marker 
+    virtual bool adjust_height(const double &height, const double &depth); // to adjust the robot arm to the initial postion where the camera reads the angle of the detected marker 
     virtual void putTexts(const double &x, const double &y, const double &z, const double &r); //puttting some texts
     virtual void initial_detection(); //the function of detecting a marker by Realsense
     virtual void hand_camera_detction(); // the functioin of detecting a marker by USB camera
@@ -381,9 +381,10 @@ void OUTLET_CV::hand_camera_detction(){
     for(int i=0; i < ids.size(); i++)
     {
       detect_start = ros::Time::now();
+      
       cv::drawFrameAxes(u_src, camera_matrix, dist_coeffs, rvecs[0], tvecs[0], 0.1);
-      // if (!adjust_height(tvecs[0](1),tvecs[0](2)))
-      //   break;
+      if (!adjust_height(tvecs[0](1),tvecs[0](2)))
+        break;
           
 
       if (_counter>40){
@@ -404,6 +405,51 @@ void OUTLET_CV::hand_camera_detction(){
     }  
 
 }
+
+
+//this is the function for moving the arm to the intial postion to read the angle of a marker
+bool OUTLET_CV::adjust_height(const double &height, const double &depth){
+  geometry_msgs::Twist twist;
+  const double diff_height = 0.0114 - height;
+  const double diff_depth = 0.13- depth;
+  const double _Kp = Kp*3;
+  const double move_height = _Kp*diff_height; 
+  const double move_depth = _Kp*diff_height; 
+  twist.linear.z = move_height; // vertical
+  twist.linear.x = -move_depth; // depth
+  const double threshold_height = 0.0005;  
+  const double threshold_depth = 0.03;         
+  if (std::abs(diff_height)<=threshold_height){
+    Done_height =true;
+  }
+  if (std::abs(diff_depth)<=threshold_depth){
+    Done_depth = true; 
+  }
+  if (initial_position){
+      if(Done_height && Done_depth || (adjust_end<ros::Time::now())){
+        //if the adjustment is done or the time of operation exceeds 10 seconds, then finalize the position
+        initial_position =false;
+        Done_height = false;
+        Done_depth = false;
+        return true;  
+      }else{
+        if(!mg400_running && (adjust_start+ros::Duration(0.5) <ros::Time::now())){
+            //if the position is still not the correct position
+            adjust_start = ros::Time::now();
+            mg400_cmd_vel_pub_.publish(twist);
+            std::cout << "diff_height: " << std::abs(diff_height) << "diff_depth: " << std::abs(diff_depth) << std::endl;
+          }
+          return false;
+      }
+  }else{
+    return true;
+  }
+}
+
+
+
+
+
 
 //this is the function to detect a marker
 void OUTLET_CV::aruco_marker_detector(){          
@@ -526,6 +572,7 @@ void OUTLET_CV::InitializeValues(){
   Done_height = false;
   Done_depth = false;
   detect_start = ros::Time::now();
+  adjust_start = ros::Time::now();
   send_command_now = ros::Time::now();
   initial= true;
   _final = false;
@@ -652,6 +699,7 @@ int main( int argc, char** argv )
                       cv::resizeWindow("src", IMG_WIDTH, IMG_HEIGHT);
                       imshow("src", cc.src);
                     }
+                    cc.adjust_end = cc.adjust_start + ros::Duration(10);
                   }else{ //showing the screen received from hand eye camera
                     if(cc.show_image){
                       namedWindow("out", WINDOW_NORMAL);
