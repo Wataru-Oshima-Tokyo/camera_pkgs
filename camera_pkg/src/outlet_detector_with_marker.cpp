@@ -384,7 +384,7 @@ void OUTLET_CV::hand_camera_detction(){
     {
       detect_start = ros::Time::now();
       
-      drawFrameAxes(u_src, camera_matrix, dist_coeffs, rvecs[0], tvecs[0], 0.1,1);
+      drawFrameAxes(u_src, camera_matrix, dist_coeffs, rvecs[0], tvecs[0], 0.1,5);
       if (!adjust_height(tvecs[0](1),tvecs[0](2)))
         break;
           
