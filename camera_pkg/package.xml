@@ -59,7 +59,7 @@
   <build_depend>std_msgs</build_depend>
   <build_depend>camera_pkg_msgs</build_depend>
   <!--build_depend>darknet_ros_msgs</build_depend-->
-  <!--build_depend>mg400_bringup</build_depend-->
+  <build_depend>mg400_bringup</build_depend>
   <build_export_depend>cv_bridge</build_export_depend>
   <build_export_depend>image_transport</build_export_depend>
   <build_export_depend>opencv2</build_export_depend>
@@ -77,8 +77,8 @@
   <exec_depend>std_msgs</exec_depend>
   <exec_depend>camera_pkg_msgs</exec_depend>
   <!--exec_depend>darknet_ros_msgs</exec_depend-->
-  <!--exec_depend>mg400_bringup</exec_depend-->
-  <depend>camera_action</depend>
+  <exec_depend>mg400_bringup</exec_depend>
+  <depend>techshare_ros_pkg</depend>
   <!-- The export tag contains other, unspecified, tags -->
   <export>
     <!-- Other tools can request additional information be placed here -->
