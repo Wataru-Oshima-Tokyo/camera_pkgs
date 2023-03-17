@@ -18,9 +18,9 @@ find_package(catkin REQUIRED COMPONENTS
   camera_pkg_msgs
   #darknet_ros_msgs
   mg400_bringup
-  camera_action
   actionlib
   actionlib_msgs
+  techshare_ros_pkg
 )
 
 set(_opencv_version 4)

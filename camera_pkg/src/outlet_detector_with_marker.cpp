@@ -24,7 +24,7 @@
 #include <math.h>
 //include action files
 #include <actionlib/server/simple_action_server.h>
-#include <camera_action/camera_pkgAction.h>
+#include <techshare_ros_pkg/camera_pkgAction.h>
 
 #define IMG_HEIGHT (480)
 #define IMG_WIDTH (640)
@@ -58,8 +58,8 @@ class OUTLET_CV{
     double adjust_speed; //the velociy for a mobile robots
 
     //actionlib servers
-    camera_action::camera_pkgGoalConstPtr current_goal; // instance of a goal
-    actionlib::SimpleActionServer<camera_action::camera_pkgAction> server;//make a server
+    techshare_ros_pkg::camera_pkgGoalConstPtr current_goal; // instance of a goal
+    actionlib::SimpleActionServer<techshare_ros_pkg::camera_pkgAction> server;//make a server
 
     //functions
     virtual bool arucodetect_start_service(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);  //the service to start the detection
@@ -78,6 +78,8 @@ class OUTLET_CV{
     virtual void putTexts(const double &x, const double &y, const double &z, const double &r); //puttting some texts
     virtual void initial_detection(); //the function of detecting a marker by Realsense
     virtual void hand_camera_detction(); // the functioin of detecting a marker by USB camera
+    virtual void drawFrameAxes(cv::Mat& image, const cv::Mat& cameraMatrix, const cv::Mat& distCoeffs,
+                        const cv::Vec3d& rvec, const cv::Vec3d& tvec, float length, int thickness);
     // Topics
     std::string IMAGE_TOPIC;
     std::string DEPTH_TOPIC;
@@ -382,7 +384,7 @@ void OUTLET_CV::hand_camera_detction(){
     {
       detect_start = ros::Time::now();
       
-      cv::drawFrameAxes(u_src, camera_matrix, dist_coeffs, rvecs[0], tvecs[0], 0.1);
+      drawFrameAxes(u_src, camera_matrix, dist_coeffs, rvecs[0], tvecs[0], 0.1,5);
       if (!adjust_height(tvecs[0](1),tvecs[0](2)))
         break;
           
@@ -581,6 +583,23 @@ void OUTLET_CV::InitializeValues(){
   rvecs_array.clear();
 }
 
+
+void OUTLET_CV::drawFrameAxes(cv::Mat& image, const cv::Mat& cameraMatrix, const cv::Mat& distCoeffs,
+                        const cv::Vec3d& rvec, const cv::Vec3d& tvec, float length, int thickness = 1) {
+          std::vector<cv::Point3f> objectPoints; // object points of the marker
+          objectPoints.push_back(cv::Point3f(0, 0, 0)); // origin
+          objectPoints.push_back(cv::Point3f(length, 0, 0)); // x-axis
+          objectPoints.push_back(cv::Point3f(0, length, 0)); // y-axis
+          objectPoints.push_back(cv::Point3f(0, 0, length)); // z-axis
+
+          std::vector<cv::Point2f> imagePoints;
+          cv::projectPoints(objectPoints, rvec, tvec, cameraMatrix, distCoeffs, imagePoints);
+
+          cv::line(image, imagePoints[0], imagePoints[1], cv::Scalar(0, 0, 255), thickness); // x-axis (red)
+          cv::line(image, imagePoints[0], imagePoints[2], cv::Scalar(0, 255, 0), thickness); // y-axis (green)
+          cv::line(image, imagePoints[0], imagePoints[3], cv::Scalar(255, 0, 0), thickness); // z-axis (blue)
+      }
+
 // return true if the robot status is 7 which means it is ready to receive the next command
 void OUTLET_CV::mg400_status_callback(const mg400_bringup::RobotStatus& msg){
   if(msg.robot_status == 7){
@@ -687,7 +706,7 @@ int main( int argc, char** argv )
             ROS_WARN("Preempt Goal\n");
 
           }else{
-            camera_action::camera_pkgFeedback feedback;
+            techshare_ros_pkg::camera_pkgFeedback feedback;
             feedback.rate = (ros::Time::now() - cc.start_time).toSec() / cc.current_goal->duration;
             cc.server.publishFeedback(feedback);
             if(!cc.src.empty() && !cc.u_src.empty() && !cc.depth.empty()){
